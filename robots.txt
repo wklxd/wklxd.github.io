@@ -1,4 +1,4 @@
 User-agent: *
 Disallow: 
 
-Sitemap: http://github.klwang.info/sitemap.xml 
+Sitemap: http://blog.klwang.info/sitemap.xml 

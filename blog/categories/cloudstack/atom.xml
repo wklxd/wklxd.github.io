@@ -1,11 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
 <feed xmlns="http://www.w3.org/2005/Atom">
 
-  <title><![CDATA[Category: cloudstack | My Octopress Blog]]></title>
-  <link href="http://github.klwang.info/blog/categories/cloudstack/atom.xml" rel="self"/>
-  <link href="http://github.klwang.info/"/>
-  <updated>2013-06-23T00:01:53+08:00</updated>
-  <id>http://github.klwang.info/</id>
+  <title><![CDATA[Category: cloudstack | klwang's Notes]]></title>
+  <link href="http://blog.klwang.info/blog/categories/cloudstack/atom.xml" rel="self"/>
+  <link href="http://blog.klwang.info/"/>
+  <updated>2013-06-23T00:31:21+08:00</updated>
+  <id>http://blog.klwang.info/</id>
   <author>
     <name><![CDATA[wklxd]]></name>
     
@@ -15,9 +15,9 @@
   
   <entry>
     <title type="html"><![CDATA[Ovirt 安装小记]]></title>
-    <link href="http://github.klwang.info/blog/ovirt-install-guide-of-klwang/"/>
+    <link href="http://blog.klwang.info/blog/ovirt-install-guide-of-klwang/"/>
     <updated>2013-05-28T00:00:00+08:00</updated>
-    <id>http://github.klwang.info/blog/ovirt-install-guide-of-klwang</id>
+    <id>http://blog.klwang.info/blog/ovirt-install-guide-of-klwang</id>
     <content type="html"><![CDATA[<p>出于工作需要，试了一把Ovirt, 发现其和cloudstack、openstack这种大家伙还是有差距的，不过也有它的长处，今天就记录一下安装的过程，下次也就方便一些了。。。
 <h3>写在前面：</h3>
 硬件要求： CPU支持虚拟化肯定是必须的了<br />
@@ -239,9 +239,9 @@ IPA安装（不能和manage在一个节点哦）：
   
   <entry>
     <title type="html"><![CDATA[Cloudstack 中 reset_password 功能设置]]></title>
-    <link href="http://github.klwang.info/blog/use-of-cloudstack-reset_password-method/"/>
+    <link href="http://blog.klwang.info/blog/use-of-cloudstack-reset_password-method/"/>
     <updated>2013-05-26T00:00:00+08:00</updated>
-    <id>http://github.klwang.info/blog/use-of-cloudstack-reset_password-method</id>
+    <id>http://blog.klwang.info/blog/use-of-cloudstack-reset_password-method</id>
     <content type="html"><![CDATA[<p>Cloudstack中对于虚拟机，有一个reset_password的功能，一直疑惑这玩意是干啥的</p>
 
 
@@ -299,9 +299,9 @@ ok，可以测试一下，脚本本身比较简单，要是不工作的话，自
   
   <entry>
     <title type="html"><![CDATA[cloudstack 虚拟机vnc配置]]></title>
-    <link href="http://github.klwang.info/blog/cloudstack-virtualmachine-vnc-config/"/>
+    <link href="http://blog.klwang.info/blog/cloudstack-virtualmachine-vnc-config/"/>
     <updated>2013-05-09T00:00:00+08:00</updated>
-    <id>http://github.klwang.info/blog/cloudstack-virtualmachine-vnc-config</id>
+    <id>http://blog.klwang.info/blog/cloudstack-virtualmachine-vnc-config</id>
     <content type="html"><![CDATA[<p><h4>1. cloudstack使用kvm实现虚拟机时 ps aux | grep kvm，可以发现神奇的东西</h4>
 <a href="http://klwang.info/blog/wp-content/uploads/2013/05/kvm.png"><img alt="kvm" src="http://klwang.info/blog/wp-content/uploads/2013/05/kvm.png" width="650" /></a>
 <h4>2. 有了vnc的监听地址和端口，我们就能很容易的链接虚拟机了。</h4>
@@ -333,9 +333,9 @@ ok，可以测试一下，脚本本身比较简单，要是不工作的话，自
   
   <entry>
     <title type="html"><![CDATA[cloudstack 基本概念]]></title>
-    <link href="http://github.klwang.info/blog/cloudstack-basic-concept/"/>
+    <link href="http://blog.klwang.info/blog/cloudstack-basic-concept/"/>
     <updated>2013-05-09T00:00:00+08:00</updated>
-    <id>http://github.klwang.info/blog/cloudstack-basic-concept</id>
+    <id>http://blog.klwang.info/blog/cloudstack-basic-concept</id>
     <content type="html"><![CDATA[<p><strong>Zone:</strong></p>
 
 
@@ -433,9 +433,9 @@ ok，可以测试一下，脚本本身比较简单，要是不工作的话，自
   
   <entry>
     <title type="html"><![CDATA[【转】安装部署CloudStack 4.0企业私有云平台]]></title>
-    <link href="http://github.klwang.info/blog/install-cloudstack-4-0/"/>
+    <link href="http://blog.klwang.info/blog/install-cloudstack-4-0/"/>
     <updated>2013-05-06T00:00:00+08:00</updated>
-    <id>http://github.klwang.info/blog/install-cloudstack-4-0</id>
+    <id>http://blog.klwang.info/blog/install-cloudstack-4-0</id>
     <content type="html"><![CDATA[<p><div /></p>
 
 

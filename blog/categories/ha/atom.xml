@@ -1,11 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
 <feed xmlns="http://www.w3.org/2005/Atom">
 
-  <title><![CDATA[Category: HA | My Octopress Blog]]></title>
-  <link href="http://github.klwang.info/blog/categories/ha/atom.xml" rel="self"/>
-  <link href="http://github.klwang.info/"/>
-  <updated>2013-06-23T00:01:53+08:00</updated>
-  <id>http://github.klwang.info/</id>
+  <title><![CDATA[Category: HA | klwang's Notes]]></title>
+  <link href="http://blog.klwang.info/blog/categories/ha/atom.xml" rel="self"/>
+  <link href="http://blog.klwang.info/"/>
+  <updated>2013-06-23T00:31:21+08:00</updated>
+  <id>http://blog.klwang.info/</id>
   <author>
     <name><![CDATA[wklxd]]></name>
     
@@ -15,9 +15,9 @@
   
   <entry>
     <title type="html"><![CDATA[将 resouce angent 改造成 multi state 类型]]></title>
-    <link href="http://github.klwang.info/blog/change-your-resouce-angent-to-multistate/"/>
+    <link href="http://blog.klwang.info/blog/change-your-resouce-angent-to-multistate/"/>
     <updated>2013-06-10T00:00:00+08:00</updated>
-    <id>http://github.klwang.info/blog/change-your-resouce-angent-to-multistate</id>
+    <id>http://blog.klwang.info/blog/change-your-resouce-angent-to-multistate</id>
     <content type="html"><![CDATA[<p>习惯了资源clone的方便快捷</p>
 
 
@@ -782,9 +782,9 @@ exit $rc
   
   <entry>
     <title type="html"><![CDATA[Clusters from Scratch 实验笔记]]></title>
-    <link href="http://github.klwang.info/blog/pacemaker-cososync-cman-setup/"/>
+    <link href="http://blog.klwang.info/blog/pacemaker-cososync-cman-setup/"/>
     <updated>2013-06-06T00:00:00+08:00</updated>
-    <id>http://github.klwang.info/blog/pacemaker-cososync-cman-setup</id>
+    <id>http://blog.klwang.info/blog/pacemaker-cososync-cman-setup</id>
     <content type="html"><![CDATA[<p>pacemaker 经典文档 Clusters_from_Scratch 的实验笔记，留作以后参考
 <h3>hosts文件设置</h3>
 <pre>
@@ -1094,9 +1094,9 @@ service pacemaker start --此时pacemaker会自动启动cman
   
   <entry>
     <title type="html"><![CDATA[GFS2 初级]]></title>
-    <link href="http://github.klwang.info/blog/gfs2-startup/"/>
+    <link href="http://blog.klwang.info/blog/gfs2-startup/"/>
     <updated>2013-06-05T00:00:00+08:00</updated>
-    <id>http://github.klwang.info/blog/gfs2-startup</id>
+    <id>http://blog.klwang.info/blog/gfs2-startup</id>
     <content type="html"><![CDATA[<p><h4>建立文件系统</h4>
 <pre># mkfs.gfs2 -p lock_dlm -t alpha:mydata1 -j 8 /dev/vg01/lvol0</pre>
 -p 指定要使用的锁定协议名称，集群的锁定协议为 lock_dlm<br />
@@ -1164,9 +1164,9 @@ gfs2不支持软链接，可以使用bind多处挂载代替
   
   <entry>
     <title type="html"><![CDATA[cman and corosync]]></title>
-    <link href="http://github.klwang.info/blog/cman-and-corosync/"/>
+    <link href="http://blog.klwang.info/blog/cman-and-corosync/"/>
     <updated>2013-06-04T00:00:00+08:00</updated>
-    <id>http://github.klwang.info/blog/cman-and-corosync</id>
+    <id>http://blog.klwang.info/blog/cman-and-corosync</id>
     <content type="html"><![CDATA[<p>在pacemaker的经典文档<a href="http://clusterlabs.org/doc/en-US/Pacemaker/1.1-plugin/html/Clusters_from_Scratch/index.html" target="_blank">Clusters from Scratch</a> 中，使用到了cman 这个红帽cluster套件中的工具；</p>
 
 
@@ -1300,9 +1300,9 @@ ccs-红帽的集群配置工具（专门用来写cluster.conf文件的）</p></p
   
   <entry>
     <title type="html"><![CDATA[kvm 虚拟机 fence 设置]]></title>
-    <link href="http://github.klwang.info/blog/kvm-guest-fence/"/>
+    <link href="http://blog.klwang.info/blog/kvm-guest-fence/"/>
     <updated>2013-06-03T00:00:00+08:00</updated>
-    <id>http://github.klwang.info/blog/kvm-guest-fence</id>
+    <id>http://blog.klwang.info/blog/kvm-guest-fence</id>
     <content type="html"><![CDATA[<p>习惯于使用 虚拟机 测试HA配置文件，但是对于fence这块，一直没有办法搞定</p>
 
 

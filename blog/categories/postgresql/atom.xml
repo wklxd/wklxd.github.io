@@ -1,11 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
 <feed xmlns="http://www.w3.org/2005/Atom">
 
-  <title><![CDATA[Category: postgresql | My Octopress Blog]]></title>
-  <link href="http://github.klwang.info/blog/categories/postgresql/atom.xml" rel="self"/>
-  <link href="http://github.klwang.info/"/>
-  <updated>2013-06-23T00:01:53+08:00</updated>
-  <id>http://github.klwang.info/</id>
+  <title><![CDATA[Category: postgresql | klwang's Notes]]></title>
+  <link href="http://blog.klwang.info/blog/categories/postgresql/atom.xml" rel="self"/>
+  <link href="http://blog.klwang.info/"/>
+  <updated>2013-06-23T00:31:21+08:00</updated>
+  <id>http://blog.klwang.info/</id>
   <author>
     <name><![CDATA[wklxd]]></name>
     
@@ -15,9 +15,9 @@
   
   <entry>
     <title type="html"><![CDATA[Sfex (resource agent)]]></title>
-    <link href="http://github.klwang.info/blog/sfex-resource-agent/"/>
+    <link href="http://blog.klwang.info/blog/sfex-resource-agent/"/>
     <updated>2013-04-22T00:00:00+08:00</updated>
-    <id>http://github.klwang.info/blog/sfex-resource-agent</id>
+    <id>http://blog.klwang.info/blog/sfex-resource-agent</id>
     <content type="html"><![CDATA[<p><h3>Basic Consept</h3>
 <ul>
     <li>SFEX is resource which control ownership of shared disk.</li>
@@ -115,9 +115,9 @@ op stop interval="0" timeout="30"</pre></p>
   
   <entry>
     <title type="html"><![CDATA[Oracle内存结构-PGA]]></title>
-    <link href="http://github.klwang.info/blog/a-explain-of-oracle-pga-memory/"/>
+    <link href="http://blog.klwang.info/blog/a-explain-of-oracle-pga-memory/"/>
     <updated>2013-04-11T00:00:00+08:00</updated>
-    <id>http://github.klwang.info/blog/a-explain-of-oracle-pga-memory</id>
+    <id>http://blog.klwang.info/blog/a-explain-of-oracle-pga-memory</id>
     <content type="html"><![CDATA[<p><span style="color: #000000;">一、概述<br />
 SGA，PGA，UGA都是Oracle管理的内存区。</span></p>
 
@@ -264,9 +264,9 @@ SQL&gt; select /*+ use_hash(tb1 tb2)*/ * from sorttable tb1,sorttable tb2 where 
   
   <entry>
     <title type="html"><![CDATA[postgresql的分区表实现方式]]></title>
-    <link href="http://github.klwang.info/blog/postgresql-partition-table-explain/"/>
+    <link href="http://blog.klwang.info/blog/postgresql-partition-table-explain/"/>
     <updated>2013-03-21T00:00:00+08:00</updated>
-    <id>http://github.klwang.info/blog/postgresql-partition-table-explain</id>
+    <id>http://blog.klwang.info/blog/postgresql-partition-table-explain</id>
     <content type="html"><![CDATA[<p><h3>如下：可以在postgresql中建立分区表</h3>
 <div>
 <ol type="1" compact="compact">
@@ -506,9 +506,9 @@ UNION ALL SELECT * FROM measurement_y2008m01;</pre>
   
   <entry>
     <title type="html"><![CDATA[postgresql的一些隐含列]]></title>
-    <link href="http://github.klwang.info/blog/postgresql-columns-that-your-dont-know/"/>
+    <link href="http://blog.klwang.info/blog/postgresql-columns-that-your-dont-know/"/>
     <updated>2013-03-21T00:00:00+08:00</updated>
-    <id>http://github.klwang.info/blog/postgresql-columns-that-your-dont-know</id>
+    <id>http://blog.klwang.info/blog/postgresql-columns-that-your-dont-know</id>
     <content type="html"><![CDATA[<p>postgresql中的每张表都含有一些系统特定列，如下：
 <div><dl><dt><tt>oid</tt></dt><dd>只有在建表时使用（WITH OIDS）选项时，才会含有该列，为表中的每个原组分配oid</dd><dt><tt>tableoid</tt></dt><dd>表的oid，用来记录某个具体的原组到底来自哪张表</dd><dt><tt>xmin</tt></dt><dd>该原组被insert时的transaction id， 每一次更新会产生该原组的一个新版本(MVCC)</dd></dl></div></p>
 
@@ -522,9 +522,9 @@ UNION ALL SELECT * FROM measurement_y2008m01;</pre>
   
   <entry>
     <title type="html"><![CDATA[PostgreSQL Rules 的简单介绍 - Making entries which can't be altered]]></title>
-    <link href="http://github.klwang.info/blog/introduction-to-postgresql-rules-making-entries-which-cant-be-altered/"/>
+    <link href="http://blog.klwang.info/blog/introduction-to-postgresql-rules-making-entries-which-cant-be-altered/"/>
     <updated>2013-03-14T00:00:00+08:00</updated>
-    <id>http://github.klwang.info/blog/introduction-to-postgresql-rules-making-entries-which-cant-be-altered</id>
+    <id>http://blog.klwang.info/blog/introduction-to-postgresql-rules-making-entries-which-cant-be-altered</id>
     <content type="html"><![CDATA[<p>原文请猛点 <a title="这里" href="https://wiki.postgresql.org/wiki/Introduction_to_PostgreSQL_Rules_-_Making_entries_which_can%27t_be_altered">这里</a>，下面是经过本人翻译整理的版本<br />
 by Justin Clift</p>
 

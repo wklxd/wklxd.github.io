@@ -1,11 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
 <feed xmlns="http://www.w3.org/2005/Atom">
 
-  <title><![CDATA[Category: oracle | My Octopress Blog]]></title>
-  <link href="http://github.klwang.info/blog/categories/oracle/atom.xml" rel="self"/>
-  <link href="http://github.klwang.info/"/>
-  <updated>2013-06-23T00:01:53+08:00</updated>
-  <id>http://github.klwang.info/</id>
+  <title><![CDATA[Category: oracle | klwang's Notes]]></title>
+  <link href="http://blog.klwang.info/blog/categories/oracle/atom.xml" rel="self"/>
+  <link href="http://blog.klwang.info/"/>
+  <updated>2013-06-23T00:31:21+08:00</updated>
+  <id>http://blog.klwang.info/</id>
   <author>
     <name><![CDATA[wklxd]]></name>
     
@@ -15,9 +15,9 @@
   
   <entry>
     <title type="html"><![CDATA[oralce 默认安装后目录及文件简单说明]]></title>
-    <link href="http://github.klwang.info/blog/oralce-ofa-expain-of-myself/"/>
+    <link href="http://blog.klwang.info/blog/oralce-ofa-expain-of-myself/"/>
     <updated>2013-04-22T00:00:00+08:00</updated>
-    <id>http://github.klwang.info/blog/oralce-ofa-expain-of-myself</id>
+    <id>http://blog.klwang.info/blog/oralce-ofa-expain-of-myself</id>
     <content type="html"><![CDATA[<p>权限：
 <pre>  chmod 775 dirs
   chown oracle:oinstall dirs</pre>
@@ -55,9 +55,9 @@
   
   <entry>
     <title type="html"><![CDATA[oracle 常用数据字典]]></title>
-    <link href="http://github.klwang.info/blog/oracle-data-directory-explain/"/>
+    <link href="http://blog.klwang.info/blog/oracle-data-directory-explain/"/>
     <updated>2013-04-16T00:00:00+08:00</updated>
-    <id>http://github.klwang.info/blog/oracle-data-directory-explain</id>
+    <id>http://blog.klwang.info/blog/oracle-data-directory-explain</id>
     <content type="html"><![CDATA[<p><pre>dba_catalog</pre>
 表、视图、序列、同义词、索引基本信息
 <pre>dba_objects</pre>
@@ -88,9 +88,9 @@
   
   <entry>
     <title type="html"><![CDATA[Oracle 表空间管理]]></title>
-    <link href="http://github.klwang.info/blog/manage-of-oracle-tablespace/"/>
+    <link href="http://blog.klwang.info/blog/manage-of-oracle-tablespace/"/>
     <updated>2013-04-16T00:00:00+08:00</updated>
-    <id>http://github.klwang.info/blog/manage-of-oracle-tablespace</id>
+    <id>http://blog.klwang.info/blog/manage-of-oracle-tablespace</id>
     <content type="html"><![CDATA[<p>1. 创建表空间
 <pre>create [temporary] tablespace spc_name
 datafile 'path/name'
@@ -187,9 +187,9 @@ execute dbms_space_admin.tablespace_migrage_to_local('SYSTEM');</pre></p>
   
   <entry>
     <title type="html"><![CDATA[Oracle表管理]]></title>
-    <link href="http://github.klwang.info/blog/manage-of-oracle-tables/"/>
+    <link href="http://blog.klwang.info/blog/manage-of-oracle-tables/"/>
     <updated>2013-04-16T00:00:00+08:00</updated>
-    <id>http://github.klwang.info/blog/manage-of-oracle-tables</id>
+    <id>http://blog.klwang.info/blog/manage-of-oracle-tables</id>
     <content type="html"><![CDATA[<p>1. dual
 <p style="padding-left: 30px;">神奇的dual表，属于sys模式</p>
 2. 表尺寸估算/回收
@@ -362,9 +362,9 @@ execute dbms_space_admin.tablespace_migrage_to_local('SYSTEM');</pre></p>
   
   <entry>
     <title type="html"><![CDATA[Oracle索引管理]]></title>
-    <link href="http://github.klwang.info/blog/manage-of-oracle-inde/"/>
+    <link href="http://blog.klwang.info/blog/manage-of-oracle-inde/"/>
     <updated>2013-04-16T00:00:00+08:00</updated>
-    <id>http://github.klwang.info/blog/manage-of-oracle-inde</id>
+    <id>http://blog.klwang.info/blog/manage-of-oracle-inde</id>
     <content type="html"><![CDATA[<p>1. 索引有效准则
 <p style="padding-left: 30px;">1.1 访问的数据少于 15%<br />
 1.2 小表<br />

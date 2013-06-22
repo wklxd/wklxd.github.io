@@ -1,11 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
 <feed xmlns="http://www.w3.org/2005/Atom">
 
-  <title><![CDATA[Category: Linux | My Octopress Blog]]></title>
-  <link href="http://github.klwang.info/blog/categories/linux/atom.xml" rel="self"/>
-  <link href="http://github.klwang.info/"/>
-  <updated>2013-06-23T00:01:53+08:00</updated>
-  <id>http://github.klwang.info/</id>
+  <title><![CDATA[Category: Linux | klwang's Notes]]></title>
+  <link href="http://blog.klwang.info/blog/categories/linux/atom.xml" rel="self"/>
+  <link href="http://blog.klwang.info/"/>
+  <updated>2013-06-23T00:31:21+08:00</updated>
+  <id>http://blog.klwang.info/</id>
   <author>
     <name><![CDATA[wklxd]]></name>
     
@@ -15,9 +15,9 @@
   
   <entry>
     <title type="html"><![CDATA[About strace]]></title>
-    <link href="http://github.klwang.info/blog/about-strace/"/>
+    <link href="http://blog.klwang.info/blog/about-strace/"/>
     <updated>2013-06-21T00:00:00+08:00</updated>
-    <id>http://github.klwang.info/blog/about-strace</id>
+    <id>http://blog.klwang.info/blog/about-strace</id>
     <content type="html"><![CDATA[<p>作为软件的使用者而非开发者，平时会遇到很多奇怪的问题</p>
 
 
@@ -382,9 +382,9 @@
   
   <entry>
     <title type="html"><![CDATA[ubuntu NO_PUBKEY 故障解决方式]]></title>
-    <link href="http://github.klwang.info/blog/about-ubuntu-no-pubkey-error/"/>
+    <link href="http://blog.klwang.info/blog/about-ubuntu-no-pubkey-error/"/>
     <updated>2013-06-19T00:00:00+08:00</updated>
-    <id>http://github.klwang.info/blog/about-ubuntu-no-pubkey-error</id>
+    <id>http://blog.klwang.info/blog/about-ubuntu-no-pubkey-error</id>
     <content type="html"><![CDATA[<p>ubuntu在更新源后出现</p>
 
 
@@ -441,9 +441,9 @@
   
   <entry>
     <title type="html"><![CDATA[你不知道的bash (特殊字符)]]></title>
-    <link href="http://github.klwang.info/blog/bash-you-don-not-konw-special-character/"/>
+    <link href="http://blog.klwang.info/blog/bash-you-don-not-konw-special-character/"/>
     <updated>2013-06-17T00:00:00+08:00</updated>
-    <id>http://github.klwang.info/blog/bash-you-don-not-konw-special-character</id>
+    <id>http://blog.klwang.info/blog/bash-you-don-not-konw-special-character</id>
     <content type="html"><![CDATA[<p><strong>题记</strong>
 <pre>
   使用Linux有四年多了
@@ -675,9 +675,9 @@
   
   <entry>
     <title type="html"><![CDATA[lvm 实践笔记]]></title>
-    <link href="http://github.klwang.info/blog/about-lvm-skills/"/>
+    <link href="http://blog.klwang.info/blog/about-lvm-skills/"/>
     <updated>2013-06-12T00:00:00+08:00</updated>
-    <id>http://github.klwang.info/blog/about-lvm-skills</id>
+    <id>http://blog.klwang.info/blog/about-lvm-skills</id>
     <content type="html"><![CDATA[<p><strong>物理卷</strong></p>
 
 
@@ -1259,9 +1259,9 @@ mount
   
   <entry>
     <title type="html"><![CDATA[将 resouce angent 改造成 multi state 类型]]></title>
-    <link href="http://github.klwang.info/blog/change-your-resouce-angent-to-multistate/"/>
+    <link href="http://blog.klwang.info/blog/change-your-resouce-angent-to-multistate/"/>
     <updated>2013-06-10T00:00:00+08:00</updated>
-    <id>http://github.klwang.info/blog/change-your-resouce-angent-to-multistate</id>
+    <id>http://blog.klwang.info/blog/change-your-resouce-angent-to-multistate</id>
     <content type="html"><![CDATA[<p>习惯了资源clone的方便快捷</p>
 
 

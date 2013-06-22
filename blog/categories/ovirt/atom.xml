@@ -1,11 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
 <feed xmlns="http://www.w3.org/2005/Atom">
 
-  <title><![CDATA[Category: Ovirt | My Octopress Blog]]></title>
-  <link href="http://github.klwang.info/blog/categories/ovirt/atom.xml" rel="self"/>
-  <link href="http://github.klwang.info/"/>
-  <updated>2013-06-23T00:01:53+08:00</updated>
-  <id>http://github.klwang.info/</id>
+  <title><![CDATA[Category: Ovirt | klwang's Notes]]></title>
+  <link href="http://blog.klwang.info/blog/categories/ovirt/atom.xml" rel="self"/>
+  <link href="http://blog.klwang.info/"/>
+  <updated>2013-06-23T00:31:21+08:00</updated>
+  <id>http://blog.klwang.info/</id>
   <author>
     <name><![CDATA[wklxd]]></name>
     
@@ -15,9 +15,9 @@
   
   <entry>
     <title type="html"><![CDATA[Ovirt 安装小记]]></title>
-    <link href="http://github.klwang.info/blog/ovirt-install-guide-of-klwang/"/>
+    <link href="http://blog.klwang.info/blog/ovirt-install-guide-of-klwang/"/>
     <updated>2013-05-28T00:00:00+08:00</updated>
-    <id>http://github.klwang.info/blog/ovirt-install-guide-of-klwang</id>
+    <id>http://blog.klwang.info/blog/ovirt-install-guide-of-klwang</id>
     <content type="html"><![CDATA[<p>出于工作需要，试了一把Ovirt, 发现其和cloudstack、openstack这种大家伙还是有差距的，不过也有它的长处，今天就记录一下安装的过程，下次也就方便一些了。。。
 <h3>写在前面：</h3>
 硬件要求： CPU支持虚拟化肯定是必须的了<br />
