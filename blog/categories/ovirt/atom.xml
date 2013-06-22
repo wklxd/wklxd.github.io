@@ -1,10 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <feed xmlns="http://www.w3.org/2005/Atom">
 
-  <title><![CDATA[Category: Ovirt | klwang's Notes]]></title>
+  <title><![CDATA[Category: Ovirt | klwang's TechNotes]]></title>
   <link href="http://blog.klwang.info/blog/categories/ovirt/atom.xml" rel="self"/>
   <link href="http://blog.klwang.info/"/>
-  <updated>2013-06-23T00:31:21+08:00</updated>
+  <updated>2013-06-23T00:41:25+08:00</updated>
   <id>http://blog.klwang.info/</id>
   <author>
     <name><![CDATA[wklxd]]></name>
