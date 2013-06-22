@@ -1,19 +1,19 @@
 <?xml version='1.0' encoding='UTF-8'?>
 <urlset xmlns='http://www.sitemaps.org/schemas/sitemap/0.9'>
     <url>
-        <loc>http://wklxd.github.io/blog/post-title/</loc>
+        <loc>http://github.klwang.info/blog/post-title/</loc>
         <lastmod>2013-06-16T20:58:58+08:00</lastmod>
     </url>
     <url>
-        <loc>http://wklxd.github.io/robots.txt</loc>
+        <loc>http://github.klwang.info/robots.txt</loc>
         <lastmod>2013-06-16T20:23:38+08:00</lastmod>
     </url>
     <url>
-        <loc>http://wklxd.github.io/</loc>
+        <loc>http://github.klwang.info/</loc>
         <lastmod>2013-06-16T20:58:58+08:00</lastmod>
     </url>
     <url>
-        <loc>http://wklxd.github.io/blog/archives/</loc>
+        <loc>http://github.klwang.info/blog/archives/</loc>
         <lastmod>2013-06-16T20:58:58+08:00</lastmod>
     </url>
 </urlset>

@@ -1,4 +1,4 @@
 User-agent: *
 Disallow: 
 
-Sitemap: http://wklxd.github.io/sitemap.xml 
+Sitemap: http://github.klwang.info/sitemap.xml 

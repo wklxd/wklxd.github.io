@@ -2,10 +2,10 @@
 <feed xmlns="http://www.w3.org/2005/Atom">
 
   <title><![CDATA[My Octopress Blog]]></title>
-  <link href="http://wklxd.github.io/atom.xml" rel="self"/>
-  <link href="http://wklxd.github.io/"/>
-  <updated>2013-06-22T22:14:37+08:00</updated>
-  <id>http://wklxd.github.io/</id>
+  <link href="http://github.klwang.info/atom.xml" rel="self"/>
+  <link href="http://github.klwang.info/"/>
+  <updated>2013-06-22T22:18:33+08:00</updated>
+  <id>http://github.klwang.info/</id>
   <author>
     <name><![CDATA[wklxd]]></name>
     
@@ -15,9 +15,9 @@
   
   <entry>
     <title type="html"><![CDATA[post title]]></title>
-    <link href="http://wklxd.github.io/blog/post-title/"/>
+    <link href="http://github.klwang.info/blog/post-title/"/>
     <updated>2013-06-16T20:58:00+08:00</updated>
-    <id>http://wklxd.github.io/blog/post-title</id>
+    <id>http://github.klwang.info/blog/post-title</id>
     <content type="html"><![CDATA[
 ]]></content>
   </entry>
