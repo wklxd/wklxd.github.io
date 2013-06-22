@@ -1,0 +1,1340 @@
+
+<!DOCTYPE html>
+<!--[if IEMobile 7 ]><html class="no-js iem7"><![endif]-->
+<!--[if lt IE 9]><html class="no-js lte-ie8"><![endif]-->
+<!--[if (gt IE 8)|(gt IEMobile 7)|!(IEMobile)|!(IE)]><!--><html class="no-js" lang="en"><!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  <title>My Octopress Blog</title>
+  <meta name="author" content="wklxd">
+
+  
+  <meta name="description" content="文中的例子来自http://www.manniwood.com/postgresql_and_bash_stuff/index.html,经过了翻译整理。 通常，我们想要批量的执行sql，或者想要在数据库中处理一些逻辑时，会使用plsql，或者在命令行中一步一步的执行单条sql。 &hellip;">
+  
+
+  <!-- http://t.co/dKP3o1e -->
+  <meta name="HandheldFriendly" content="True">
+  <meta name="MobileOptimized" content="320">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  
+  <link rel="canonical" href="http://github.klwang.info/blog/page/5">
+  <link href="/favicon.png" rel="icon">
+  <link href="/stylesheets/screen.css" media="screen, projection" rel="stylesheet" type="text/css">
+  <link href="/atom.xml" rel="alternate" title="My Octopress Blog" type="application/atom+xml">
+  <script src="/javascripts/modernizr-2.0.js"></script>
+  <script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+  <script>!window.jQuery && document.write(unescape('%3Cscript src="./javascripts/lib/jquery.min.js"%3E%3C/script%3E'))</script>
+  <script src="/javascripts/octopress.js" type="text/javascript"></script>
+  <!--Fonts from Google"s Web font directory at http://google.com/webfonts -->
+<link href="http://fonts.googleapis.com/css?family=PT+Serif:regular,italic,bold,bolditalic" rel="stylesheet" type="text/css">
+<link href="http://fonts.googleapis.com/css?family=PT+Sans:regular,italic,bold,bolditalic" rel="stylesheet" type="text/css">
+
+  
+
+</head>
+
+<body   >
+  <header role="banner"><hgroup>
+  <h1><a href="/">My Octopress Blog</a></h1>
+  
+    <h2>A blogging framework for hackers.</h2>
+  
+</hgroup>
+
+</header>
+  <nav role="navigation"><ul class="subscription" data-subscription="rss">
+  <li><a href="/atom.xml" rel="subscribe-rss" title="subscribe via RSS">RSS</a></li>
+  
+</ul>
+  
+<form action="http://google.com/search" method="get">
+  <fieldset role="search">
+    <input type="hidden" name="q" value="site:github.klwang.info" />
+    <input class="search" type="text" name="q" results="0" placeholder="Search"/>
+  </fieldset>
+</form>
+  
+<ul class="main-navigation">
+  <li><a href="/">Blog</a></li>
+  <li><a href="/blog/archives">Archives</a></li>
+</ul>
+
+</nav>
+  <div id="main">
+    <div id="content">
+      <div class="blog-index">
+  
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/bash-psql-combination/">Bash和psql结合处理批量任务</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2013-03-14T00:00:00+08:00" pubdate data-updated="true">Mar 14<span>th</span>, 2013</time>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p>文中的例子来自<a href="http://www.manniwood.com/postgresql_and_bash_stuff/index.html">http://www.manniwood.com/postgresql_and_bash_stuff/index.html</a>,经过了翻译整理。</p>
+
+<p>通常，我们想要批量的执行sql，或者想要在数据库中处理一些逻辑时，会使用plsql，或者在命令行中一步一步的执行单条sql。</p>
+
+<p>单步执行sql的方式肯定不是我们希望的；而对于plsql，如果不熟悉plsql的语法，也会比较纠结的；况且，目前调试函数或者存储过程也比较耗时间；如果我们的批量操作只进行一次的话，调试存储过程的代价难免会比较大。</p>
+
+<p>下面，我们就来探索一种bash和psql共同工作的方式来实现这些功能；of cource，收益者就只限于熟悉bash语法和sql语法的同学了。
+<h5>1. 最简单的批量sql执行方式,(paql 的 -f 参数)</h5>
+<pre>#!/bin/sh</pre></p>
+
+<p>if [ $# != 2 ]; then<br />
+    echo &#8220;please enter a db host and a table suffix&#8221;<br />
+    exit 1<br />
+fi</p>
+
+<p>export DBHOST=$1<br />
+export TSUFF=$2</p>
+
+<p>psql \<br />
+    -X \<br />
+    -U user \<br />
+    -h $DBHOST \<br />
+    -f /path/to/sql/file.sql \<br />
+    &#8211;echo-all \<br />
+    &#8211;set AUTOCOMMIT=off \<br />
+    &#8211;set ON_ERROR_STOP=on \<br />
+    &#8211;set TSUFF=$TSUFF \ &#8211;set QTSUFF=&#39;$TSUFF&#39; \<br />
+    mydatabase</p>
+
+<p>psql_exit_status=$?</p>
+
+<p>if [ $psql_exit_status != 0 ]; then<br />
+    echo &#8220;psql failed while trying to run this sql script&#8221; 1&gt;&amp;2<br />
+    exit $psql_exit_status<br />
+fi</p>
+
+<p>echo &#8220;sql script successful&#8221;<br />
+exit 0
+<ol>
+	<li>在命令行设置了两个变量 TSUFF 和 QTSUFF，进而，可以在sql文件中应用变量，增加了sql的灵活性</li>
+	<li>使用 -X 选项来阻止 psql 读取 .psqlrc 文件</li>
+	<li>使用 &#8211;echo-all 来观察所有的执行日志</li>
+	<li>使用 ON_ERROR_STOP， 在出错的时候，停止执行；当然，有时候我们可能不想要这个参数</li>
+	<li>关闭 AUTOCOMMIT 来阻止sql的自动提交，在批量sql时，这个参数很重要；当然，有时我们可以考率一下 -l 参数来将所有的sql放在一个事务中运行；</li>
+</ol>
+下面是一个可能的sql文件：（注意，其中用到了之前SET的变量）
+<pre>begin;
+drop index this_index_:TSUFF;
+commit;</pre></p>
+
+<p>begin;<br />
+create table new_table_:TSUFF (<br />
+    greeting text not null default &#8221;);<br />
+commit;</p>
+
+<p>begin;<br />
+insert into new_table_:TSUFF (greeting)<br />
+values (&#8216;Hello from table &#8217; || :QTSUFF);<br />
+commit;
+<h5>2. 熟练使用psql的 &lt; 操作</h5>
+可能有些人还不知道，使用&lt;重定向符号，可以将文件中的sql发送给psql来执行，下面，我们就来试试这种方式
+<pre>#!/bin/bash</pre></p>
+
+<p>set -e</p>
+
+<p>RUN_ON_MYDB=&#8221;psql -X -U myuser -h myhost &#8211;set ON_ERROR_STOP=on &#8211;set AUTOCOMMIT=off mydb&#8221;</p>
+
+<p>$RUN_ON_MYDB &lt;
+甚至，我们可以将多个事务进行拆分和叠加操作
+<pre>--注意，下面的句子还在上个bash脚本中哦
+CREATE_MY_TABLE_SQL=$(cat &lt;</pre>
+<h5>3. 将select执行出单独的结果赋值给shell变量，然后在shell中使用这个值怎么样？（我们又离存储过程的功能近了一步）</h5>
+<pre>CURRENT_ID=`$PSQL -X -U $PROD_USER -h myhost -P t -P format=unaligned $PROD_DB -c "select max(id) from users"`
+let NEXT_ID=CURRENT_ID+1
+echo "next user.id is $NEXT_ID"</pre></p>
+
+<p>echo &#8220;about to reset user id sequence on other database&#8221;<br />
+$PSQL -X -U $DEV_USER $DEV_DB -c &#8220;alter sequence user_ids restart with $NEXT_ID&#8221;
+神奇的-c参数将select的结果拿了出来，在shell中进行您喜欢的计算后，又放回postgresql中，怎么样？</p>
+
+<p>有人会问，select出来的结果一般是一个结果集，或着，至少是多个列吧，要怎么处理呢？ok，看这个神奇的数组
+<h5>4. 使用数组来处理select出来单条记录的多个列</h5>
+<pre>#!/bin/bash</pre></p>
+
+<p>set -e</p>
+
+<p>declare -a ROW=(`psql \<br />
+    -X \<br />
+    -h myhost \<br />
+    -U myuser \<br />
+    -c &#8220;select username, first_name, last_name from users where id = 5489&#8221; \<br />
+    &#8211;single-transaction \<br />
+    &#8211;set AUTOCOMMIT=off \<br />
+    &#8211;set ON_ERROR_STOP=on \<br />
+    &#8211;no-align \<br />
+    -t \<br />
+    &#8211;field-separator &#8217; &#8217; \<br />
+    &#8211;quiet \<br />
+    mydb`)</p>
+
+<p>username=${ROW[0]}<br />
+first_name=${ROW[1]}<br />
+last_name=${ROW[2]}</p>
+
+<p>echo &#8220;username: $username, first_name: $first_name, last_name: $last_name&#8221;
+梦想又近了一步啦，下面看怎么处理一个结果集
+<h5>5. 使用数组+循环来处理select出来包含多个列的结果集</h5>
+<pre>#!/bin/bash</pre></p>
+
+<p>PSQL=/usr/bin/psql</p>
+
+<p>DB_USER=myuser<br />
+DB_HOST=myhost<br />
+DB_NAME=mydb</p>
+
+<p>$PSQL \<br />
+    -X \<br />
+    -h $DB_HOST \<br />
+    -U $DB_USER \<br />
+    -c &#8220;select username, password, first_name, last_name from users&#8221; \<br />
+    &#8211;no-align \<br />
+    -t \<br />
+    &#8211;field-separator &#8217; &#8217; \<br />
+    &#8211;quiet \<br />
+    $DB_NAME | while read -a Record ; do</p>
+
+<p>    username=${Record[0]}<br />
+    password=${Record[1]}<br />
+    first_name=${Record[2]}<br />
+    last_name=${Record[3]}</p>
+
+<p>    echo &#8220;USER: $username $password $first_name $last_name&#8221;<br />
+done
+ok，大工告成，以上5种 sql + bash 的方式，已经足够我们应付在工作中遇到的大部分需要plsql才可以解决的问题了</p>
+
+<p>以下是一些bash+psql处理事情的具体例子，和上面的五种方式没有深层的联系
+<h5>附录A：使用独立表来控制事务的处理</h5>
+假如我们有好多事情要干（当然，仅限于数据库中的数据处理），我们知道干活的具体办法，只有一个唯一的限制：这些事情必须是串行执行的。</p>
+
+<p>呆在电脑前，一个一个的处理事情肯定不是我们想要的方式，那我们何不做一个表来控制事情的进行呢？结束的工作标记为done，下次在没有done的事情中挑出一件来做，直到所有的事情都为done状态；如下：
+<pre>#!/bin/bash</pre></p>
+
+<p>set -e</p>
+
+<p>PSQL=&#8221;/u99/pgsql-9.1/bin/psql&#8221;<br />
+DNL_TABLE=&#8221;items_to_process&#8221;<br />
+#DNL_TABLE=&#8221;test&#8221;<br />
+FETCH_QUERY=&#8221;select item_id from my_schema.${DNL_TABLE} where done is false order by item_id limit 1&#8221;</p>
+
+<p>process_item() {<br />
+    local item_id=$1<br />
+    local dt=`date`<br />
+    echo &#8220;[${dt}] processing item_id $item_id&#8221;<br />
+    $PSQL -X -U myuser -h myhost -c &#8220;insert into my_schema.thingies select thingie_id, salutation, name, ddr from thingies where item_id = $item_id and salutation like &#8216;Mr.%&#8217;&#8221; mydb<br />
+    #我们可以将处理具体事情的操作放在这里， ^ ^<br />
+}</p>
+
+<p>item_id=`$PSQL -X -U myuser -h myhost -P t -P format=unaligned -c &#8220;${FETCH_QUERY}&#8221; mydb`<br />
+dt=`date`<br />
+while [ -n &#8220;$item_id&#8221; ]; do<br />
+    process_item $item_id<br />
+    echo &#8220;[${dt}] marking item_id $item_id as done&#8230;&#8221; #随时记录日志是好孩子<br />
+    $PSQL -X -U myuser -h myhost -c &#8220;update my_schema.${DNL_TABLE} set done = true where item_id = $item_id&#8221; mydb<br />
+    item_id=`$PSQL -X -U myuser -h myhost -P t -P format=unaligned -c &#8220;${FETCH_QUERY}&#8221; mydb`<br />
+    dt=`date`<br />
+done
+<h5></h5>
+<h5>附录B不同库之间的数据传输</h5>
+数据导入导出的方式简直是太多了，也不差再多这一种，或许会有意想不到的好处呢，如下：
+<pre>psql \
+    -X \
+    -U user \
+    -h oldhost \
+    -c "\\copy users to stdout" \
+    olddb \
+| \
+psql \
+    -X \
+    -U user \
+    -h $DBHOST \
+    -c "\\copy users from stdin" \
+    newdb \</pre>
+如何？如果旧表和新表的列数不一样呢？（这也是超过pg_dump的地方）
+<ul>
+	<li>first_name</li>
+	<li>middle_name</li>
+	<li>last_name</li>
+</ul>
+新表如下：
+<ul>
+	<li>first_name</li>
+	<li>last_name</li>
+</ul>
+依然，我们可以使用如下的方式来实现：
+<pre>psql \
+    -X \
+    -U user \
+    -h oldhost \
+    -c "\\copy (select first_name, last_name from users) to stdout" \
+    olddb \
+| \
+psql \
+    -X \
+    -U user \
+    -h $DBHOST \
+    -c "\\copy users from stdin" \
+    newdb \</pre></p>
+</div>
+  
+  
+
+
+    </article>
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/pgsql-aduit-method-of-trigger/">使用触发器来实现postgresql数据库的审计功能</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2013-03-13T00:00:00+08:00" pubdate data-updated="true">Mar 13<span>th</span>, 2013</time>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p>最简单的一种审计方式，使用触发器来实现：</p>
+
+<p>1. 基本表
+<pre>
+CREATE TABLE emp (
+    empname           text NOT NULL,
+    salary            integer
+);
+</pre>
+2. 建立审计表，主要记录操作，时间，操作用户等信息
+<pre>
+CREATE TABLE emp_audit( 
+    operation         char(1)   NOT NULL,
+    stamp             timestamp NOT NULL,
+    userid            text      NOT NULL,
+    empname           text      NOT NULL,
+    salary            integer
+);
+</pre>
+3. 具体操作的函数（注意：postgresql不支持存储过程）
+<pre>
+CREATE OR REPLACE FUNCTION process_emp_audit() RETURNS TRIGGER AS $emp_audit$
+    BEGIN
+        --
+        -- Create a row in emp_audit to reflect the operation performed on emp,
+        -- make use of the special variable TG_OP to work out the operation.
+        --
+        IF (TG_OP = 'DELETE') THEN
+            INSERT INTO emp_audit SELECT 'D', now(), user, OLD.*;
+            RETURN OLD;
+        ELSIF (TG_OP = 'UPDATE') THEN
+            INSERT INTO emp_audit SELECT 'U', now(), user, NEW.*;
+            RETURN NEW;
+        ELSIF (TG_OP = 'INSERT') THEN
+            INSERT INTO emp_audit SELECT 'I', now(), user, NEW.*;
+            RETURN NEW;
+        END IF;
+        RETURN NULL; -- result is ignored since this is an AFTER trigger
+    END;
+$emp_audit$ LANGUAGE plpostgresql;
+</pre>
+4. 建立触发器
+<pre>
+CREATE TRIGGER emp_audit
+AFTER INSERT OR UPDATE OR DELETE ON emp
+    FOR EACH ROW EXECUTE PROCEDURE process_emp_audit();
+</pre>
+这样，每次对emp进行操作(INSERT,UPDATE,DELETE)的时候，就会进行记录了。<br />
+缺点：<br />
+1.对于oltp的系统，由于表中数据的更改很频繁，审计记录将会很多，需要定时的清除审计信息<br />
+2.对于表结构修改的操作(DML语句)，该方式无法记录<br />
+3.对于表数据不幸删除或者其他误操作的恢复时，可能需要一个友好的恢复方案。</p>
+
+<p>to be continued ..</p>
+</div>
+  
+  
+
+
+    </article>
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/sorry-too-many-clients/">Sorry, Too Many Clients</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2013-03-12T00:00:00+08:00" pubdate data-updated="true">Mar 12<span>th</span>, 2013</time>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p>postgresql在使用的过程中，有时会出现&#8221;Sorry, too many clients&#8221;的报错信息，无法链接数据库</p>
+
+<p>下面是官方的解释：</p>
+
+<p>You have reached the default limit of 100 database sessions. You need to increase the server&#8217;s limit on how many concurrent backend processes it can start by changing the max_connections value in postgresql.conf and restarting the server.</p>
+
+<p>用户程序的链接数已经达到了默认的100个，新的链接无法创建，此时，需要修改max_connections的系统参数，重启数据库就可以生效了。</p>
+</div>
+  
+  
+
+
+    </article>
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/some-max-result-of-pgsql/">Postgresql数据库的极限（max）</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2013-03-12T00:00:00+08:00" pubdate data-updated="true">Mar 12<span>th</span>, 2013</time>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p>下面是来自postgresql官方关于postgresql的一些极限值的解释：</p>
+
+<p>单库最大容量：Maximum size for a database? unlimited (32 TB databases exist)<br />
+单表最大容量：Maximum size for a table? 32 TB<br />
+单行最大容量：Maximum size for a row? 400 GB<br />
+单字段最大容量：Maximum size for a field? 1 GB<br />
+单表最大记录数：Maximum number of rows in a table? unlimited<br />
+单表最大字段数：Maximum number of columns in a table? 250-1600 depending on column types<br />
+单表最大索引数：Maximum number of indexes on a table? unlimited</p>
+
+<p>以上只是默认情况下的最大值，通过修改 block_size 至32k，单表容量、单行最大容量、单表最大字段数都可以进一步提升</p>
+
+<p>此外，通过分区表的使用，postgresql中单表的容量也会出现质的改变</p>
+</div>
+  
+  
+
+
+    </article>
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/pgsql-password-come-back/">Postgresql忘记密码处理办法</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2013-03-12T00:00:00+08:00" pubdate data-updated="true">Mar 12<span>th</span>, 2013</time>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p>忘记数据库密码是很常见的事情，下面收集了一写postgresql忘记密码的处理方式，如下：
+<p itemprop="name">1. unix like 系统</p></p>
+
+<p><ul>
+	<li>edit pg_hba.conf to allow <i>trust</i> authorization temporarily</li>
+	<li>Reload the config file (pg_ctl reload)</li>
+	<li>Connect and issue ALTER ROLE / PASSWORD to set the new password</li>
+	<li>edit pg_hba.conf again and restore the previous settings</li>
+	<li>Reload the config file again</li>
+</ul>
+<p itemprop="name">此类系统忘记密码时，比较好办，只要可以登录数据库安装的机器</p>
+即可。<br />
+1.1修改 pg_hba.conf 文件，将第一行改为 trust
+<pre>local  all         all         127.0.0.1/32          md5</pre>
+<p itemprop="name">改为</p></p>
+
+<p><pre>local  all         all         127.0.0.1/32          trust</pre>
+<p itemprop="name">1.2修改密码</p></p>
+
+<p><pre>psql -d template1 -U postgres -c "alter role postgres password ‘passwd’;"</pre>
+<p itemprop="name">1.3将pg_hba.conf的内容改回来即可</p></p>
+
+<p><h3 itemprop="name"></h3>
+<p itemprop="name">2. windows系统，下面是一篇博客，详细说明了windows上忘记密码的处理方式</p>
+<p itemprop="name" style="padding-left: 30px;">原文：<a href="http://pgsnake.blogspot.com/2010/07/postgresql-passwords-and-installers.html">http://pgsnake.blogspot.com/2010/07/postgresql-passwords-and-installers.html</a></p></p>
+
+<p><h3 itemprop="name">Postgres, Passwords and Installers</h3>
+<div></div>
+<div dir="ltr" /></p>
+
+<p>By far the most common issues we see reported with the &#8220;one-click&#8221; <a href="http://www.proxyee.com/sohu.php?u=63cqCLHi7IeqzW8qCpRvd9xiRI0mSUg49cHGTOpQe1lF8IHUwaiTTo0cROOeSw%3D%3D&amp;b=3">PostgreSQL installers</a> that we build here at <a href="http://www.proxyee.com/sohu.php?u=63cqCLHi7IeqzW8qCpRvd9xiRI0mSUg4&amp;b=3">EnterpriseDB</a> are password related. In this post I&#8217;ll explain what the passwords are, why we need them, and how to reset them.</p>
+
+<p>Superuser Password</p>
+
+<p>The Superuser Password is used by Postgres to secure the built-in &#8220;postgres&#8221; superuser account in the database itself. This is the only account found in a fresh installation. The password is setup during the initial installation of the database server, and may be changed at any point in the future using <a href="http://www.proxyee.com/sohu.php?u=63cqCLHi7JKj2G41E4goa8thCQ%3D%3D&amp;b=3">pgAdmin</a>, or by issuing an SQL query such as:</p>
+
+<p>ALTER USER postgres WITH PASSWORD &#8216;VeryVerySecret&#8217;;</p>
+
+<p>The superuser password is not required to upgrade Postgres to a newer version, however it will be required if you install certain StackBuilder modules, such as PostGIS or any of the PHP applications that are available. The password is required for these installers because they connect to the database server and create databases and other objects required to run the software.</p>
+
+<p>Service Password</p>
+
+<p>The service password is the one that tends to confuse people. Postgres runs under a special operating system user account for security reasons. This account is created on your machine when the installer runs, and unless overridden on the command line, it will be called &#8220;postgres&#8221;. On Unix-like operating systems such as Linux and Mac OS X, the account is setup without a password and users generally never need to worry about it again.</p>
+
+<p>On Windows however, things are slightly different. In a normal installation of Postgres we&#8217;ll setup the service account on Windows to use the same password that we use for the superuser account (expert users can override this behaviour using command line options for the installer). We need to do this because Windows requires that service accounts have secured passwords.</p>
+
+<p><b>Note</b>: If you change the superuser password in the future, that does not change the service password as well.</p>
+
+<p>When you upgrade Postgres on Windows, in order to re-install the service we need to know the service password which is why the installer will require that it be re-entered correctly.</p>
+
+<p>If you have forgotten the password, you can reset it on the command line (there are GUI tools that can be used as well, but they are not available on all versions of Windows). Start a command prompt, and then enter a command like:</p>
+
+<p>net user postgres *</p>
+
+<p><i><b>Update from Craig Ringer (19/11/2012):</b> Note that this command must be run in a command prompt with Administrative rights. Remember, under UAC, even if you have local admin access you have to explicitly run programs with admin rights. Shift-right-click on &#8220;Command Prompt&#8221; in the Start menu and choose &#8220;Run as administrator&#8221; from the context menu.</i></p>
+
+<p>You will be prompted to enter and confirm a new password for the user. If you do this, you must then also update the password in the service configuration for any Postgres or related services (such as pgAgent or pgBouncer) that may use the account, or expect them to fail to start at the next reboot. You can do this using the <i>Services</i> management console which can be found in the <i>Administrative Tools</i> folder. Just right-click each service, select <i>Properties</i>, and enter the new password and click <i>OK.</i></p>
+
+<p>We get a lot of people asking us to reset their service password, as they mistakenly think it&#8217;s related to either their Postgres Community Login, or their account on the EnterpriseDB website. It&#8217;s not - and we cannot change it for you!</p>
+
+<p>Uninstallation</p>
+
+<p>If you uninstall Postgres, the service account will not be removed from the operating system. This is because each individual uninstaller has no way of knowing if you are using the service account with other packages or installations. This isn&#8217;t a huge problem unless you come to reinstall Postgres at a later time and realise you&#8217;ve completely forgotten what the password was set to - in which case you can reset it as shown above. If you prefer to remove the account, you can use a command like:</p>
+
+<p>net user postgres /delete</p>
+
+<p><i><b>Update from Craig Ringer (19/11/2012):</b> Note that this command must be run in a command prompt with Administrative rights. Remember, under UAC, even if you have local admin access you have to explicitly run programs with admin rights. Shift-right-click on &#8220;Command Prompt&#8221; in the Start menu and choose &#8220;Run as administrator&#8221; from the context menu.</i>
+<i>
+</i> Summary</p>
+
+<p>So to recap, we have Superuser passwords which are used to secure the database server&#8217;s superuser account, and on Windows a service password to secure the operating system service account used by Postgres. Accounts use the same username (postgres) and the same password in a normal installation, but either password can be changed independently of the other post-installation. Both passwords are specific to your own machine, and can be changed (or the service account deleted) as shown.</p>
+
+<p>For a walkthrough of the installation process, please see <a href="http://www.proxyee.com/sohu.php?u=63cqCLHi7IeqzW8qCpRvd9xiRI0mSUg46dbIWvFaYU1F8IHZwKyJfYUISamfChAC&amp;b=3">this guide</a>.</p>
+
+<p>If you need any further assistance having read this post, please use the <a href="http://www.proxyee.com/sohu.php?u=63cqCLHi7JKryn4%2FCIN1ddUoSdEiCUZ46N7cRvZHdgUG6ZXE3fA%3D&amp;b=3">postgresql-general@postgresql.org mailing list</a>, or the <a href="http://www.proxyee.com/sohu.php?u=63cqGannt4%2B3l282DoN0dMtvVcYhRAt06t6GTvBBekcZr5XYwajSG8wNQaqf&amp;b=3">EnterpriseDB Forums</a>.</p>
+
+<p></p>
+</div>
+  
+  
+
+
+    </article>
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/pgsql-log-system/">Postgresql的log系统</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2013-03-12T00:00:00+08:00" pubdate data-updated="true">Mar 12<span>th</span>, 2013</time>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p>下面是来自postgresql官方的文档，详细描述了和日志相关的一些参数，在调试的时候非常有用。</p>
+
+<p>原文地址：<a href="http://www.postgresql.org/docs/current/interactive/runtime-config-logging.html">http://www.postgresql.org/docs/current/interactive/runtime-config-logging.html</a>
+<div>
+<h1><a id="RUNTIME-CONFIG-LOGGING" name="RUNTIME-CONFIG-LOGGING"></a>Error Reporting and Logging</h1>
+<div>
+<h2><a id="RUNTIME-CONFIG-LOGGING-WHERE" name="RUNTIME-CONFIG-LOGGING-WHERE"></a>18.8.1. Where To Log</h2>
+<div><dl><dt><a id="GUC-LOG-DESTINATION" name="GUC-LOG-DESTINATION"></a><tt>log_destination</tt> (<tt>string</tt>)</dt><dd>PostgreSQL supports several methods for logging server messages, including stderr, csvlog and syslog. On Windows, eventlog is also supported. Set this parameter to a list of desired log destinations separated by commas. The default is to log to stderr only. This parameter can only be set in the <tt>postgresql.conf</tt> file or on the server command line.</dd></dl></div></div></div></p>
+
+<p>If csvlog is included in <tt>log_destination</tt>, log entries are output in &#8220;comma separated value&#8221; (<acronym>CSV</acronym>) format, which is convenient for loading logs into programs. See <a href="http://www.postgresql.org/docs/current/interactive/runtime-config-logging.html#RUNTIME-CONFIG-LOGGING-CSVLOG"> Section 18.8.4</a> for details. <a href="http://www.postgresql.org/docs/current/interactive/runtime-config-logging.html#GUC-LOGGING-COLLECTOR">logging_collector</a> must be enabled to generate CSV-format log output.
+<div>
+<blockquote><b>Note:</b> On most Unix systems, you will need to alter the configuration of your system&#8217;s syslog daemon in order to make use of the syslog option for <tt>log_destination</tt>. PostgreSQL can log to syslog facilities <tt>LOCAL0</tt> through <tt>LOCAL7</tt> (see <a href="http://www.postgresql.org/docs/current/interactive/runtime-config-logging.html#GUC-SYSLOG-FACILITY">syslog_facility</a>), but the default syslog configuration on most platforms will discard all such messages. You will need to add something like:
+<pre>local0.*    /var/log/postgresql</pre>
+to the syslog daemon&#8217;s configuration file to make it work.</blockquote></div></p>
+
+<p>On Windows, when you use the <tt>eventlog</tt> option for <tt>log_destination</tt>, you should register an event source and its library with the operating system so that the Windows Event Viewer can display event log messages cleanly. See <a href="http://www.postgresql.org/docs/current/interactive/event-log-registration.html">Section 17.11</a> for details.
+
+<dt><a id="GUC-LOGGING-COLLECTOR" name="GUC-LOGGING-COLLECTOR"></a><tt>logging_collector</tt> (<tt>boolean</tt>)</dt><dd>This parameter enables the <i>logging collector</i>, which is a background process that captures log messages sent to stderr and redirects them into log files. This approach is often more useful than logging to syslog, since some types of messages might not appear in syslog output. (One common example is dynamic-linker failure messages; another is error messages produced by scripts such as <tt>archive_command</tt>.) This parameter can only be set at server start.
+<div>
+<blockquote><b>Note:</b> It is possible to log to stderr without using the logging collector; the log messages will just go to wherever the server&#8217;s stderr is directed. However, that method is only suitable for low log volumes, since it provides no convenient way to rotate log files. Also, on some platforms not using the logging collector can result in lost or garbled log output, because multiple processes writing concurrently to the same log file can overwrite each other&#8217;s output.</blockquote>
+</div>
+<div>
+<blockquote><b>Note:</b> The logging collector is designed to never lose messages. This means that in case of extremely high load, server processes could be blocked while trying to send additional log messages when the collector has fallen behind. In contrast, syslog prefers to drop messages if it cannot write them, which means it may fail to log some messages in such cases but it will not block the rest of the system.</blockquote>
+</div>
+</dd><dt><a id="GUC-LOG-DIRECTORY" name="GUC-LOG-DIRECTORY"></a><tt>log_directory</tt> (<tt>string</tt>)</dt><dd>When <tt>logging_collector</tt> is enabled, this parameter determines the directory in which log files will be created. It can be specified as an absolute path, or relative to the cluster data directory. This parameter can only be set in the <tt>postgresql.conf</tt> file or on the server command line.</dd></p>
+
+<p><dt><a id="GUC-LOG-FILENAME" name="GUC-LOG-FILENAME"></a><tt>log_filename</tt> (<tt>string</tt>)</dt><dd>When <tt>logging_collector</tt> is enabled, this parameter sets the file names of the created log files. The value is treated as a strftime pattern, so <tt>%</tt>-escapes can be used to specify time-varying file names. (Note that if there are any time-zone-dependent <tt>%</tt>-escapes, the computation is done in the zone specified by <a href="http://www.postgresql.org/docs/current/interactive/runtime-config-logging.html#GUC-LOG-TIMEZONE">log_timezone</a>.) The supported <tt>%</tt>-escapes are similar to those listed in the Open Group&#8217;s <a href="http://pubs.opengroup.org/onlinepubs/009695399/functions/strftime.html" target="_top">strftime</a> specification. Note that the system&#8217;s strftime is not used directly, so platform-specific (nonstandard) extensions do not work.</dd></p>
+
+<p>If you specify a file name without escapes, you should plan to use a log rotation utility to avoid eventually filling the entire disk. In releases prior to 8.4, if no <tt>%</tt> escapes were present, PostgreSQL would append the epoch of the new log file&#8217;s creation time, but this is no longer the case.</p>
+
+<p>If CSV-format output is enabled in <tt>log_destination</tt>, <tt>.csv</tt> will be appended to the timestamped log file name to create the file name for CSV-format output. (If <tt>log_filename</tt> ends in <tt>.log</tt>, the suffix is replaced instead.) In the case of the example above, the CSV file name will be <tt>server_log.1093827753.csv</tt>.</p>
+
+<p>This parameter can only be set in the <tt>postgresql.conf</tt> file or on the server command line.</p>
+
+<p><dt><a id="GUC-LOG-FILE-MODE" name="GUC-LOG-FILE-MODE"></a><tt>log_file_mode</tt> (<tt>integer</tt>)</dt><dd>On Unix systems this parameter sets the permissions for log files when <tt>logging_collector</tt> is enabled. (On Microsoft Windows this parameter is ignored.) The parameter value is expected to be a numeric mode specified in the format accepted by the <code>chmod</code> and <code>umask</code> system calls. (To use the customary octal format the number must start with a <tt>0</tt> (zero).)</dd></p>
+
+<p>The default permissions are <tt>0600</tt>, meaning only the server owner can read or write the log files. The other commonly useful setting is <tt>0640</tt>, allowing members of the owner&#8217;s group to read the files. Note however that to make use of such a setting, you&#8217;ll need to alter <a href="http://www.postgresql.org/docs/current/interactive/runtime-config-logging.html#GUC-LOG-DIRECTORY">log_directory</a> to store the files somewhere outside the cluster data directory. In any case, it&#8217;s unwise to make the log files world-readable, since they might contain sensitive data.</p>
+
+<p>This parameter can only be set in the <tt>postgresql.conf</tt> file or on the server command line.</p>
+
+<p><dt><a id="GUC-LOG-ROTATION-AGE" name="GUC-LOG-ROTATION-AGE"></a><tt>log_rotation_age</tt> (<tt>integer</tt>)</dt><dd>When <tt>logging_collector</tt> is enabled, this parameter determines the maximum lifetime of an individual log file. After this many minutes have elapsed, a new log file will be created. Set to zero to disable time-based creation of new log files. This parameter can only be set in the <tt>postgresql.conf</tt> file or on the server command line.</dd></p>
+
+<p><dt><a id="GUC-LOG-ROTATION-SIZE" name="GUC-LOG-ROTATION-SIZE"></a><tt>log_rotation_size</tt> (<tt>integer</tt>)</dt><dd>When <tt>logging_collector</tt> is enabled, this parameter determines the maximum size of an individual log file. After this many kilobytes have been emitted into a log file, a new log file will be created. Set to zero to disable size-based creation of new log files. This parameter can only be set in the <tt>postgresql.conf</tt> file or on the server command line.</dd></p>
+
+<p><dt><a id="GUC-LOG-TRUNCATE-ON-ROTATION" name="GUC-LOG-TRUNCATE-ON-ROTATION"></a><tt>log_truncate_on_rotation</tt> (<tt>boolean</tt>)</dt><dd>When <tt>logging_collector</tt> is enabled, this parameter will cause PostgreSQL to truncate (overwrite), rather than append to, any existing log file of the same name. However, truncation will occur only when a new file is being opened due to time-based rotation, not during server startup or size-based rotation. When off, pre-existing files will be appended to in all cases. For example, using this setting in combination with a <tt>log_filename</tt> like <tt>postgresql-%H.log</tt> would result in generating twenty-four hourly log files and then cyclically overwriting them. This parameter can only be set in the <tt>postgresql.conf</tt> file or on the server command line.</dd></p>
+
+<p>Example: To keep 7 days of logs, one log file per day named <tt>server_log.Mon</tt>, <tt>server_log.Tue</tt>, etc, and automatically overwrite last week&#8217;s log with this week&#8217;s log, set <tt>log_filename</tt> to <tt>server_log.%a</tt>, <tt>log_truncate_on_rotation</tt> to <tt>on</tt>, and <tt>log_rotation_age</tt> to <tt>1440</tt>.</p>
+
+<p>Example: To keep 24 hours of logs, one log file per hour, but also rotate sooner if the log file size exceeds 1GB, set <tt>log_filename</tt> to <tt>server_log.%H%M</tt>, <tt>log_truncate_on_rotation</tt> to <tt>on</tt>, <tt>log_rotation_age</tt> to <tt>60</tt>, and <tt>log_rotation_size</tt> to <tt>1000000</tt>. Including <tt>%M</tt> in <tt>log_filename</tt> allows any size-driven rotations that might occur to select a file name different from the hour&#8217;s initial file name.</p>
+
+<p><dt><a id="GUC-SYSLOG-FACILITY" name="GUC-SYSLOG-FACILITY"></a><tt>syslog_facility</tt> (<tt>enum</tt>)</dt><dd>When logging to syslog is enabled, this parameter determines the syslog &#8220;facility&#8221; to be used. You can choose from <tt>LOCAL0</tt>, <tt>LOCAL1</tt>, <tt>LOCAL2</tt>, <tt>LOCAL3</tt>, <tt>LOCAL4</tt>, <tt>LOCAL5</tt>, <tt>LOCAL6</tt>, <tt>LOCAL7</tt>; the default is <tt>LOCAL0</tt>. See also the documentation of your system&#8217;s syslog daemon. This parameter can only be set in the <tt>postgresql.conf</tt> file or on the server command line.</dd></p>
+
+<p><dt><a id="GUC-SYSLOG-IDENT" name="GUC-SYSLOG-IDENT"></a><tt>syslog_ident</tt> (<tt>string</tt>)</dt><dd>When logging to syslog is enabled, this parameter determines the program name used to identify PostgreSQL messages in syslog logs. The default is <tt>postgres</tt>. This parameter can only be set in the <tt>postgresql.conf</tt> file or on the server command line.</dd></p>
+
+<p><dt><a id="GUC-EVENT-SOURCE" name="GUC-EVENT-SOURCE"></a><tt>event_source</tt> (<tt>string</tt>)</dt><dd>When logging to event log is enabled, this parameter determines the program name used to identify PostgreSQL messages in the log. The default is <tt>PostgreSQL</tt>. This parameter can only be set in the <tt>postgresql.conf</tt> file or on the server command line.</dd></p>
+
+<p>
+
+<div>
+<h2><a id="RUNTIME-CONFIG-LOGGING-WHEN" name="RUNTIME-CONFIG-LOGGING-WHEN"></a>18.8.2. When To Log</h2>
+<div><dl><dt><a id="GUC-CLIENT-MIN-MESSAGES" name="GUC-CLIENT-MIN-MESSAGES"></a><tt>client_min_messages</tt> (<tt>enum</tt>)</dt><dd>Controls which message levels are sent to the client. Valid values are <tt>DEBUG5</tt>, <tt>DEBUG4</tt>, <tt>DEBUG3</tt>, <tt>DEBUG2</tt>, <tt>DEBUG1</tt>, <tt>LOG</tt>, <tt>NOTICE</tt>, <tt>WARNING</tt>, <tt>ERROR</tt>, <tt>FATAL</tt>, and <tt>PANIC</tt>. Each level includes all the levels that follow it. The later the level, the fewer messages are sent. The default is <tt>NOTICE</tt>. Note that <tt>LOG</tt> has a different rank here than in <tt>log_min_messages</tt>.</dd></dl></div></div></p>
+
+<p><dt><a id="GUC-LOG-MIN-MESSAGES" name="GUC-LOG-MIN-MESSAGES"></a><tt>log_min_messages</tt> (<tt>enum</tt>)</dt><dd>Controls which message levels are written to the server log. Valid values are <tt>DEBUG5</tt>, <tt>DEBUG4</tt>, <tt>DEBUG3</tt>, <tt>DEBUG2</tt>, <tt>DEBUG1</tt>, <tt>INFO</tt>, <tt>NOTICE</tt>, <tt>WARNING</tt>, <tt>ERROR</tt>, <tt>LOG</tt>, <tt>FATAL</tt>, and <tt>PANIC</tt>. Each level includes all the levels that follow it. The later the level, the fewer messages are sent to the log. The default is <tt>WARNING</tt>. Note that <tt>LOG</tt> has a different rank here than in <tt>client_min_messages</tt>. Only superusers can change this setting.</dd></p>
+
+<p><dt><a id="GUC-LOG-MIN-ERROR-STATEMENT" name="GUC-LOG-MIN-ERROR-STATEMENT"></a><tt>log_min_error_statement</tt> (<tt>enum</tt>)</dt><dd>Controls which SQL statements that cause an error condition are recorded in the server log. The current SQL statement is included in the log entry for any message of the specified severity or higher. Valid values are <tt>DEBUG5</tt>, <tt>DEBUG4</tt>, <tt>DEBUG3</tt>, <tt>DEBUG2</tt>, <tt>DEBUG1</tt>, <tt>INFO</tt>, <tt>NOTICE</tt>, <tt>WARNING</tt>, <tt>ERROR</tt>, <tt>LOG</tt>, <tt>FATAL</tt>, and <tt>PANIC</tt>. The default is <tt>ERROR</tt>, which means statements causing errors, log messages, fatal errors, or panics will be logged. To effectively turn off logging of failing statements, set this parameter to <tt>PANIC</tt>. Only superusers can change this setting.</dd></p>
+
+<p><dt><a id="GUC-LOG-MIN-DURATION-STATEMENT" name="GUC-LOG-MIN-DURATION-STATEMENT"></a><tt>log_min_duration_statement</tt> (<tt>integer</tt>)</dt><dd>Causes the duration of each completed statement to be logged if the statement ran for at least the specified number of milliseconds. Setting this to zero prints all statement durations. Minus-one (the default) disables logging statement durations. For example, if you set it to <tt>250ms</tt> then all SQL statements that run 250ms or longer will be logged. Enabling this parameter can be helpful in tracking down unoptimized queries in your applications. Only superusers can change this setting.</dd></p>
+
+<p>For clients using extended query protocol, durations of the Parse, Bind, and Execute steps are logged independently.
+<div>
+<blockquote><b>Note:</b> When using this option together with <a href="http://www.postgresql.org/docs/current/interactive/runtime-config-logging.html#GUC-LOG-STATEMENT">log_statement</a>, the text of statements that are logged because of <tt>log_statement</tt> will not be repeated in the duration log message. If you are not using syslog, it is recommended that you log the PID or session ID using <a href="http://www.postgresql.org/docs/current/interactive/runtime-config-logging.html#GUC-LOG-LINE-PREFIX">log_line_prefix</a> so that you can link the statement message to the later duration message using the process ID or session ID.</blockquote>
+</div>
+
+<a href="http://www.postgresql.org/docs/current/interactive/runtime-config-logging.html#RUNTIME-CONFIG-SEVERITY-LEVELS">Table 18-1</a> explains the message severity levels used by PostgreSQL. If logging output is sent to syslog or Windows&#8217; eventlog, the severity levels are translated as shown in the table.
+<div><a id="RUNTIME-CONFIG-SEVERITY-LEVELS" name="RUNTIME-CONFIG-SEVERITY-LEVELS"></a>Table 18-1. Message Severity Levels
+<table border="1"><colgroup><col /> <col /> <col /> <col /> </colgroup>
+<thead>
+<tr>
+<th>Severity</th>
+<th>Usage</th>
+<th>syslog</th>
+<th>eventlog</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><tt>DEBUG1..DEBUG5</tt></td>
+<td>Provides successively-more-detailed information for use by developers.</td>
+<td><tt>DEBUG</tt></td>
+<td><tt>INFORMATION</tt></td>
+</tr>
+<tr>
+<td><tt>INFO</tt></td>
+<td>Provides information implicitly requested by the user, e.g., output from <tt>VACUUM VERBOSE</tt>.</td>
+<td><tt>INFO</tt></td>
+<td><tt>INFORMATION</tt></td>
+</tr>
+<tr>
+<td><tt>NOTICE</tt></td>
+<td>Provides information that might be helpful to users, e.g., notice of truncation of long identifiers.</td>
+<td><tt>NOTICE</tt></td>
+<td><tt>INFORMATION</tt></td>
+</tr>
+<tr>
+<td><tt>WARNING</tt></td>
+<td>Provides warnings of likely problems, e.g., <tt>COMMIT</tt> outside a transaction block.</td>
+<td><tt>NOTICE</tt></td>
+<td><tt>WARNING</tt></td>
+</tr>
+<tr>
+<td><tt>ERROR</tt></td>
+<td>Reports an error that caused the current command to abort.</td>
+<td><tt>WARNING</tt></td>
+<td><tt>ERROR</tt></td>
+</tr>
+<tr>
+<td><tt>LOG</tt></td>
+<td>Reports information of interest to administrators, e.g., checkpoint activity.</td>
+<td><tt>INFO</tt></td>
+<td><tt>INFORMATION</tt></td>
+</tr>
+<tr>
+<td><tt>FATAL</tt></td>
+<td>Reports an error that caused the current session to abort.</td>
+<td><tt>ERR</tt></td>
+<td><tt>ERROR</tt></td>
+</tr>
+<tr>
+<td><tt>PANIC</tt></td>
+<td>Reports an error that caused all database sessions to abort.</td>
+<td><tt>CRIT</tt></td>
+<td><tt>ERROR</tt></td>
+</tr>
+</tbody>
+</table>
+</div>
+
+<div>
+<h2><a id="RUNTIME-CONFIG-LOGGING-WHAT" name="RUNTIME-CONFIG-LOGGING-WHAT"></a>18.8.3. What To Log</h2>
+<div><dl><dt><a id="GUC-APPLICATION-NAME" name="GUC-APPLICATION-NAME"></a><tt>application_name</tt> (<tt>string</tt>)</dt><dd>The <tt>application_name</tt> can be any string of less than <tt>NAMEDATALEN</tt> characters (64 characters in a standard build). It is typically set by an application upon connection to the server. The name will be displayed in the <tt>pg_stat_activity</tt> view and included in CSV log entries. It can also be included in regular log entries via the <a href="http://www.postgresql.org/docs/current/interactive/runtime-config-logging.html#GUC-LOG-LINE-PREFIX">log_line_prefix</a> parameter. Only printable ASCII characters may be used in the <tt>application_name</tt> value. Other characters will be replaced with question marks (<tt>?</tt>).</dd></dl></div></div></p>
+
+<p><dt><tt>debug_print_parse</tt> (<tt>boolean</tt>)
+<tt>debug_print_rewritten</tt> (<tt>boolean</tt>)
+<tt>debug_print_plan</tt> (<tt>boolean</tt>)</dt><dd>These parameters enable various debugging output to be emitted. When set, they print the resulting parse tree, the query rewriter output, or the execution plan for each executed query. These messages are emitted at <tt>LOG</tt> message level, so by default they will appear in the server log but will not be sent to the client. You can change that by adjusting <a href="http://www.postgresql.org/docs/current/interactive/runtime-config-logging.html#GUC-CLIENT-MIN-MESSAGES">client_min_messages</a> and/or <a href="http://www.postgresql.org/docs/current/interactive/runtime-config-logging.html#GUC-LOG-MIN-MESSAGES">log_min_messages</a>. These parameters are off by default.</dd></p>
+
+<p><dt><tt>debug_pretty_print</tt> (<tt>boolean</tt>)</dt><dd>When set, <tt>debug_pretty_print</tt> indents the messages produced by <tt>debug_print_parse</tt>, <tt>debug_print_rewritten</tt>, or <tt>debug_print_plan</tt>. This results in more readable but much longer output than the &#8220;compact&#8221; format used when it is off. It is on by default.</dd></p>
+
+<p><dt><a id="GUC-LOG-CHECKPOINTS" name="GUC-LOG-CHECKPOINTS"></a><tt>log_checkpoints</tt> (<tt>boolean</tt>)</dt><dd>Causes checkpoints and restartpoints to be logged in the server log. Some statistics are included in the log messages, including the number of buffers written and the time spent writing them. This parameter can only be set in the <tt>postgresql.conf</tt> file or on the server command line. The default is off.</dd></p>
+
+<p><dt><a id="GUC-LOG-CONNECTIONS" name="GUC-LOG-CONNECTIONS"></a><tt>log_connections</tt> (<tt>boolean</tt>)</dt><dd>Causes each attempted connection to the server to be logged, as well as successful completion of client authentication. This parameter cannot be changed after session start. The default is off.
+<div>
+<blockquote><b>Note:</b> Some client programs, like psql, attempt to connect twice while determining if a password is required, so duplicate &#8220;connection received&#8221; messages do not necessarily indicate a problem.</blockquote>
+</div>
+</dd><dt><a id="GUC-LOG-DISCONNECTIONS" name="GUC-LOG-DISCONNECTIONS"></a><tt>log_disconnections</tt> (<tt>boolean</tt>)</dt><dd>This outputs a line in the server log similar to <tt>log_connections</tt> but at session termination, and includes the duration of the session. This is off by default. This parameter cannot be changed after session start.</dd></p>
+
+<p><dt><a id="GUC-LOG-DURATION" name="GUC-LOG-DURATION"></a><tt>log_duration</tt> (<tt>boolean</tt>)</dt><dd>Causes the duration of every completed statement to be logged. The default is <tt>off</tt>. Only superusers can change this setting.</dd></p>
+
+<p>For clients using extended query protocol, durations of the Parse, Bind, and Execute steps are logged independently.
+<div>
+<blockquote><b>Note:</b> The difference between setting this option and setting <a href="http://www.postgresql.org/docs/current/interactive/runtime-config-logging.html#GUC-LOG-MIN-DURATION-STATEMENT"> log_min_duration_statement</a> to zero is that exceeding <tt>log_min_duration_statement</tt> forces the text of the query to be logged, but this option doesn&#8217;t. Thus, if <tt>log_duration</tt> is <tt>on</tt> and <tt>log_min_duration_statement</tt> has a positive value, all durations are logged but the query text is included only for statements exceeding the threshold. This behavior can be useful for gathering statistics in high-load installations.</blockquote>
+</div>
+<dt><a id="GUC-LOG-ERROR-VERBOSITY" name="GUC-LOG-ERROR-VERBOSITY"></a><tt>log_error_verbosity</tt> (<tt>enum</tt>)</dt><dd>Controls the amount of detail written in the server log for each message that is logged. Valid values are <tt>TERSE</tt>, <tt>DEFAULT</tt>, and <tt>VERBOSE</tt>, each adding more fields to displayed messages. <tt>TERSE</tt> excludes the logging of <tt>DETAIL</tt>, <tt>HINT</tt>, <tt>QUERY</tt>, and <tt>CONTEXT</tt> error information. <tt>VERBOSE</tt> output includes the <tt>SQLSTATE</tt> error code (see also <a href="http://www.postgresql.org/docs/current/interactive/errcodes-appendix.html">Appendix A</a>) and the source code file name, function name, and line number that generated the error. Only superusers can change this setting.</dd></p>
+
+<p><dt><a id="GUC-LOG-HOSTNAME" name="GUC-LOG-HOSTNAME"></a><tt>log_hostname</tt> (<tt>boolean</tt>)</dt><dd>By default, connection log messages only show the IP address of the connecting host. Turning this parameter on causes logging of the host name as well. Note that depending on your host name resolution setup this might impose a non-negligible performance penalty. This parameter can only be set in the <tt>postgresql.conf</tt> file or on the server command line.</dd></p>
+
+<p><dt><a id="GUC-LOG-LINE-PREFIX" name="GUC-LOG-LINE-PREFIX"></a><tt>log_line_prefix</tt> (<tt>string</tt>)</dt><dd>This is a <code>printf</code>-style string that is output at the beginning of each log line. <tt>%</tt> characters begin &#8220;escape sequences&#8221; that are replaced with status information as outlined below. Unrecognized escapes are ignored. Other characters are copied straight to the log line. Some escapes are only recognized by session processes, and are ignored by background processes such as the main server process. This parameter can only be set in the <tt>postgresql.conf</tt> file or on the server command line. The default is an empty string.
+<div><a id="AEN29253" name="AEN29253"></a>
+<table border="1"><colgroup><col /> <col /> <col /> </colgroup>
+<thead>
+<tr>
+<th>Escape</th>
+<th>Effect</th>
+<th>Session only</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><tt>%a</tt></td>
+<td>Application name</td>
+<td>yes</td>
+</tr>
+<tr>
+<td><tt>%u</tt></td>
+<td>User name</td>
+<td>yes</td>
+</tr>
+<tr>
+<td><tt>%d</tt></td>
+<td>Database name</td>
+<td>yes</td>
+</tr>
+<tr>
+<td><tt>%r</tt></td>
+<td>Remote host name or IP address, and remote port</td>
+<td>yes</td>
+</tr>
+<tr>
+<td><tt>%h</tt></td>
+<td>Remote host name or IP address</td>
+<td>yes</td>
+</tr>
+<tr>
+<td><tt>%p</tt></td>
+<td>Process ID</td>
+<td>no</td>
+</tr>
+<tr>
+<td><tt>%t</tt></td>
+<td>Time stamp without milliseconds</td>
+<td>no</td>
+</tr>
+<tr>
+<td><tt>%m</tt></td>
+<td>Time stamp with milliseconds</td>
+<td>no</td>
+</tr>
+<tr>
+<td><tt>%i</tt></td>
+<td>Command tag: type of session&#8217;s current command</td>
+<td>yes</td>
+</tr>
+<tr>
+<td><tt>%e</tt></td>
+<td>SQLSTATE error code</td>
+<td>no</td>
+</tr>
+<tr>
+<td><tt>%c</tt></td>
+<td>Session ID: see below</td>
+<td>no</td>
+</tr>
+<tr>
+<td><tt>%l</tt></td>
+<td>Number of the log line for each session or process, starting at 1</td>
+<td>no</td>
+</tr>
+<tr>
+<td><tt>%s</tt></td>
+<td>Process start time stamp</td>
+<td>no</td>
+</tr>
+<tr>
+<td><tt>%v</tt></td>
+<td>Virtual transaction ID (backendID/localXID)</td>
+<td>no</td>
+</tr>
+<tr>
+<td><tt>%x</tt></td>
+<td>Transaction ID (0 if none is assigned)</td>
+<td>no</td>
+</tr>
+<tr>
+<td><tt>%q</tt></td>
+<td>Produces no output, but tells non-session processes to stop at this point in the string; ignored by session processes</td>
+<td>no</td>
+</tr>
+<tr>
+<td><tt>%%</tt></td>
+<td>Literal <tt>%</tt></td>
+<td>no</td>
+</tr>
+</tbody>
+</table>
+</div>
+The <tt>%c</tt> escape prints a quasi-unique session identifier, consisting of two 4-byte hexadecimal numbers (without leading zeros) separated by a dot. The numbers are the process start time and the process ID, so <tt>%c</tt> can also be used as a space saving way of printing those items. For example, to generate the session identifier from <tt>pg_stat_activity</tt>, use this query:
+<pre>SELECT to_hex(EXTRACT(EPOCH FROM backend_start)::integer) || '.' ||
+       to_hex(pid)
+FROM pg_stat_activity;</pre>
+<div>
+<blockquote><b>Tip:</b> If you set a nonempty value for <tt>log_line_prefix</tt>, you should usually make its last character be a space, to provide visual separation from the rest of the log line. A punctuation character can be used too.</blockquote>
+</div>
+<div>
+<blockquote><b>Tip:</b> Syslog produces its own time stamp and process ID information, so you probably do not want to include those escapes if you are logging to syslog.</blockquote>
+</div>
+</dd><dt><a id="GUC-LOG-LOCK-WAITS" name="GUC-LOG-LOCK-WAITS"></a><tt>log_lock_waits</tt> (<tt>boolean</tt>)</dt><dd>Controls whether a log message is produced when a session waits longer than <a href="http://www.postgresql.org/docs/current/interactive/runtime-config-locks.html#GUC-DEADLOCK-TIMEOUT">deadlock_timeout</a> to acquire a lock. This is useful in determining if lock waits are causing poor performance. The default is <tt>off</tt>.</dd></p>
+
+<p><dt><a id="GUC-LOG-STATEMENT" name="GUC-LOG-STATEMENT"></a><tt>log_statement</tt> (<tt>enum</tt>)</dt><dd>Controls which SQL statements are logged. Valid values are <tt>none</tt> (off), <tt>ddl</tt>, <tt>mod</tt>, and <tt>all</tt> (all statements). <tt>ddl</tt> logs all data definition statements, such as <tt>CREATE</tt>, <tt>ALTER</tt>, and <tt>DROP</tt> statements. <tt>mod</tt> logs all <tt>ddl</tt> statements, plus data-modifying statements such as <tt>INSERT</tt>, <tt>UPDATE</tt>, <tt>DELETE</tt>, <tt>TRUNCATE</tt>, and <tt>COPY FROM</tt>. <tt>PREPARE</tt>, <tt>EXECUTE</tt>, and <tt>EXPLAIN ANALYZE</tt> statements are also logged if their contained command is of an appropriate type. For clients using extended query protocol, logging occurs when an Execute message is received, and values of the Bind parameters are included (with any embedded single-quote marks doubled).</dd></p>
+
+<p>The default is <tt>none</tt>. Only superusers can change this setting.
+<div>
+<blockquote><b>Note:</b> Statements that contain simple syntax errors are not logged even by the <tt>log_statement</tt> = <tt>all</tt> setting, because the log message is emitted only after basic parsing has been done to determine the statement type. In the case of extended query protocol, this setting likewise does not log statements that fail before the Execute phase (i.e., during parse analysis or planning). Set <tt>log_min_error_statement</tt> to <tt>ERROR</tt> (or lower) to log such statements.</blockquote>
+</div>
+<dt><a id="GUC-LOG-TEMP-FILES" name="GUC-LOG-TEMP-FILES"></a><tt>log_temp_files</tt> (<tt>integer</tt>)</dt><dd>Controls logging of temporary file names and sizes. Temporary files can be created for sorts, hashes, and temporary query results. A log entry is made for each temporary file when it is deleted. A value of zero logs all temporary file information, while positive values log only files whose size is greater than or equal to the specified number of kilobytes. The default setting is -1, which disables such logging. Only superusers can change this setting.</dd></p>
+
+<p><dt><a id="GUC-LOG-TIMEZONE" name="GUC-LOG-TIMEZONE"></a><tt>log_timezone</tt> (<tt>string</tt>)</dt><dd>Sets the time zone used for timestamps written in the server log. Unlike <a href="http://www.postgresql.org/docs/current/interactive/runtime-config-client.html#GUC-TIMEZONE">TimeZone</a>, this value is cluster-wide, so that all sessions will report timestamps consistently. The built-in default is <tt>GMT</tt>, but that is typically overridden in <tt>postgresql.conf</tt>; initdb will install a setting there corresponding to its system environment. See <a href="http://www.postgresql.org/docs/current/interactive/datatype-datetime.html#DATATYPE-TIMEZONES">Section 8.5.3</a> for more information. This parameter can only be set in the <tt>postgresql.conf</tt> file or on the server command line.</dd></p>
+
+<p>
+
+<div>
+<h2><a id="RUNTIME-CONFIG-LOGGING-CSVLOG" name="RUNTIME-CONFIG-LOGGING-CSVLOG"></a>18.8.4. Using CSV-Format Log Output</h2>
+Including <tt>csvlog</tt> in the <tt>log_destination</tt> list provides a convenient way to import log files into a database table. This option emits log lines in comma-separated-values (<acronym>CSV</acronym>) format, with these columns: time stamp with milliseconds, user name, database name, process ID, client host:port number, session ID, per-session line number, command tag, session start time, virtual transaction ID, regular transaction ID, error severity, SQLSTATE code, error message, error message detail, hint, internal query that led to the error (if any), character count of the error position therein, error context, user query that led to the error (if any and enabled by <tt>log_min_error_statement</tt>), character count of the error position therein, location of the error in the PostgreSQL source code (if <tt>log_error_verbosity</tt> is set to <tt>verbose</tt>), and application name. Here is a sample table definition for storing CSV-format log output:
+<pre>CREATE TABLE postgres_log
+(
+  log_time timestamp(3) with time zone,
+  user_name text,
+  database_name text,
+  process_id integer,
+  connection_from text,
+  session_id text,
+  session_line_num bigint,
+  command_tag text,
+  session_start_time timestamp with time zone,
+  virtual_transaction_id text,
+  transaction_id bigint,
+  error_severity text,
+  sql_state_code text,
+  message text,
+  detail text,
+  hint text,
+  internal_query text,
+  internal_query_pos integer,
+  context text,
+  query text,
+  query_pos integer,
+  location text,
+  application_name text,
+  PRIMARY KEY (session_id, session_line_num)
+);</pre>
+To import a log file into this table, use the <tt>COPY FROM</tt> command:
+<pre>COPY postgres_log FROM '/full/path/to/logfile.csv' WITH csv;</pre>
+There are a few things you need to do to simplify importing CSV log files:
+<ol type="1">
+	<li>Set <tt>log_filename</tt> and <tt>log_rotation_age</tt> to provide a consistent, predictable naming scheme for your log files. This lets you predict what the file name will be and know when an individual log file is complete and therefore ready to be imported.</li>
+	<li>Set <tt>log_rotation_size</tt> to 0 to disable size-based log rotation, as it makes the log file name difficult to predict.</li>
+	<li>Set <tt>log_truncate_on_rotation</tt> to <tt>on</tt> so that old log data isn&#8217;t mixed with the new in the same file.</li>
+	<li>The table definition above includes a primary key specification. This is useful to protect against accidentally importing the same information twice. The <tt>COPY</tt> command commits all of the data it imports at one time, so any error will cause the entire import to fail. If you import a partial log file and later import the file again when it is complete, the primary key violation will cause the import to fail. Wait until the log is complete and closed before importing. This procedure will also protect against accidentally importing a partial line that hasn&#8217;t been completely written, which would also cause <tt>COPY</tt> to fail.</li>
+</ol>
+</div>
+</p>
+</div>
+  
+  
+
+
+    </article>
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/pgsql-auto-increment-column/">Postgresql表中的自增列创建方式</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2013-03-12T00:00:00+08:00" pubdate data-updated="true">Mar 12<span>th</span>, 2013</time>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p>受mysql使用习惯的影响，在使用postgresql的时候，可能非常希望有一个AUTO_INCREMENT字段。。</p>
+
+<p>postgresql官方给出了下面的解决方式：
+<pre>CREATE TABLE person (
+    id SERIAL,
+    name TEXT
+);</pre>
+在内部，其实是这样做的:
+<pre>CREATE SEQUENCE person_id_seq;
+CREATE TABLE person (
+    id INTEGER NOT NULL DEFAULT nextval('person_id_seq'),
+    name TEXT
+);</pre>
+自动创建了一个序列，命名位 <span style="color: #0000ff;">表明_字段名_seq, <span style="color: #000000;">然后将需要子增列的值和这个序列关联起来</span></span></p>
+
+<p>除此之外，对于某些可能记录数很大的表，postgresql提供了BIGSERIAL类型，序列的值由int变成了bigint。</p>
+
+<p>注意：由于序列可能被其他的操作使用，所以，含有子增字段的表中的自增值可能会出现（hole）,即自增的内容可能是不连续的；这确实比较悲剧，不过话说回来，既然选择自增列，无非是想有一个唯一的值，而对于值的内容可能就不怎么关心了</p>
+
+<p>&nbsp;</p>
+</div>
+  
+  
+
+
+    </article>
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/about-the-cluster-of-pgsql/">关于postgresql的集群</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2013-03-12T00:00:00+08:00" pubdate data-updated="true">Mar 12<span>th</span>, 2013</time>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p>两个链接，先记下</p>
+
+<p><a href="http://www.postgresql.org/docs/current/static/high-availability.html">http://www.postgresql.org/docs/current/static/high-availability.html</a></p>
+
+<p><a href="http://wiki.postgresql.org/wiki/Replication,_Clustering,_and_Connection_Pooling">http://wiki.postgresql.org/wiki/Replication,_Clustering,_and_Connection_Pooling</a></p>
+</div>
+  
+  
+
+
+    </article>
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/upstart/">Chapter 1. 元信息</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2013-03-08T00:00:00+08:00" pubdate data-updated="true">Mar 8<span>th</span>, 2013</time>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p><h3>1.1 文档版本</h3>
+<p style="padding-left: 30px;">这是本次文档的第175次修订</p>
+<p style="padding-left: 30px;">详细信息请看最下边的footer</p></p>
+
+<p><h3>1.2 作者</h3>
+<ul style="padding-left: 30px;">
+	<li>James Hunt &lt;<a href="mailto:james.hunt%40canonical.com">james.hunt@canonical.com</a>&gt;</li>
+	<li>Clint Byrum &lt;<a href="mailto:clint.byrum%40canonical.com">clint.byrum@canonical.com</a>&gt;</li>
+</ul>
+<h3>1.3 致谢</h3>
+<p style="padding-left: 30px;">作者非常感谢下面这些对本文档做出突出贡献的个人，他们是：</p></p>
+
+<p><ul style="padding-left: 60px;">
+	<li>Colin Watson (Canonical)</li>
+	<li>Scott James Remnant (Canonical, Google), author of <a href="http://upstart.ubuntu.com">Upstart</a>.</li>
+	<li>James Page (Canonical)</li>
+	<li>Joel Ebel (Google)</li>
+	<li>Mark Russell (Canonical)</li>
+	<li>Bradley Ayers</li>
+	<li>Kenneth Porter</li>
+	<li>Roberto Alsina (Canonical), <a href="http://docutils.sourceforge.net/rst.html">reStructuredText</a> Guru.</li>
+</ul>
+<h3>1.4 目的</h3>
+<p style="padding-left: 30px;">这篇文档完成的意图是多方面的，具体如下：</p></p>
+
+<p><ul style="padding-left: 60px;">
+	<li>对于Upstart的温柔介绍</li>
+	<li>菜谱的配方和解决Upstart常规和非常规问题的最佳实践</li>
+	<li>对于Upstart的衍生配置语法手册</li>
+</ul>
+<p style="padding-left: 30px;">本文尝试使用可以工作的实例细节来解释Upstart复杂的工作机制</p>
+<p style="padding-left: 30px;">注意：任何时候，对于Upstart的最权威参考文档都是它的的官方手册：本文仅仅作为一个补充</p></p>
+
+<p><h3>1.5 建议和勘误</h3>
+<p style="padding-left: 30px;">烂的文档还不如没有文档来的靠谱，如果你在本文中发现任何问题，无论有多小：</p></p>
+
+<p><ul style="padding-left: 60px;">
+	<li>单词拼写错误</li>
+	<li>语法错误</li>
+	<li>实时错误</li>
+	<li>讲述的不清楚</li>
+	<li>不明确、甚至歧义的内容</li>
+	<li>信息丢失</li>
+	<li>等等</li>
+</ul>
+<p style="padding-left: 30px;">如果您想在本文中看到实践型的特性，请向Upstart CookBook <a href="https://launchpad.net/upstart-cookbook">project website</a> 提交一个bug报告，我们会尽快的进行完善</p></p>
+
+<p><ul>
+	<li><a href="https://bugs.launchpad.net/upstart-cookbook/+filebug">https://bugs.launchpad.net/upstart-cookbook/+filebug</a></li>
+</ul>
+<p style="padding-left: 30px;">作为激励，您的名字将会出现在1.3节的致谢中</p></p>
+
+<p><h3>1.6 适用范围</h3>
+<h4 style="padding-left: 30px;">1.6.1 最原始的Upstart</h4>
+<p style="padding-left: 60px;">下面是最初设计在Linux运行的Upstart最原始、最纯粹的版本：</p></p>
+
+<p><ul style="padding-left: 60px;">
+	<li>主页：<a href="http://launchpad.net/upstart">http://launchpad.net/upstart</a></li>
+	<li>问题报告：<a href="http://bugs.launchpad.net/upstart">http://bugs.launchpad.net/upstart</a></li>
+	<li>疑问：<a href="https://answers.launchpad.net/upstart/+addquestion">https://answers.launchpad.net/upstart/+addquestion</a></li>
+</ul>
+<h4 style="padding-left: 30px;">1.6.2 Ubuntu版本的Upstart</h4>
+<p style="padding-left: 60px;">Ubuntu包装的Upstart</p>
+<p style="padding-left: 60px;">一种Debian系列的Upstart版本（一个为debian及其衍生版本开发的Upstart），它包含一些较小的针对运行在ubuntu上的修改，如：</p></p>
+
+<p><ul style="padding-left: 60px;">
+	<li>修改了终端初始化的方式，使其能和<a href="http://www.freedesktop.org/wiki/Software/Plymouth">Plymouth</a>一起工作</li>
+	<li>针对Initramfs传递到root文件上下文的</li>
+</ul>
+<p style="padding-left: 60px;">有用的链接</p></p>
+
+<p><ul style="padding-left: 60px;">
+	<li>主页： <a href="http://launchpad.net/ubuntu/+source/upstart">http://launchpad.net/ubuntu/+source/upstart</a></li>
+	<li>问题报告：<a href="http://bugs.launchpad.net/ubuntu/+source/upstart">http://bugs.launchpad.net/ubuntu/+source/upstart</a></li>
+	<li>疑问：<a href="https://answers.launchpad.net/ubuntu/+source/upstart/+addquestion">https://answers.launchpad.net/ubuntu/+source/upstart/+addquestion</a></li>
+</ul>
+<h4 style="padding-left: 30px;">1.6.3 可用性</h4>
+<p style="padding-left: 60px;">Upstart被基于不同操作系统的成千上万的系统依赖，它们包括：</p></p>
+
+<p><ul style="padding-left: 60px;">
+	<li>Google 的 Chrome OS</li>
+	<li>Google 的 Chromium OS</li>
+	<li>红帽的 <a href="http://www.redhat.com/rhel">RHEL</a> 6</li>
+	<li>Ubuntu</li>
+</ul>
+<p style="padding-left: 60px;">也也被以下系统作为一种可选的配置项存在：</p></p>
+
+<p><ul style="padding-left: 60px;">
+	<li>Debian</li>
+	<li>Fedora</li>
+</ul>
+<h4 style="padding-left: 30px;">1.6.4 Ubuntu的特殊性</h4>
+<p style="padding-left: 60px;">这篇在完成的时候始终考虑到了Ubuntu上Upstart的特殊性，为了表示Ubuntu-Upstart的特殊行为，会在适当的位置添加上一个<a href="http://blog.klwang.info/wp-content/uploads/2013/03/favicon1.ico"><img class="alignnone size-medium wp-image-78" alt="favicon" src="http://blog.klwang.info/wp-content/uploads/2013/03/favicon1.ico" /></a>logo</p></p>
+
+<p><h3>1.7 本文读者</h3>
+<p style="padding-left: 30px;">本文期待的读者如下：</p></p>
+
+<p><ul>
+	<li>对学习Upstart充满兴趣的用户</li>
+	<li>想要使用所有Upstart功能的系统管理员</li>
+	<li>想要将自己程序打包和Upstart一起运行的开发者和打包者</li>
+</ul>
+<h3>1.8 制作本文的工具</h3>
+<p style="padding-left: 30px;">本文使用富结构化的文本书写&#8211;一种文本标记语言，本文使用以下工具完成：</p></p>
+
+<p><ul>
+	<li>vim 文本编辑器</li>
+	<li>包含<a href="http://www.orgmode.org/">Org-Mode</a>表格的<a href="http://www.gnu.org/software/emacs">Emacs</a>文本编辑器</li>
+	<li>Jave的图形化多功能ASCII编辑器</li>
+</ul>
+<h3> 1.9 参考文档</h3>
+<p style="padding-left: 30px;">本文的参考文档如下：</p></p>
+
+<p><ul style="padding-left: 30px;">
+	<li><a href="https://code.launchpad.net/%7Eupstart-documenters/upstart-cookbook/trunk">https://code.launchpad.net/~upstart-documenters/upstart-cookbook/trunk</a></li>
+</ul>
+<p style="padding-left: 30px;">本文的最新版本：</p></p>
+
+<p><ul>
+	<li><a href="http://upstart.ubuntu.com/cookbook/">http://upstart.ubuntu.com/cookbook/</a></li>
+	<li><a href="http://upstart.ubuntu.com/cookbook/upstart_cookbook.pdf">http://upstart.ubuntu.com/cookbook/upstart_cookbook.pdf</a></li>
+</ul>
+<h3>1.10 警告</h3>
+<p style="padding-left: 30px;">本文的目标是帮助使用者理解Upstart，对于一般性的问题和疑问提供一些有前途的解决方案和建议</p>
+<p style="padding-left: 30px;">虽然在整理本文的过程中作者尽可能的细心，但是还是要强烈的建议您在修改像init这样的系统关键设施时尽可能的小心。在本文中作出的所有修改都是可以恢复的，并且提供了修改建议，但是当您的系统出现像爆炸、着火这种现象以至于无法使用时，您需要凭着您的智慧独立进行修理</p>
+&nbsp;
+<p style="padding-left: 30px;"></p></p>
+</div>
+  
+  
+
+
+    </article>
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/before-the-article/">前言</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2013-03-08T00:00:00+08:00" pubdate data-updated="true">Mar 8<span>th</span>, 2013</time>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p>本指南的目标是： 成为用户在 heartbeat集群通讯层、Linux-HA集群资源代理、以及其他由 Linux-HA 项目组维护的集群模块 最权威的参考指南。</p>
+
+<p>我们欢迎并积极鼓励有关本文档的任何、所有的反馈。请使用linux-ha@lists.linux-ha.org 邮件列表来发表意见、修正、建议来进一步提升该用户指南</p>
+
+<p><a href="http://www.linux-ha.org/doc/users-guide/_preface.html" target="_blank">原文链接</a>，欢迎指正</p>
+</div>
+  
+  
+
+
+    </article>
+  
+  <div class="pagination">
+    
+      <a class="prev" href="/blog/page/6/">&larr; Older</a>
+    
+    <a href="/blog/archives">Blog Archives</a>
+    
+    <a class="next" href="/blog/page/4/">Newer &rarr;</a>
+    
+  </div>
+</div>
+<aside class="sidebar">
+  
+    <section>
+  <h1>Recent Posts</h1>
+  <ul id="recent_posts">
+    
+      <li class="post">
+        <a href="/blog/about-strace/">About Strace</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/about-ubuntu-no-pubkey-error/">Ubuntu NO_PUBKEY 故障解决方式</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/bash-you-don-not-konw-special-character/">你不知道的bash (特殊字符)</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/about-lvm-skills/">Lvm 实践笔记</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/change-your-resouce-angent-to-multistate/">将 Resouce Angent 改造成 Multi State 类型</a>
+      </li>
+    
+  </ul>
+</section>
+
+
+
+
+
+  
+</aside>
+
+    </div>
+  </div>
+  <footer role="contentinfo"><p>
+  Copyright &copy; 2013 - wklxd -
+  <span class="credit">Powered by <a href="http://octopress.org">Octopress</a></span>
+</p>
+
+</footer>
+  
+
+
+
+
+
+
+
+  <script type="text/javascript">
+    (function(){
+      var twitterWidgets = document.createElement('script');
+      twitterWidgets.type = 'text/javascript';
+      twitterWidgets.async = true;
+      twitterWidgets.src = 'http://platform.twitter.com/widgets.js';
+      document.getElementsByTagName('head')[0].appendChild(twitterWidgets);
+    })();
+  </script>
+
+
+
+
+
+</body>
+</html>

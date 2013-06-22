@@ -1,0 +1,317 @@
+
+<!DOCTYPE html>
+<!--[if IEMobile 7 ]><html class="no-js iem7"><![endif]-->
+<!--[if lt IE 9]><html class="no-js lte-ie8"><![endif]-->
+<!--[if (gt IE 8)|(gt IEMobile 7)|!(IEMobile)|!(IE)]><!--><html class="no-js" lang="en"><!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  <title>kvm 虚拟机 fence 设置 - My Octopress Blog</title>
+  <meta name="author" content="wklxd">
+
+  
+  <meta name="description" content="习惯于使用 虚拟机 测试HA配置文件，但是对于fence这块，一直没有办法搞定 之前看到有人用external/ssh的，就想试试，但是后知后觉的发现，这玩意竟然被pacemaker给枪毙了（相关链接）官方说来说去就是一句话来解释这个问题(No. external/ssh simply &hellip;">
+  
+
+  <!-- http://t.co/dKP3o1e -->
+  <meta name="HandheldFriendly" content="True">
+  <meta name="MobileOptimized" content="320">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  
+  <link rel="canonical" href="http://github.klwang.info/blog/kvm-guest-fence">
+  <link href="/favicon.png" rel="icon">
+  <link href="/stylesheets/screen.css" media="screen, projection" rel="stylesheet" type="text/css">
+  <link href="/atom.xml" rel="alternate" title="My Octopress Blog" type="application/atom+xml">
+  <script src="/javascripts/modernizr-2.0.js"></script>
+  <script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+  <script>!window.jQuery && document.write(unescape('%3Cscript src="./javascripts/lib/jquery.min.js"%3E%3C/script%3E'))</script>
+  <script src="/javascripts/octopress.js" type="text/javascript"></script>
+  <!--Fonts from Google"s Web font directory at http://google.com/webfonts -->
+<link href="http://fonts.googleapis.com/css?family=PT+Serif:regular,italic,bold,bolditalic" rel="stylesheet" type="text/css">
+<link href="http://fonts.googleapis.com/css?family=PT+Sans:regular,italic,bold,bolditalic" rel="stylesheet" type="text/css">
+
+  
+
+</head>
+
+<body   >
+  <header role="banner"><hgroup>
+  <h1><a href="/">My Octopress Blog</a></h1>
+  
+    <h2>A blogging framework for hackers.</h2>
+  
+</hgroup>
+
+</header>
+  <nav role="navigation"><ul class="subscription" data-subscription="rss">
+  <li><a href="/atom.xml" rel="subscribe-rss" title="subscribe via RSS">RSS</a></li>
+  
+</ul>
+  
+<form action="http://google.com/search" method="get">
+  <fieldset role="search">
+    <input type="hidden" name="q" value="site:github.klwang.info" />
+    <input class="search" type="text" name="q" results="0" placeholder="Search"/>
+  </fieldset>
+</form>
+  
+<ul class="main-navigation">
+  <li><a href="/">Blog</a></li>
+  <li><a href="/blog/archives">Archives</a></li>
+</ul>
+
+</nav>
+  <div id="main">
+    <div id="content">
+      <div>
+<article class="hentry" role="article">
+  
+  <header>
+    
+      <h1 class="entry-title">Kvm 虚拟机 Fence 设置</h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2013-06-03T00:00:00+08:00" pubdate data-updated="true">Jun 3<span>rd</span>, 2013</time>
+        
+      </p>
+    
+  </header>
+
+
+<div class="entry-content"><p>习惯于使用 虚拟机 测试HA配置文件，但是对于fence这块，一直没有办法搞定</p>
+
+<p>之前看到有人用external/ssh的，就想试试，但是后知后觉的发现，这玩意竟然被pacemaker给枪毙了（<a href="http://hg.linux-ha.org/glue/rev/5ef3f9370458">相关链接</a>）官方说来说去就是一句话来解释这个问题(No. external/ssh simply cannot be relied on)
+<pre>
+>> You really don't want to rely on SSH STONITH in a production environment.
+>>
+>> Regards,
+>>
+>> Tim
+>>
+>> Sure, but I'm in a lab environment at the moment without
+>> UPS-based STONITH capabilities, so having SSH STONITH working
+>> to test things out would be helpful.</pre></p>
+
+<p>The development package should contain external/ssh.</p>
+
+<p>> Also, even in production,<br />
+> what would be the harm of having both SSH and UPS-based STONITH<br />
+> available? Wouldn&#8217;t more routes to STONITH a node be better?</p>
+
+<p>No. external/ssh simply cannot be relied on.
+算了，不给用就不用好了，kvm 反正还有其他的方式来实现fence呢
+<h3>host机操作</h3>
+<h4>1 把包先装上</h4>
+<pre># yum install -y fence-virt fence-virtd fence-virtd-libvirt fence-virtd-multicast</pre>
+<h4>2 搞一个认证文件</h4>
+没有啥限制，主要是内部通信用，通信机器之间文件一致即可
+<pre># mkdir /etc/cluster
+# dd if=/dev/urandom of=/etc/cluster/fence_xvm.key bs=4096 count=1</pre>
+<h4>3. 生成配置文件</h4>
+<pre># fence_virtd -c</pre>
+有一点需要改改，其他的按照提示一路回车就ok
+<pre># Backend module [checkpoint]: libvirt  --因为我们只安装了fence-virtd-libvirt这个backend</pre>
+<h4>4.配置文件review</h4>
+生成的配置文件长这个样 /etc/fence_virt.conf
+<pre>backends {
+    libvirt {
+        uri = "qemu:///system";
+    }</pre></p>
+
+<p>}</p>
+
+<p>listeners {<br />
+    multicast {<br />
+        interface = &#8220;br0&#8221;;<br />
+        port = &#8220;1229&#8221;;<br />
+        family = &#8220;ipv4&#8221;;<br />
+        address = &#8220;225.0.0.12&#8221;;<br />
+        key_file = &#8220;/etc/cluster/fence_xvm.key&#8221;;<br />
+    }</p>
+
+<p>}</p>
+
+<p>fence_virtd {<br />
+    module_path = &#8220;/usr/lib64/fence-virt&#8221;;<br />
+    backend = &#8220;libvirt&#8221;;<br />
+    listener = &#8220;multicast&#8221;;<br />
+}
+就是一般的配置文件，对于不明白的地方，man fence_virt.conf 即可找到喜欢的解释
+<strong><em>特别注意： interface = &#8220;br0&#8221;; 这个参数一定要仔细对待，不要被它的默认提示给忽悠了，这个监听的网卡一定要选择一个host机和guest机能够相互通信的网卡（像virtbr0这种kvm默认的网卡要仔细喽），比如，如果你的guest机是bridge的，那就写host的对外网卡就ok了</em></strong>
+<h4><strong><em></em></strong> 5.启动服务</h4>
+<pre># service fence_virtd start
+# chkconfig --add fence_virtd
+# chkconfig fence_virtd on</pre>
+<h4>6. 验证配置</h4>
+<pre># fence_xvm -o list</pre></p>
+
+<p>cluster_node1             f2bd9d70-411e-393c-0720-3311985a63bf on<br />
+cluster_node2             3fd4a9cd-aa43-11b1-a943-9f8623b790b3 on<br />
+cluster_node3             f2bd9d70-411e-393c-0720-3314335a34bf on<br />
+cluster_node4             3fd4a9cd-aa43-11b1-a943-9f234b7934b3 on
+重启一个guest机试试？（不要说我没告诉你-o reboot是重启的意思哦）
+<pre># fence_xvm -o reboot -H cluster_node2</pre>
+<h3>guest机配置</h3>
+<h4>1. 安装软件包</h4>
+这个 fence-virt 就是为了试试 fence_xvm 命令的，其实不装也ok的
+<pre># yum install -y fence-virt</pre>
+<h4>2. 同步配置文件</h4>
+把之前在host上生成的 /etc/cluster/fence_xvm.key 文件拷贝到所有guest的对应位置
+<h4>3. 测试</h4>
+<pre># fence_xvm -o list</pre></p>
+
+<p>cluster_node1             f2bd9d70-411e-393c-0720-3311985a63bf on<br />
+cluster_node2             3fd4a9cd-aa43-11b1-a943-9f8623b790b3 on<br />
+cluster_node3             f2bd9d70-411e-393c-0720-3314335a34bf on<br />
+cluster_node4             3fd4a9cd-aa43-11b1-a943-9f234b7934b3 on
+同样，可以看到其它的机器，<br />
+试试？别把自己fence掉啦
+<pre># fence_xvm -o reboot -H cluster_node2</pre>
+ok啦，可以使用这个fence设备了
+<pre> crm configure primitive st-virt stonith:fence_xvm \
+ params port="cluster_node1 cluster_node2 cluster_node3 cluster_node4"</pre>
+这个port就是fence机器的列表</p>
+
+<p>&nbsp;</p>
+
+<p>参考文章
+<a href="http://www.daemonzone.net/e/3/" target="_blank">Guest fencing on a RHEL KVM host</a>
+<a href="http://clusterlabs.org/wiki/Guest_Fencing" target="_blank">Guest Fencing</a></p>
+</div>
+
+
+  <footer>
+    <p class="meta">
+      
+  
+
+<span class="byline author vcard">Posted by <span class="fn">wklxd</span></span>
+
+      
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2013-06-03T00:00:00+08:00" pubdate data-updated="true">Jun 3<span>rd</span>, 2013</time>
+      
+
+<span class="categories">
+  
+    <a class='category' href='/blog/categories/ha/'>HA</a>
+  
+</span>
+
+
+    </p>
+    
+      <div class="sharing">
+  
+  <a href="http://twitter.com/share" class="twitter-share-button" data-url="http://github.klwang.info/blog/kvm-guest-fence/" data-via="" data-counturl="http://github.klwang.info/blog/kvm-guest-fence/" >Tweet</a>
+  
+  
+  
+</div>
+
+    
+    <p class="meta">
+      
+        <a class="basic-alignment left" href="/blog/linux-file-permission/" title="Previous Post: Linux 文件权限">&laquo; Linux 文件权限</a>
+      
+      
+        <a class="basic-alignment right" href="/blog/cman-and-corosync/" title="Next Post: cman and corosync">cman and corosync &raquo;</a>
+      
+    </p>
+  </footer>
+</article>
+
+</div>
+
+<aside class="sidebar">
+  
+    <section>
+  <h1>Recent Posts</h1>
+  <ul id="recent_posts">
+    
+      <li class="post">
+        <a href="/blog/about-strace/">About Strace</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/about-ubuntu-no-pubkey-error/">Ubuntu NO_PUBKEY 故障解决方式</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/bash-you-don-not-konw-special-character/">你不知道的bash (特殊字符)</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/about-lvm-skills/">Lvm 实践笔记</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/change-your-resouce-angent-to-multistate/">将 Resouce Angent 改造成 Multi State 类型</a>
+      </li>
+    
+  </ul>
+</section>
+
+
+
+
+
+  
+</aside>
+
+
+    </div>
+  </div>
+  <footer role="contentinfo"><p>
+  Copyright &copy; 2013 - wklxd -
+  <span class="credit">Powered by <a href="http://octopress.org">Octopress</a></span>
+</p>
+
+</footer>
+  
+
+
+
+
+
+
+
+  <script type="text/javascript">
+    (function(){
+      var twitterWidgets = document.createElement('script');
+      twitterWidgets.type = 'text/javascript';
+      twitterWidgets.async = true;
+      twitterWidgets.src = 'http://platform.twitter.com/widgets.js';
+      document.getElementsByTagName('head')[0].appendChild(twitterWidgets);
+    })();
+  </script>
+
+
+
+
+
+</body>
+</html>

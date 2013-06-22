@@ -1,0 +1,1104 @@
+
+<!DOCTYPE html>
+<!--[if IEMobile 7 ]><html class="no-js iem7"><![endif]-->
+<!--[if lt IE 9]><html class="no-js lte-ie8"><![endif]-->
+<!--[if (gt IE 8)|(gt IEMobile 7)|!(IEMobile)|!(IE)]><!--><html class="no-js" lang="en"><!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  <title>My Octopress Blog</title>
+  <meta name="author" content="wklxd">
+
+  
+  <meta name="description" content="之前遇到一个文件权限是 rws&#8211;x&#8211;x 的问题，对这个 -s 属性很是不太明白，就仔细的找了些资料；
+赶紧记录下来，以免后面又忘了 1. 基本权限 权限位一共是10位，下面这个图表比较清楚的解释了每一位的作用
+1	2	3	4	5	6	7	8	9	10
+File	User &hellip;">
+  
+
+  <!-- http://t.co/dKP3o1e -->
+  <meta name="HandheldFriendly" content="True">
+  <meta name="MobileOptimized" content="320">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  
+  <link rel="canonical" href="http://github.klwang.info/blog/page/2">
+  <link href="/favicon.png" rel="icon">
+  <link href="/stylesheets/screen.css" media="screen, projection" rel="stylesheet" type="text/css">
+  <link href="/atom.xml" rel="alternate" title="My Octopress Blog" type="application/atom+xml">
+  <script src="/javascripts/modernizr-2.0.js"></script>
+  <script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+  <script>!window.jQuery && document.write(unescape('%3Cscript src="./javascripts/lib/jquery.min.js"%3E%3C/script%3E'))</script>
+  <script src="/javascripts/octopress.js" type="text/javascript"></script>
+  <!--Fonts from Google"s Web font directory at http://google.com/webfonts -->
+<link href="http://fonts.googleapis.com/css?family=PT+Serif:regular,italic,bold,bolditalic" rel="stylesheet" type="text/css">
+<link href="http://fonts.googleapis.com/css?family=PT+Sans:regular,italic,bold,bolditalic" rel="stylesheet" type="text/css">
+
+  
+
+</head>
+
+<body   >
+  <header role="banner"><hgroup>
+  <h1><a href="/">My Octopress Blog</a></h1>
+  
+    <h2>A blogging framework for hackers.</h2>
+  
+</hgroup>
+
+</header>
+  <nav role="navigation"><ul class="subscription" data-subscription="rss">
+  <li><a href="/atom.xml" rel="subscribe-rss" title="subscribe via RSS">RSS</a></li>
+  
+</ul>
+  
+<form action="http://google.com/search" method="get">
+  <fieldset role="search">
+    <input type="hidden" name="q" value="site:github.klwang.info" />
+    <input class="search" type="text" name="q" results="0" placeholder="Search"/>
+  </fieldset>
+</form>
+  
+<ul class="main-navigation">
+  <li><a href="/">Blog</a></li>
+  <li><a href="/blog/archives">Archives</a></li>
+</ul>
+
+</nav>
+  <div id="main">
+    <div id="content">
+      <div class="blog-index">
+  
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/linux-file-permission/">Linux 文件权限</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2013-06-02T00:00:00+08:00" pubdate data-updated="true">Jun 2<span>nd</span>, 2013</time>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p>之前遇到一个文件权限是 rws&#8211;x&#8211;x 的问题，对这个 -s 属性很是不太明白，就仔细的找了些资料；<br />
+赶紧记录下来，以免后面又忘了</p>
+
+<p>1. 基本权限</p>
+
+<p>权限位一共是10位，下面这个图表比较清楚的解释了每一位的作用
+<pre>1	2	3	4	5	6	7	8	9	10
+File	User Permissions	Group Permissions	Other Permissions
+Type	Read	Write	Execute	Read	Write	Execute	Read	Write	Execute
+d	r	w	e	r	w	e	r	w	e</pre>
+<ul>
+	<li>1位是type: - 常规文件, d 目录, l 链接.</li>
+</ul>
+<ul>
+	<li>2-4位表示文件拥有者的权限:分别是读、写、和执行</li>
+</ul>
+<ul>
+	<li>5-7位表示同组用户的权限：分别是读、写、和执行</li>
+</ul>
+<ul>
+	<li>8-10位表示其他用户的权限：同样，分别是读、写、和执行</li>
+</ul>
+文件的权限一个共有5种，分别是
+<ul>
+	<li>r = 读 - r权限只在read位置出现</li>
+</ul>
+<ul>
+	<li>w = 写 - w权限只在write位置出现</li>
+</ul>
+<ul>
+	<li>x = 执行 - w权限只在execute位置出现</li>
+</ul>
+<ul>
+	<li>s = setuid - s权限只在execute位置出现</li>
+</ul>
+<ul>
+	<li>- 表示没有权限</li>
+</ul>
+type位一共有这么几种
+<ul>
+	<li>d = 目录</li>
+</ul>
+<ul>
+	<li>l = 符号链接</li>
+</ul>
+<ul>
+	<li>s = socket</li>
+</ul>
+<ul>
+	<li>p = 命名管道</li>
+</ul>
+<ul>
+	<li>- = 普通文件</li>
+</ul>
+<ul>
+	<li>c= character (没有缓冲的) 设备，如键盘，鼠标</li>
+</ul>
+<ul>
+	<li>b= block (有缓冲的) 设备，如IDE硬盘</li>
+</ul>
+文件的 Set ID 位
+<ul>
+	<li>当owner的execute被设置为s时，表示任何程序在执行这个文件时就好像文件的owner一样（可以接触到相关的系统资源和权限等）</li>
+</ul>
+<ul>
+	<li>同理，当group的execute被设置为s时，表示任何程序在执行这个文件时就好像文件的group中成员一样可以接触到相关的系统资源和权限</li>
+</ul>
+<ul>
+	<li>最后，other肯定是没有s位的，不然就太恐怖啦（你能使用other的权限，那还得了？）</li>
+</ul>
+<ul>
+	<li><em>import：设置s时，首先要保证在该位上有x权限（常识啦，没有x就没有意义么）</em></li>
+</ul>
+<em> </em>
+目录有两个特殊的权限位，分别是
+<ul>
+	<li>t 表示在这个目录中，用户只能删除或者修改属于自己的或者自己有写权限的文件，比如/tmp就有这个权限</li>
+</ul>
+<ul>
+	<li>s 设置group id，一般来说，一个用户建立一个文件时，文件的组一般为自己所属的组。。当目录设置了该位时，该目录下建立的文件组和目录所属的组相同，而不是建立文件的用户所属组</li>
+</ul>
+umask设置
+<p style="padding-left: 30px;">
+文件默认的权限为<br />
+777 可执行文件<br />
+666 普通文件</p>
+文件默认的权限会让所有用户对可执行文件有所有权限，对所有普通文件有读写权限，设置umask可以改变这个系统行为</p>
+
+<p>如，umask为022时，普通文件的权限就变成了 666 - 022 = 644， 可执行文件权限变成了 777 - 022 = 755</p>
+
+<p>over</p>
+
+<p>参考文档
+<a title="Linux Files and File Permission" href="http://www.comptechdoc.org/os/linux/usersguide/linux_ugfilesp.html" target="_blank">Linux Files and File Permission</a></p>
+</div>
+  
+  
+
+
+    </article>
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/config-your-net-card-name/">设置网卡名</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2013-06-01T00:00:00+08:00" pubdate data-updated="true">Jun 1<span>st</span>, 2013</time>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p>有时候更换网卡之后，发现网卡名字会变得很奇怪，比如，明明自己只有两块网卡，却叫 eth2，eth3；</p>
+
+<p>那eth和eth1跑哪里去了？<br />
+这个是/etc/udev/rules.d/70-persistent-net.rules文件的内容
+<pre>
+# This file was automatically generated by the /lib/udev/write_net_rules
+# program, run by the persistent-net-generator.rules rules file.
+#
+# You can modify it, as long as you keep each rule on a single
+# line, and change only the value of the NAME= key.
+</pre>
+人家说的很清楚，这个文件是由 /lib/udev/write_net_rules 自动生成的，但是还是可以根据需要手工修改，下面是这个文件本来的内容</p>
+
+<p><pre>
+# PCI device 0x10ec:/sys/devices/pci0000:00/0000:00:1c.2/0000:03:00.0 (r8169)
+SUBSYSTEM=="net", ACTION=="add", DRIVERS=="?*", ATTR{address}=="00:e0:4c:ca:xa:ba", ATTR{dev_id}=="0x0", ATTR{type}=="1", KERNEL=="eth*", NAME="eth0"</pre></p>
+
+<p># PCI device 0x168c:/sys/devices/pci0000:00/0000:00:1c.1/0000:02:00.0 (ath9k)<br />
+SUBSYSTEM==&#8221;net&#8221;, ACTION==&#8221;add&#8221;, DRIVERS==&#8221;?*&#8221;, ATTR{address}==&#8221;48:5d:60:ca:xa:a9&#8221;, ATTR{dev_id}==&#8221;0x0&#8221;, ATTR{type}==&#8221;1&#8221;, KERNEL==&#8221;wlan*&#8221;, NAME=&#8221;eth1&#8221;</p>
+
+<p># PCI device 0x10ec:/sys/devices/pci0000:00/0000:00:1c.2/0000:03:00.0 (r8169)<br />
+SUBSYSTEM==&#8221;net&#8221;, ACTION==&#8221;add&#8221;, DRIVERS==&#8221;?*&#8221;, ATTR{address}==&#8221;00:ca:xa::74:90:ba&#8221;, ATTR{dev_id}==&#8221;0x0&#8221;, ATTR{type}==&#8221;1&#8221;, KERNEL==&#8221;eth*&#8221;, NAME=&#8221;eth2&#8221;</p>
+
+<p># PCI device 0x168c:/sys/devices/pci0000:00/0000:00:1c.1/0000:02:00.0 (ath9k)<br />
+SUBSYSTEM==&#8221;net&#8221;, ACTION==&#8221;add&#8221;, DRIVERS==&#8221;?*&#8221;, ATTR{address}==&#8221;ca:xa::60:95:07:c9&#8221;, ATTR{dev_id}==&#8221;0x0&#8221;, ATTR{type}==&#8221;1&#8221;, KERNEL==&#8221;wlan*&#8221;, NAME=&#8221;eth3&#8221;
+</p>
+
+<p>哦，原来是这样的，之前的两块网卡已经换了，信息却还是留在了这里；<br />
+那好吧，删掉那两行内容，把 eth2 、 eth3分别改成 eth0和eth1即可</p>
+</div>
+  
+  
+
+
+    </article>
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/ovirt-install-guide-of-klwang/">Ovirt 安装小记</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2013-05-28T00:00:00+08:00" pubdate data-updated="true">May 28<span>th</span>, 2013</time>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p>出于工作需要，试了一把Ovirt, 发现其和cloudstack、openstack这种大家伙还是有差距的，不过也有它的长处，今天就记录一下安装的过程，下次也就方便一些了。。。
+<h3>写在前面：</h3>
+硬件要求： CPU支持虚拟化肯定是必须的了<br />
+作为存储的节点，硬盘相应的大一些喽<br />
+运行虚拟机的节点，RAM和CPU肯定是越犀利越<br />
+数据库和管理节点，差不多就ok</p>
+
+<p>操作系统： 本次用的是 CentOS 6.4 x86_64， 反正红帽系列都ok，debian系列的没有试过，但是应该也差不多</p>
+
+<p>文档来源： Ovirt的好处就是文档多（当然，都是红帽的RHEV，工具的名字可能不一样，功能、参数差不多）
+<h3>进入正题：</h3>
+<h4>1. 防火墙设置</h4>
+<h5>管理节点</h5>
+<pre>    8080、8443： --web管理界面
+    8006~8009： --和host通信</pre>
+<h5>存储节点(本次使用nfs)</h5>
+<pre>    $ cat /etc/sysconfig/nfs
+    LOCKD_TCPPORT=32803
+    LOCKD_UDPPORT=32769
+    MOUNTD_PORT=892
+    RQUOTAD_PORT=875
+    STATD_PORT=662
+    STATD_OUTGOING_PORT=2020</pre>
+<h5>host节点</h5>
+<pre>    5634 - 6166： 虚拟机通信(kvm等)
+    16514： libvirt在线迁移
+    49152 - 49216：虚拟机迁移、fencing等
+    54321： host和manager通信（坑爹的端口哦）</pre>
+<h5>Directory节点</h5>
+<pre>    88, 464: Kerberos
+    389, 636: ldap</pre>
+最后，ssh的22端口肯定要开了，我们默认所有节点都安装ssh服务。。</p>
+
+<p>要是单单自己装着玩，为了省事，就直接这样吧
+<pre>    service iptables stop
+    chkconfig --del iptables</pre>
+<h4>2. 准备工作</h4>
+Ovrit比较坑爹，需要一个DNS服务器来给自己干活，hosts文件都抗不住，最好装一个;<br />
+用自己的机子，或者随便一台host或者管理机兼职一下</p>
+
+<p>为每台机子设置好机器名、域名等: 达到以下结果(hosts文件就能办到)
+<pre>    hostname --fqdn
+        nodex.xx.com
+    dnsdomainname
+        xx.com</pre>
+<h4>3. 安装管理节点</h4>
+<pre>    cd /etc/yum.repo.d/
+    wget http://ovirt.org/releases/stable/ovirt-engine.repo
+    yum install ovirt-engine</pre>
+ok,就是这么简单</p>
+
+<p>配置：
+<pre>    # engine-setup</pre>
+会问一大堆东西，一般默认就ok，记住一点，数据库和admin的密码一定要记住，不然就自己后悔去吧
+<pre>    oVirt Manager will be installed using the following configuration:
+    =================================================================
+    http-port: 8080
+    https-port: 8443
+    host-fqdn: engine.demo.ovirt.org
+    auth-pass: ********
+    db-pass: ********
+    org-name: oVirt
+    default-dc-type: NFS
+    nfs-mp: /isoshare
+    iso-domain-name: ISODomain
+    override-iptables: yes
+    Proceed with the configuration listed above? (yes|no):</pre>
+数据库密码忘了还好，用的是postgresql，可以参考我的<a href="http://klwang.info/pgsql%E5%BF%98%E8%AE%B0%E5%AF%86%E7%A0%81%E5%A4%84%E7%90%86%E5%8A%9E%E6%B3%95/">这篇blog</a>搞定<br />
+admin的密码忘了我就不知道怎么搞了，自己重新 engine-setup 吧</p>
+
+<p>装完后，会自动把你的网卡桥接，做一个ovirtmanage的网卡，供它自己使用<br />
+这里，如果你已经把iptables禁用了，就不要让它帮你设置iptables了
+<h4>4. 设置</h4>
+管理节点安装好，就可以进去操作一把了，地址 your_manager_ip:8080<br />
+帐号密码是 admin/你的密码</p>
+
+<p>概念和 cloudstack 差不多，有 datacenter、cluster、host、storage的概念，基本是相互包含的关系<br />
+没有pods的概念，把 secondary 分为了 iso 和 export连个玩意，意思差不多，放iso文件和备份啥的</p>
+
+<p>特别的，storage支持iscsi，大家可以试试</p>
+
+<p>最终安装结果：<br />
+一个default的datacenter、一个default的cluster、加一个放data的storage（我用的是NFS，NFS的安装设置也不是很难，参考我之前<a href="http://klwang.info/category/cloudstack/">转载的那个cludstack</a>里边的做法即可）<br />
+然后，把 data的storage激活(active)，这个云就算是ok了，，，下来可以添加运行虚拟机的节点啦
+<h4>5. 安装host节点</h4>
+红帽就是红帽，不愧是做操作系统的；<br />
+他们做了一个专门运行host的操作系统，也就是说让他们的host直接运行在裸机上<br />
+我们就算了，在centos上装个运行虚拟机的服务就行了，不折腾了<br />
+想折腾的朋友，看看这里：http://resources.ovirt.org/releases/stable/iso， 随便下载个试试</p>
+
+<p>ok，装服务
+<pre>    yum install vdsm vdsm-cli -y</pre>
+就这么简单，同样，它会自己搞定网卡桥接的事情
+<h4>6. 将host节点加入云</h4>
+在管理界面中，点击hosts栏，点击add<br />
+输入 显示名， 地址， root的 密码就ok了，会自动安装需要的软件，完后自动重启</p>
+
+<p>最后，选中一个host机器，点击 active 激活就行了
+<h4>7. 创建虚拟机</h4>
+先把 iso 文件传上去， scp，嘿嘿。放在 engine-setup 时你自己设定的： nfs-mp 目录下（不会忘了吧）<br />
+刷新一下，知道你看见自己上传的系统镜像iso</p>
+
+<p>创建虚拟机很简单，自己设置一下网卡，默认的ovirt-manage网卡会桥接到自己的host机器上去<br />
+完了，根据需要添加一个磁盘<br />
+好了，剩下的就是平时装系统，不浪费篇幅说了
+<h4>8. 制作模版</h4>
+这个比较重要，云就是为了部署起来简单，这样的话，模版就不可或缺了</p>
+
+<p>选一个要作为模版的虚拟机，开始处理：<br />
+Linux
+<pre>    touch /.unconfigured
+    rm -rf /etc/ssh/ssh_host_*
+    rm -rf /etc/udev/rules.d/70-*
+    去除 /etc/sysconfig/network-scripts/ifcfg-eth* 中HWADDR那行
+    删了 /var/log 下的垃圾（可选）
+    init 0</pre>
+好了，可以做模版了</p>
+
+<p>Windows<br />
+运行 Sysprep, 做好模版即可（一般就是一路回车搞定）</p>
+
+<p>ok，有了模版就可以使用模版生成虚拟机了
+<h4>9. 在线迁移</h4>
+云的最大好处就是可以将虚拟机在线迁移到其他节点，操作很简单，图形界面，点击 migrage 就行啦 自己试试吧，只可意会不能言传的，这东西
+<h4>10. 用户管理</h4>
+Ovirt的用户管理真难受，自己还不管，非要搞个认证服务器来，我们使用IPA<br />
+IPA安装（不能和manage在一个节点哦）：
+<pre>    yum install ipa-server bind bind-dyndb-ldap
+    ipa-server-install</pre>
+一路按照提示输入信息<br />
+切记切记要设置好DNS服务器，安装过程后会自动识别机器名和域名<br />
+最后，这句话：
+<pre>    Sample zone file for bind has been created in /tmp/sample.zone.ygzij5.db</pre>
+生成了一个关于ldap、krb等的DNS解析，如下：
+<pre>    ; ldap servers
+    _ldap._tcp              IN SRV 0 100 389        ipaserver.example.com
+    ;kerberos realm
+    _kerberos               IN TXT EXAMPLE.COM
+    ; kerberos servers
+    _kerberos._tcp          IN SRV 0 100 88         ipaserver.example.com
+    _kerberos._udp          IN SRV 0 100 88         ipaserver.example.com
+    _kerberos-master._tcp   IN SRV 0 100 88         ipaserver.example.com
+    _kerberos-master._udp   IN SRV 0 100 88         ipaserver.example.com
+    _kpasswd._tcp           IN SRV 0 100 464        ipaserver.example.com
+    _kpasswd._udp           IN SRV 0 100 464        ipaserver.example.com</pre>
+将这些东西放到你的DNS服务器的 解析文件中去
+<pre>    service named reload</pre>
+添加用户
+<pre>    kinit admin
+    ipa user-add
+    ipa password login-name --循环添加多个用户
+    kdestory</pre>
+然后，在你的Ovirt中Uers中设置用户权限，就可以用新添加的用户登陆啦。。
+<h4>后记</h4>
+文章写的比较简单，默认读者应该 对linux比较熟悉</p>
+
+<p>参考文章:</p>
+
+<p><a href="https://access.redhat.com/site/documentation//en-US/Red_Hat_Enterprise_Linux/6/html/Identity_Management_Guide/index.html">Red_Hat_Identity_Management_Guide</a>
+<a href="http://www.ovirt.org/File:OVirt-3.0-Installation_Guide-en-US.pdf">OVirt-3.0-Installation_Guide</a>
+<a href="https://access.redhat.com/site/documentation/en-US/Red_Hat_Enterprise_Virtualization/3.2-Beta/html/Administration_Guide/index.html" target="_blank">RHEV_Administration_Guide</a>
+<a href="https://access.redhat.com/site/documentation//en-US/Red_Hat_Enterprise_Virtualization/3.2-Beta/html/Installation_Guide/index.html">RHEV_Installation_Guide</a>
+<a href="https://access.redhat.com/site/documentation//en-US/Red_Hat_Enterprise_Virtualization/3.2-Beta/html/Quick_Start_Guide/index.html">RHEV_Quick_Start_Guide</a>
+<a href="http://www.rjsystems.nl/en/2100-dns-discovery-openldap.php">DNS discovery for OpenLDAP</a></p>
+</div>
+  
+  
+
+
+    </article>
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/resource-agent-debug/">Resource Agent 的调试方式</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2013-05-27T00:00:00+08:00" pubdate data-updated="true">May 27<span>th</span>, 2013</time>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p>HA的配置过程中，经常会出现资源不按照自己想像的方式启动的时候，又苦于不知道该怎么寻找问题；</p>
+
+<p>自己平时也遇到过一些，总结了一些经验，今天突然发现clusterlibs的wiki里边用的方式和我用的方式基本一致，就做一下整理，希望可以帮助到别人；</p>
+
+<p>1. 脱管资源
+<pre>    crm resource unmanage <rsc_name>;</rsc_name></pre>
+2. 配置环境变量
+<pre>    # export OCF_ROOT=/usr/lib/ocf
+    --这个是必须有的，默认是这个位置，可根据自己的环境设置，为resource,d的父目录即可
+    # export OCF_RESKEY_=  
+    --这些都是配置时需要传进去的参数
+    # 如果传进去的参数比较多，这里一一设置，注意 OCF_RESKEY 的前缀</pre>
+3. 手工启动试试;
+<pre>    # /usr/lib/ocf/resource.d/heartbeat/<rsc_name> start ; echo $?</rsc_name></pre>
+瞅瞅返回的参数，要是还是没有有用的信息，就像平时调试shell一样，加一个 -x 参数</p>
+
+<p>4. 调试
+<pre>    # sh -x /usr/lib/ocf/resource.d/heartbeat/<rsc_name>; start ; echo $?</rsc_name></pre>
+这样，基本可以找到问题所在了，修复问题（修改agent脚本，或者配置忘记的参数，或者其他）</p>
+
+<p>5. 重新让paceker管理资源
+<pre>    crm resource manage <rsc_name /></pre>
+<a href="http://clusterlabs.org/wiki/Debugging_Resource_Failures">原文地址</a></p>
+</div>
+  
+  
+
+
+    </article>
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/use-of-cloudstack-reset_password-method/">Cloudstack 中 Reset_password 功能设置</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2013-05-26T00:00:00+08:00" pubdate data-updated="true">May 26<span>th</span>, 2013</time>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p>Cloudstack中对于虚拟机，有一个reset_password的功能，一直疑惑这玩意是干啥的</p>
+
+<p>没错，就是重置root或者Administrator密码的，下面写下配置的过程</p>
+
+<p>Windows</p>
+
+<p>windows的比较简单，按照官方文档、安装一个小程序就ok了</p>
+
+<p>点击<a href="http://sourceforge.net/projects/cloudstack/files/Password%20Management%20Scripts/CloudInstanceManager.msi">这里</a>下载</p>
+
+<p>一路回车安装即可</p>
+
+<p>Linux</p>
+
+<p>点击<a href="http://sourceforge.net/projects/cloudstack/files/Password%20Management%20Scripts/cloud-set-guest-password">这里</a>下载
+<pre>    mv cloud-set-guest-password /etc/rc.d/init.d
+    chmod +x /etc/init.d/cloud-set-guest-password
+    chkconfig --add cloud-set-guest-password</pre>
+很明显，上面说的 redhat 系列的操作系统，在ubuntu上需要修改一些东西</p>
+
+<p>比如，脚本的这行
+<pre>    DHCP_FILES="/var/lib/dhclient/dhclient-eth0.leases /var/lib/dhcp3/dhclient.eth0.leases"</pre>
+先看看操作系统的dhcp文件是不是叫那个名字，要是不是的话，就把最新的复制一个，取名dhclient.eth0.leases
+<pre>    mv cloud-set-guest-password /etc/init.d
+    chmod +x /etc/init.d/cloud-set-guest-password
+    update-rc.d -n cloud-set-guest-password defaults</pre>
+ok，可以测试一下，脚本本身比较简单，要是不工作的话，自己修改修改，调试调试，多试几次</p>
+</div>
+  
+  
+
+
+    </article>
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/centos-and-centos-update-softwares/">CentOS 使用第三方源（redhat）</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2013-05-26T00:00:00+08:00" pubdate data-updated="true">May 26<span>th</span>, 2013</time>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p>干活使用的机器装的是redhat，但是又木有买人家的服务，要安装软件实在是不容易，整理一些有用的源，作为笔记，免得以后忘了；
+<h3>epel源</h3>
+1. 为了保证源的顺序，安装 yum-priorities
+<pre>    yum install -y yum-priorities</pre>
+2. 安装 epel.repo，在这里找，根据自己的版本，选择i386或者x86_86(这里选择x86_64的)
+<pre>    wget http://mirrors.ustc.edu.cn/fedora/epel/6/x86_64/epel-release-6-8.noarch.rpm 
+    rpm -ivh epel-release-6-8.noarch.rpm
+    rpm --import /etc/pki/rpm-gpg/RPM-GPG-KEY-EPEL-6</pre>
+3. 设置priority，比其他的源数字都大</p>
+
+<p>ok， epel的源安装好啦
+<h3>rpmforge 源</h3>
+1. 在这里下载对应的版本 http://pkgs.repoforge.org/rpmforge-release/
+<pre>    wget http://pkgs.repoforge.org/rpmforge-release/rpmforge-release-0.5.3-1.el6.rf.x86_64.rpm
+    rpm -ivh rpmforge-release-0.5.3-1.el6.rf.x86_64.rpm</pre>
+2. 不导入证书的话，将gpgcheck设置为0即可</p>
+
+<p>3. 设置priority，比其他的源数字都大</p>
+
+<p>ok, rpmforge源安装好了
+<h3>rpmfusion 源</h3>
+1. 在这里下载对应的版本 http://download1.rpmfusion.org/nonfree/el/updates/6/
+<pre>    wget http://download1.rpmfusion.org/nonfree/el/updates/6/x86_64/rpmfusion-nonfree-release-6-1.noarch.rpm
+    rpm -ivh rpmfusion-nonfree-release-6-1.noarch.rpm</pre>
+2. 设置priority，比其他的源数字都大
+<h3>redhat使用centos源</h3>
+1. 删除系统自带的yum相关软件：rpm -qa | grep yum | xargs rpm -e &#8211;nodeps<br />
+2. 找一个镜像站点，下载对应的包(俺们选择163的)
+<pre>    python-iniparse
+    yum
+    yum-fastestmirror
+    yum-metadata-parser</pre>
+3. 安装下载好的包
+<pre>    rpm -ivh *.rpm</pre>
+4. 下载163的源
+<pre>    cd /etc/yum.repo.d
+    wget mirrors.163.com/.help/CentOS6-Base-163.repo</pre>
+5. 导入证书
+<pre>    rpm --import http://tel.mirrors.163.com/centos/6.4/os/x86_64/RPM-GPG-KEY-CentOS-6</pre>
+ok， 可以使用centos的源啦</p>
+</div>
+  
+  
+
+
+    </article>
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/split-brain-quorum-and-fencing/">Split-brain, Quorum, and Fencing</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2013-05-19T00:00:00+08:00" pubdate data-updated="true">May 19<span>th</span>, 2013</time>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p>原文地址：  <a href="http://techthoughts.typepad.com/managing_computers/2007/10/split-brain-quo.html">Split-brain, Quorum, and Fencing</a>,一切权利归原作者所有</p>
+
+<p>in some ways, an HA system is pretty simple - it starts services, it stops them, and it sees if they and the computers that run them are still running.  But, there are a few bits of important &#8220;rocket science&#8221; hiding in there among all these apparently simple tasks.  Much of the rocket science that&#8217;s there centers around trying to solve a single thorny problem - split brain.  The methods that are used to solve this problem are quorum and fencing.  Unfortunately, if you manage an HA system you need to understand these issues.  So this post will concentrate on these three topics: <em>split-brain, quorum, </em>and <em>fencing</em>.</p>
+
+<p>If you have three computers and some way for them to communicate with each other, you can make a cluster out of them and,each can monitor the others to see if their peer has crashed.  Unfortunately, there&#8217;s a problem here - you can&#8217;t distinguish a crash of a peer from broken communications with the peer.  All you really know is that you can&#8217;t hear anything from them.  You&#8217;re really stuck in a Dunn&#8217;s law[<a href="http://linux-ha.org/DunnsLaw">1</a>] situation - where you really don&#8217;t know very much, but desperately need to.  Maybe you don&#8217;t feel too desperate yet.  Perhaps you think that you don&#8217;t need to be able to distinguish these two cases.  The truth is that sometimes you don&#8217;t need to, but much of the time you very much need to be able to tell the difference.  Let&#8217;s see if I can make this clearer with an illustration.</p>
+
+<p>Let&#8217;s say you have three computers, <em>paul</em>, <em>silas</em>, and <em>mark</em>, and <em>paul</em> and <em>silas</em> can&#8217;t hear anything from <em>mark</em> and vice versa.  Let&#8217;s further suppose that <em>mark</em> had a filesystem <tt><strong>/importantstuff</strong></tt><tt> </tt>from a SAN volume mounted on it when we lost contact with it. and that <em>mark</em> is alive but out of contact.  What happens if we just go ahead and mount <tt><strong>/importantstuff</strong></tt> up on <em>paul</em>? The short answer is that bad things will happen[<a href="http://linux-ha.org/BadThingsWillHappen">2</a>]. <tt><strong>/importantstuff</strong></tt> will be irreparably corrupted as two different computers update the disk independently.  The next question you&#8217;ll ask yourself is &#8220;Where are those backup tapes?&#8221;. That&#8217;s the kind of question that&#8217;s been known to be career-ending.</p>
+
+<p><strong>Split-Brain</strong></p>
+
+<p>This problem of a subset of computers in a cluster beginning to operate autonomously from each other is called <em>Split Brain</em>[<a href="http://linux-ha.org/SplitBrain">3</a>]. In our example above, the cluster has split into two subclusters: {<em>paul</em>, <em>silas</em>} and {<em>mark</em>}, and each subset is unaware of the others.  This is the perhaps most difficult problem to deal with in high-availability clustering.  Although this situation does not occur frequently in practice, it does occur more often than one would guess.  As a result, it&#8217;s vital that a clustering system have a way to safely deal with this situation.</p>
+
+<p>Earlier I mentioned that there was information you really want to know, but don&#8217;t know.  Exactly what information did I mean?   What I wanted to know was &#8220;is it safe to mount up <tt><strong>/importantstuff</strong></tt> somewhere else?&#8221;.  In turn, you could figure that out if you knew the answer to one of these two questions:  &#8220;Is <em>mark</em> really dead?&#8221; which is one way of figuring out &#8220;Is <em>mark</em> going to write on the volume any more?&#8221;  But, of course, since we can&#8217;t communicate with <em>mark</em>, this is pretty hard to figure out.  So, cluster developers came out with a kind of clever way of ensuring that this question can be answered.  We call that answer <em>fencing</em>.</p>
+
+<p><strong>Fencing</strong></p>
+
+<p>Fencing is the idea of putting a fence around a subcluster so that it can&#8217;t access cluster resources, like  <tt><strong>/importantstuff</strong></tt>.  If you put a fence between it and its resources, then suddenly you know the answer to the question &#8220;Is <em>mark</em> going to write on the volume any more?&#8221; - and the answer is no - because that&#8217;s what the fence is designed to prevent.  So, instead of passively wondering what the answer to the safeness question is, fencing takes action to ensure the &#8220;right&#8221; answer to the question.</p>
+
+<p>This sort of abstract idea of fencing is fine enough, but how is this fencing stuff actually done? There are basically two general techniques:  <em>resource fencing</em> [<a href="http://linux-ha.org/ResourceFencing">4</a>] and <em>node fencing</em>.[<a href="http://linux-ha.org/NodeFencing">5</a>].
+<ul>
+	<li><strong>Resource fencing </strong>is the idea that if you know what resources a node might be using, then you can use some method of keeping it from accessing those resources. For example, if one has a disk which is accessed by a fiber channel switch, then one can talk to the fiber channel switch and tell it to deny the errant node access to the SAN.</li>
+	<li><strong>Node fencing</strong> is the idea that one can keep a node from accessing <em>all</em> resources - without knowing what kind of resources it might be accessing, or how one might deny access to them.  A common way of doing this is to power off or reset the errant node.  This is a very effective if somewhat inelegant method of keeping it from accessing anything at all.  This technique is also called STONITH[<a href="http://linux-ha.org/STONITH">6</a>] - which is a  graphic and colorful acronym standing for Shoot The Other Node In The Head.</li>
+</ul>
+With fencing, we can easily keep errant nodes from accessing resources, and we can now keep the world safe for democracy - or at least keep our little corner of it safe for clustering.  An important aspect of good fencing techniques is that they&#8217;re performed without the cooperation of the node being fenced off, and that they give positive confirmation that the fencing was done.  Since errant nodes are suspect, it&#8217;s by far better to rely on positive confirmation from a correctly operating fencing component than to rely on errant cluster nodes you can&#8217;t communicate with to police themselves.</p>
+
+<p>Although fencing is sufficient to ensure safe resource access, it is not typically considered to be sufficient for happy cluster operation because without some other mechanism, there are some behaviors it can get into which can be significantly annoying (even if your data really <em>is</em> safe).  To discuss this, let&#8217;s return our sample cluster.</p>
+
+<p>Earlier we talked about how <em>paul</em> or <em>silas</em> could use fencing to keep the errant node <em>mark</em> from accessing <tt><strong>/importantstuff</strong></tt>.  But, what about <em>mark</em>?  If <em>mark</em> is still alive, then it is going to regard <em>paul</em> and <em>silas</em> as errant, not itself.  So, it would also proceed to fence <em>paul</em> and <em>silas</em> - and progress in the cluster would stop.  If it is using STONITH, then one could get into a sort of infinite reboot loop, with nodes declaring each other as errant and rebooting each other, coming back up and doing it all over again.  Although this is kind of humorous the first time you see this in a test environment - in production with important services, the humor of the situation probably wouldn&#8217;t be your first thought.  To solve this problem, we introduce another new mechanism - <em>quorum</em>.</p>
+
+<p><strong>Quorum</strong></p>
+
+<p>One way to solve the mutual fencing dilemma described above is to somehow select only one of these two subclusters to carry on and fence the subclusters it can&#8217;t communicate with.  Of course, you have to solve it without communicating with the other subclusters - since that&#8217;s the problem - you can&#8217;t communicate with them.  The idea of quorum represents the process of selecting a unique (or <em>distinguished</em> for the mathematically inclined) subcluster.</p>
+
+<p>The most classic solution to selecting a single subcluster is a majority vote.  If you choose a subcluster with more than half of the members in it, then (barring bugs) you know there can&#8217;t be any other subclusters like this one. So, this is looks like a simple and elegant solution to the problem. For many cases, that&#8217;s true.  But, what if your cluster only has two nodes in it?  Now,  if you have a single node fail, then you can&#8217;t do anything - no one has quorum.  If this is the case, then two machines have no advantage over a single machine - it&#8217;s not much of an HA cluster.  Since 2-node HA clusters are by far the most common size of HA cluster, it&#8217;s kind of an important case to handle well.  So, how are we going to get out of this problem?</p>
+
+<p><strong>Quorum Variants and Improvements</strong></p>
+
+<p>What you need in this case, is some kind of a 3rd party arbitrator to help select who can fence off the other nodes and allow you to bring up resources - safely.  To solve this problem there is a variety of other methods available to act as this arbitrator - either software or hardware. Although there are several methods available to use as arbitrator, we&#8217;ll only talk about one each of hardware and software methods: <em>SCSI reserve</em> and <em>Quorum Daemon</em>.
+<ul>
+	<li><strong>SCSI reserve</strong>:  In hardware, we fall back on our friend SCSI reserve.  In this usage, both nodes try and reserve a disk partition available to both of them, and the SCSI reserve mechanism ensures that only one of the two of them can succeed.  Although I won&#8217;t go into all the gory details here, SCSI reserve creates its own set of problems including it won&#8217;t work reliably over geographic distances.  A disk which one uses in this way with SCSI reserve to determine quorum is sometimes called a quorum disk.  Some HA implementations (notably Microsoft&#8217;s) require a quorum disk.</li>
+	<li><strong>Quorum Daemon</strong>:  In Linux-HA[<a href="http://linux-ha.org/">7]</a>, we have implemented a quorum daemon - whose sole purpose in life is to arbitrate quorum disputes between cluster members.  One could argue that for the purposes of quorum this is basically SCSI reserve implemented in software - and such an analogy is a reasonable one.  However, since it is designed for only this purpose, it has a number of significant advantages over SCSI reserve - one of which is that it can conveniently and reliably operate over geographic distances, making it ideal for disaster recovery (DR) type situations.  I&#8217;ll cover the quorum daemon and why it&#8217;s a good thing in more detail in a later posting.  Both HP and Sun have similar implementations, although I have security concerns about them, particularly over long distances.  Other than the security concerns (which might or might not concern you), both HP&#8217;s and Sun&#8217;s implementations are also good ideas.</li>
+</ul>
+Arguably the best way to use these alternative techniques is not directly as a quorum method, but rather as a way of breaking ties when the number of nodes in a subcluster is exactly half the number of nodes in the cluster.  Otherwise, these mechanisms can become single points of failure - that is, if they fail the cluster cannot recover.</p>
+
+<p><strong>Alternatives to Fencing</strong></p>
+
+<p>There are times when it is impossible to use normal 3rd-party fencing techniques.  For example, in a split-site configuration (a cluster which is split across geographically distributed sites), when inter-site communication fails, then attempts to fence will also fail.  In these cases, there are a few self-fencing alternatives which one can use when the more normal third-party fencing methods aren&#8217;t available.  These include:
+<ul>
+	<li><strong>Node suicide</strong>.  If a node is running resources and it loses quorum, then it can power itself off or reboot itself (sort of a self-STONITH).  The remaining nodes wait &#8220;long enough&#8221; for the other node to notice and kill itself.  The problem is that a node which is sick might not succeed in self-suicide, or might not notice that it had a membership change, or had lost quorum.   It is equally bad if notification of these events is simply delayed &#8220;too long&#8221;.  Since there is a belief that the node in question is, or at least might be, malfunctioning, this is not a trivial question.  In this case, use of hardware or software watchdog timers becomes critical.</li>
+	<li><strong>Self-shutdown</strong>.  This self-fencing method is a variant on suicide, except that resources are stopped gracefully.  It has many of the same problems, except it is somewhat less reliable because the time to shut down resources can be quite long.  Like the case above, use of hardware or software watchdog timers becomes critical.</li>
+</ul>
+Note that without fencing, the membership and quorum algorithms are extremely critical.  You&#8217;ve basically lost a layer of protection, and you&#8217;ve switched from relying on a component which gives positive confirmation to relying on a probably faulty component to fence itself, and then hoping without confirmation that you&#8217;ve waited long enough before continuing.</p>
+
+<p><strong>Summary</strong></p>
+
+<p>Split-brain is the idea that a cluster can have communication failures, which can cause it to split into subclusters.  Fencing is the way of ensuring that one can safely proceed in these cases, and quorum is the idea of determining which subcluster can fence the others and proceed to recover the cluster services.</p>
+
+<p><strong>An Important Final Note</strong></p>
+
+<p>It is fencing which best guarantees the safety of your resources.  Nothing else works quite as well.  If you have fencing in your cluster software, and you have irreparable resources (i.e. that would be irreparably damaged in a split-brain situation), then you <strong>must</strong> configure fencing.  If your HA software doesn&#8217;t support (3rd party) fencing, then I suggest that you consider getting a different HA package.</p>
+</div>
+  
+  
+
+
+    </article>
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/sbd-fencing/">SBD Fencing</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2013-05-19T00:00:00+08:00" pubdate data-updated="true">May 19<span>th</span>, 2013</time>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p>原文链接 <a href="http://www.linux-ha.org/wiki/SBD_Fencing">SBD Fencing</a></p>
+
+<p>SBD expands to storage-based death, and is named in reference to Novell&#8217;s Cluster Services, which used SBD to exchange poison pill messages.</p>
+
+<p>The sbd daemon, combined with the external/sbd STONITH agent, provides a way to enable STONITH and fencing in clusters without external power switches, but with shared storage.</p>
+
+<p>The sbd daemon runs on all nodes in the cluster, monitoring the shared storage. When it either loses access to the majority of sbd devices, or sees that another node has written a fencing request to its mailbox slot, the node will immediately fence itself.</p>
+
+<p>sbd can be used in virtual environments where the hypervisor layer is not cluster-enabled, but a shared storage device between the guests is available; for other scenarios, please see DomUClusters.</p>
+
+<p>While this mechanism requires minimal cooperation from the node to be fenced, the code has proven very stable over the course of several years.
+<h4>Requirements</h4>
+You must have shared storage.<br />
+You can use one, two, or three devices.<br />
+This can be connected via Fibre Channel, Fibre Channel over Eterhnet, or even iSCSI.</p>
+
+<p>Thus, an iSCSI target can become a sort-of network-based quorum server; the advantage is that it does not require a smart host at your third location, just block storage.</p>
+
+<p>You must dedicate a small partition of each as the SBD device.<br />
+The SBD devices must not make use of host-based RAID.<br />
+The SBD devices must not reside on a DRBD instance.</p>
+
+<p>Why? Because DRBD is not shared, but replicated storage. If your cluster communication breaks down, and you finally need to actually use stonith, chances are that the DRBD replication link broke down as well, whatever you write to your local instance of DRBD cannot reach the peer, and the peer&#8217;s sbd daemon has no way to know about that poison pill it is supposed to commit suicide uppon.<br />
+The SBD device may of course be an iSCSI LU, which in turn may be exported from a DRBD based iSCSI target cluster.</p>
+
+<p>A SBD device can be shared between different clusters, as long as no more than 255 nodes share the device.
+<h4>Configuration</h4>
+How many devices should I use?</p>
+
+<p>SBD supports one, two, or three devices. This affects the operation of SBD as follows:<br />
+One device</p>
+
+<p>In its most simple implementation, you use one device only. (Older versions of SBD did not support more.) This is appropriate for clusters where all your data is on the same shared storage (with internal redundancy) anyway; the SBD device does not introduce an additional single point of failure then.<br />
+Three devices</p>
+
+<p>In this most reliable configuration, SBD will only commit suicide if more than one device is lost; hence, this configuration is resilient against one device outages (be it due to failures or maintenance). Fencing messages can be successfully relayed if at least two devices remain up.</p>
+
+<p>This configuration is appropriate for more complex scenarios where storage is not confined to a single array.</p>
+
+<p>Host-based mirroring solutions could have one SBD per mirror leg (not mirrored itself), and an additional tie-breaker on iSCSI.</p>
+
+<p>Two devices</p>
+
+<p>This configuration is a trade-off, primarily aimed at environments where host-based mirroring is used, but no third storage device is available.</p>
+
+<p>SBD will not commit suicide if it loses access to one mirror leg; this allows the cluster to continue to function even in the face of one outage.</p>
+
+<p>However, SBD will not fence the other side while only one mirror leg is available, since it does not have enough knowledge to detect an asymmetric split of the storage. So it will not be able to automatically tolerate a second failure while one of the storage arrays is down. (Though you can use the appropriate crm command to acknowledge the fence manually.)<br />
+Initialize the sbd device(s)</p>
+
+<p>All these steps must be performed as root.</p>
+
+<p>Decide which block device(s) will serve as the SBD device(s). This can be a logical unit, partition, or a logical volume; but it must be accessible from all nodes. Substitute the full path to this device wherever /dev/sbd is referenced below.</p>
+
+<p>If you have selected more than one device, provide them by specifying the -d options multiple times, as in: sbd -d /dev/sda -d /dev/sdb -d /dev/sdc &#8230;</p>
+
+<p>After having made very sure that these are indeed the devices you want to use, and do not hold any data you need - as the sbd command will overwrite it without further requests for confirmation -, initialize the sbd devices:
+<pre> # sbd -d /dev/sbd create
+ # sbd -d /dev/sbd3 -d /dev/sdc2 -d /dev/disk/by-id/foo-part1 create</pre>
+This will write a header to the device, and create slots for up to 255 nodes sharing this device. You can look at what was written to the device using:
+<pre> # sbd -d /dev/sbd dump
+ Header version     : 2
+ Number of slots    : 255
+ Sector size        : 512
+ Timeout (watchdog) : 5
+ Timeout (allocate) : 2
+ Timeout (loop)     : 1
+ Timeout (msgwait)  : 10</pre>
+As you can see, the timeouts are also stored in the header, to ensure that all participating nodes agree on them.
+<h4>Setup the software watchdog</h4>
+It is most strongly suggested that you set up your Linux system to use a watchdog. Use the watchdog driver, which fits best to your hardware, e. g. hpwdt for HP server. A list of available watchdogs can be found in /usr/src/linux/drivers/watchdog/</p>
+
+<p>If no watchdog matches to your hardware then use softdog.</p>
+
+<p>You can do this by adding the line
+<pre> modprobe softdog</pre>
+to
+<pre> /etc/init.d/boot.local</pre>
+<h4>Start the sbd daemon</h4>
+The sbd daemon is a critical piece of the cluster stack. It must always be running when the cluster stack is up, or even when it has crashed.</p>
+
+<p>The heartbeat/openais init script starts and stops SBD if configured; add the following to /etc/sysconfig/sbd:
+<pre> SBD_DEVICE="/dev/sbd"
+ SBD_OPTS="-W"</pre>
+-W enables the watchdog support, which you are most strongly suggested to do. If you need to specify multiple devices here, use a semicolon to separate them (their order does not matter):
+<pre> SBD_DEVICE="/dev/sbd;/dev/sde;/dev/sdc"</pre>
+If the SBD device is not accessible, the daemon will fail to start and prevent the cluster stack from coming up, too.
+<h4>Testing the sbd daemon</h4>
+<pre> sbd -d /dev/sbd list</pre>
+Will dump the node slots, and their current messages, from the sbd device. You should see all cluster nodes being listed there; most likely with a message clear.</p>
+
+<p>You can now try sending a test message to one of the nodes:
+<pre> sbd -d /dev/sbd message nodea test</pre>
+The node will acknowledge the receipt of the message in the system logs:
+<pre> Aug 29 14:10:00 nodea sbd: [13412]: info: Received command test from nodeb</pre>
+Messages are considered to have been delivered successfully if they have been sent to more than half of the configured devices.
+<h4>Configure the fencing resource</h4>
+All that is required is to add a STONITH resource of type external/sbd to the CIB. Newer versions of the agent will automatically source the devices from the host&#8217;s /etc/sysconfig/sbd. If this does not match your configuration, or if you are running an older version of the agent, set the sbd_device instance attribute accordingly.</p>
+
+<p>Sample configuration for crm configure:
+<pre> primitive stonith_sbd stonith:external/sbd</pre>
+Or, if you need to specify the device name:
+<pre> primitive stonith_sbd stonith:external/sbd \
+ 	params sbd_device="/dev/sbd"</pre>
+The sbd agent does not need to and should not be cloned. If all of your nodes run SBD, as is most likely, not even a monitor action provides a real benefit, since the daemon would suicide the node if there was a problem.</p>
+
+<p>SBD also supports turning the reset request into a crash request, which may be helpful for debugging if you have kernel crashdumping configured; then, every fence request will cause the node to dump core. You can enable this via the crashdump=&#8221;true&#8221; setting on the fencing resource. This is not recommended for on-going production use, but for debugging phases.
+<h4>Multipathing</h4>
+If your single sbd device resides on a multipath group, you may need to adjust the timeouts sbd uses, as MPIO&#8217;s path down detection can cause delays. (If you have multiple devices, transient timeouts of a single device will not negatively affect SBD. However, if they all go through the same FC switches, you will still need to do this.)</p>
+
+<p>After the msgwait timeout, the message is assumed to have been delivered to the node. For multipath, this should be the time required for MPIO to detect a path failure and switch to the next path. You may have to test this in your environment.</p>
+
+<p>The node will perform suicide if it has not updated the watchdog timer fast enough; the watchdog timeout must be shorter than the msgwait timeout - half the value is a good rule of thumb.</p>
+
+<p>You would set these values by adding -4 msgwait -1 watchdogtimeout to the create command:
+<pre> /usr/sbin/sbd -d /dev/sbd -4 20 -1 10 create</pre>
+(All timeouts are in seconds.)</p>
+
+<p>Note: This can incur significant delays to fail-over, unfortunately.
+<h4>Recovering from temporary device outages</h4>
+If you have multiple devices, failure of a single device is not immediately fatal. SBD will retry ten times in succession to reattach to the device, and then pause (as to not flood the system) for an hour before retrying. Thus, SBD should automatically recover from temporary outages.</p>
+
+<p>Should you wish to try reattach to the device right now, you can send a SIGUSR1 to the SBD parent daemon.</p>
+
+<p>The timeout can be tuned via the -t 3600 option. Setting the timeout to 0 will disable automatic restarts.
+<h4>Limitations</h4>
+Again, the sbd device must not use host-based RAID.<br />
+sbd is currently limited to 255 nodes per partition. If you have a need to configure larger clusters, create multiple sbd partitions, split the watch daemons across them, and configure one external/sbd STONITH resource per sbd device.
+<h4>Misc</h4>
+Slot allocation is automatic; when a daemon is started in watch mode, it will allocate one slot for itself if needed and then monitor it for incoming requests.</p>
+
+<p>Similarly, no hostlist has to be provided to external/sbd; it retrieves this list automatically from the sbd device.</p>
+
+<p>To overcome the MPIO delays, sbd should handle several paths internally, submitting the requests to all paths concurrently. However, this is not quite as trivial, as IO ordering is not guaranteed.</p>
+</div>
+  
+  
+
+
+    </article>
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/move-my-wordpress-to-a-subdir/">将wordpress博客站点移动到子目录</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2013-05-19T00:00:00+08:00" pubdate data-updated="true">May 19<span>th</span>, 2013</time>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p>之前为了简单，建立博客时使用了wordpress的默认选项，一路回车；</p>
+
+<p>今天心血来潮，想要安装新的功能，才发现网站的目录结构已经惨不忍睹了，索性就将wp移动到了子目录</p>
+
+<p>1. 修改 WordPress 地址（URL） (设置-> 常规)
+<pre>       http://klwang.info/abcd     --这里假设站点的子目录是abcd</pre>
+2. 将所有的wp文件全部移动到bacd目录</p>
+
+<p>3. 将原来的index.php和.<tt>.htaccess</tt>文件复制到根目录<br />
+    注意：这里是<strong>复制</strong>
+    想知道直接移动是啥效果吗，可以试试，会发现自己的博客赤裸裸的暴露在了攻击之下</p>
+
+<p>4. 用文本编辑器打开根目录中的 index.php, 原文
+<pre>       require('./wp-blog-header.php');</pre>
+修改成
+<pre>       require('./abcd/wp-blog-header.php');</pre></p>
+
+<p>5.更新固定链接 (设置->固定链接)<br />
+直接保存即可 (这一步很重要，不然，你会发现之前的文章都不能访问了)</p>
+
+<p>参考文章:  <a href="http://codex.wordpress.org/Giving_WordPress_Its_Own_Directory">Giving WordPress Its Own Directory</a></p>
+</div>
+  
+  
+
+
+    </article>
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/install-a-dhcp-service-on-ubuntu-server/">Ubuntu Server 安装 DHCP服务器</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2013-05-19T00:00:00+08:00" pubdate data-updated="true">May 19<span>th</span>, 2013</time>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p>1. 基本软件包安装
+<pre>sudo apt-get install isc-dhcp-server</pre>
+2. dhcp配置
+<pre>default-lease-time 600;
+max-lease-time 7200;
+subnet 192.168.1.0 netmask 255.255.255.0 {
+range 192.168.1.150 192.168.1.200;                     --地址范围
+option routers 192.168.1.254;                          --gateway地址，可选
+option domain-name-servers 192.168.1.1, 192.168.1.2;   --dns服务器地址，可选
+option domain-name "mydomain.example";                 --域名，可选
+}</pre>
+3. 重启服务
+<pre>sudo service isc-dhcp-server restart</pre></p>
+</div>
+  
+  
+
+
+    </article>
+  
+  <div class="pagination">
+    
+      <a class="prev" href="/blog/page/3/">&larr; Older</a>
+    
+    <a href="/blog/archives">Blog Archives</a>
+    
+    <a class="next" href="/">Newer &rarr;</a>
+    
+  </div>
+</div>
+<aside class="sidebar">
+  
+    <section>
+  <h1>Recent Posts</h1>
+  <ul id="recent_posts">
+    
+      <li class="post">
+        <a href="/blog/about-strace/">About Strace</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/about-ubuntu-no-pubkey-error/">Ubuntu NO_PUBKEY 故障解决方式</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/bash-you-don-not-konw-special-character/">你不知道的bash (特殊字符)</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/about-lvm-skills/">Lvm 实践笔记</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/change-your-resouce-angent-to-multistate/">将 Resouce Angent 改造成 Multi State 类型</a>
+      </li>
+    
+  </ul>
+</section>
+
+
+
+
+
+  
+</aside>
+
+    </div>
+  </div>
+  <footer role="contentinfo"><p>
+  Copyright &copy; 2013 - wklxd -
+  <span class="credit">Powered by <a href="http://octopress.org">Octopress</a></span>
+</p>
+
+</footer>
+  
+
+
+
+
+
+
+
+  <script type="text/javascript">
+    (function(){
+      var twitterWidgets = document.createElement('script');
+      twitterWidgets.type = 'text/javascript';
+      twitterWidgets.async = true;
+      twitterWidgets.src = 'http://platform.twitter.com/widgets.js';
+      document.getElementsByTagName('head')[0].appendChild(twitterWidgets);
+    })();
+  </script>
+
+
+
+
+
+</body>
+</html>

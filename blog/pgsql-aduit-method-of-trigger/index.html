@@ -1,0 +1,273 @@
+
+<!DOCTYPE html>
+<!--[if IEMobile 7 ]><html class="no-js iem7"><![endif]-->
+<!--[if lt IE 9]><html class="no-js lte-ie8"><![endif]-->
+<!--[if (gt IE 8)|(gt IEMobile 7)|!(IEMobile)|!(IE)]><!--><html class="no-js" lang="en"><!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  <title>使用触发器来实现postgresql数据库的审计功能 - My Octopress Blog</title>
+  <meta name="author" content="wklxd">
+
+  
+  <meta name="description" content="最简单的一种审计方式，使用触发器来实现： 1. 基本表 CREATE TABLE emp ( empname text NOT NULL, salary integer
+); 2. 建立审计表，主要记录操作，时间，操作用户等信息 CREATE TABLE emp_audit( operation &hellip;">
+  
+
+  <!-- http://t.co/dKP3o1e -->
+  <meta name="HandheldFriendly" content="True">
+  <meta name="MobileOptimized" content="320">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  
+  <link rel="canonical" href="http://github.klwang.info/blog/pgsql-aduit-method-of-trigger">
+  <link href="/favicon.png" rel="icon">
+  <link href="/stylesheets/screen.css" media="screen, projection" rel="stylesheet" type="text/css">
+  <link href="/atom.xml" rel="alternate" title="My Octopress Blog" type="application/atom+xml">
+  <script src="/javascripts/modernizr-2.0.js"></script>
+  <script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+  <script>!window.jQuery && document.write(unescape('%3Cscript src="./javascripts/lib/jquery.min.js"%3E%3C/script%3E'))</script>
+  <script src="/javascripts/octopress.js" type="text/javascript"></script>
+  <!--Fonts from Google"s Web font directory at http://google.com/webfonts -->
+<link href="http://fonts.googleapis.com/css?family=PT+Serif:regular,italic,bold,bolditalic" rel="stylesheet" type="text/css">
+<link href="http://fonts.googleapis.com/css?family=PT+Sans:regular,italic,bold,bolditalic" rel="stylesheet" type="text/css">
+
+  
+
+</head>
+
+<body   >
+  <header role="banner"><hgroup>
+  <h1><a href="/">My Octopress Blog</a></h1>
+  
+    <h2>A blogging framework for hackers.</h2>
+  
+</hgroup>
+
+</header>
+  <nav role="navigation"><ul class="subscription" data-subscription="rss">
+  <li><a href="/atom.xml" rel="subscribe-rss" title="subscribe via RSS">RSS</a></li>
+  
+</ul>
+  
+<form action="http://google.com/search" method="get">
+  <fieldset role="search">
+    <input type="hidden" name="q" value="site:github.klwang.info" />
+    <input class="search" type="text" name="q" results="0" placeholder="Search"/>
+  </fieldset>
+</form>
+  
+<ul class="main-navigation">
+  <li><a href="/">Blog</a></li>
+  <li><a href="/blog/archives">Archives</a></li>
+</ul>
+
+</nav>
+  <div id="main">
+    <div id="content">
+      <div>
+<article class="hentry" role="article">
+  
+  <header>
+    
+      <h1 class="entry-title">使用触发器来实现postgresql数据库的审计功能</h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2013-03-13T00:00:00+08:00" pubdate data-updated="true">Mar 13<span>th</span>, 2013</time>
+        
+      </p>
+    
+  </header>
+
+
+<div class="entry-content"><p>最简单的一种审计方式，使用触发器来实现：</p>
+
+<p>1. 基本表
+<pre>
+CREATE TABLE emp (
+    empname           text NOT NULL,
+    salary            integer
+);
+</pre>
+2. 建立审计表，主要记录操作，时间，操作用户等信息
+<pre>
+CREATE TABLE emp_audit( 
+    operation         char(1)   NOT NULL,
+    stamp             timestamp NOT NULL,
+    userid            text      NOT NULL,
+    empname           text      NOT NULL,
+    salary            integer
+);
+</pre>
+3. 具体操作的函数（注意：postgresql不支持存储过程）
+<pre>
+CREATE OR REPLACE FUNCTION process_emp_audit() RETURNS TRIGGER AS $emp_audit$
+    BEGIN
+        --
+        -- Create a row in emp_audit to reflect the operation performed on emp,
+        -- make use of the special variable TG_OP to work out the operation.
+        --
+        IF (TG_OP = 'DELETE') THEN
+            INSERT INTO emp_audit SELECT 'D', now(), user, OLD.*;
+            RETURN OLD;
+        ELSIF (TG_OP = 'UPDATE') THEN
+            INSERT INTO emp_audit SELECT 'U', now(), user, NEW.*;
+            RETURN NEW;
+        ELSIF (TG_OP = 'INSERT') THEN
+            INSERT INTO emp_audit SELECT 'I', now(), user, NEW.*;
+            RETURN NEW;
+        END IF;
+        RETURN NULL; -- result is ignored since this is an AFTER trigger
+    END;
+$emp_audit$ LANGUAGE plpostgresql;
+</pre>
+4. 建立触发器
+<pre>
+CREATE TRIGGER emp_audit
+AFTER INSERT OR UPDATE OR DELETE ON emp
+    FOR EACH ROW EXECUTE PROCEDURE process_emp_audit();
+</pre>
+这样，每次对emp进行操作(INSERT,UPDATE,DELETE)的时候，就会进行记录了。<br />
+缺点：<br />
+1.对于oltp的系统，由于表中数据的更改很频繁，审计记录将会很多，需要定时的清除审计信息<br />
+2.对于表结构修改的操作(DML语句)，该方式无法记录<br />
+3.对于表数据不幸删除或者其他误操作的恢复时，可能需要一个友好的恢复方案。</p>
+
+<p>to be continued ..</p>
+</div>
+
+
+  <footer>
+    <p class="meta">
+      
+  
+
+<span class="byline author vcard">Posted by <span class="fn">wklxd</span></span>
+
+      
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2013-03-13T00:00:00+08:00" pubdate data-updated="true">Mar 13<span>th</span>, 2013</time>
+      
+
+<span class="categories">
+  
+    <a class='category' href='/blog/categories/postgresql/'>postgresql</a>
+  
+</span>
+
+
+    </p>
+    
+      <div class="sharing">
+  
+  <a href="http://twitter.com/share" class="twitter-share-button" data-url="http://github.klwang.info/blog/pgsql-aduit-method-of-trigger/" data-via="" data-counturl="http://github.klwang.info/blog/pgsql-aduit-method-of-trigger/" >Tweet</a>
+  
+  
+  
+</div>
+
+    
+    <p class="meta">
+      
+        <a class="basic-alignment left" href="/blog/sorry-too-many-clients/" title="Previous Post: Sorry, too many clients">&laquo; Sorry, too many clients</a>
+      
+      
+        <a class="basic-alignment right" href="/blog/bash-psql-combination/" title="Next Post: bash和psql结合处理批量任务">bash和psql结合处理批量任务 &raquo;</a>
+      
+    </p>
+  </footer>
+</article>
+
+</div>
+
+<aside class="sidebar">
+  
+    <section>
+  <h1>Recent Posts</h1>
+  <ul id="recent_posts">
+    
+      <li class="post">
+        <a href="/blog/about-strace/">About Strace</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/about-ubuntu-no-pubkey-error/">Ubuntu NO_PUBKEY 故障解决方式</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/bash-you-don-not-konw-special-character/">你不知道的bash (特殊字符)</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/about-lvm-skills/">Lvm 实践笔记</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/change-your-resouce-angent-to-multistate/">将 Resouce Angent 改造成 Multi State 类型</a>
+      </li>
+    
+  </ul>
+</section>
+
+
+
+
+
+  
+</aside>
+
+
+    </div>
+  </div>
+  <footer role="contentinfo"><p>
+  Copyright &copy; 2013 - wklxd -
+  <span class="credit">Powered by <a href="http://octopress.org">Octopress</a></span>
+</p>
+
+</footer>
+  
+
+
+
+
+
+
+
+  <script type="text/javascript">
+    (function(){
+      var twitterWidgets = document.createElement('script');
+      twitterWidgets.type = 'text/javascript';
+      twitterWidgets.async = true;
+      twitterWidgets.src = 'http://platform.twitter.com/widgets.js';
+      document.getElementsByTagName('head')[0].appendChild(twitterWidgets);
+    })();
+  </script>
+
+
+
+
+
+</body>
+</html>

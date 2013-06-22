@@ -1,0 +1,432 @@
+<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+
+  <title><![CDATA[Category: oracle | My Octopress Blog]]></title>
+  <link href="http://github.klwang.info/blog/categories/oracle/atom.xml" rel="self"/>
+  <link href="http://github.klwang.info/"/>
+  <updated>2013-06-22T23:37:24+08:00</updated>
+  <id>http://github.klwang.info/</id>
+  <author>
+    <name><![CDATA[wklxd]]></name>
+    
+  </author>
+  <generator uri="http://octopress.org/">Octopress</generator>
+
+  
+  <entry>
+    <title type="html"><![CDATA[oralce 默认安装后目录及文件简单说明]]></title>
+    <link href="http://github.klwang.info/blog/oralce-ofa-expain-of-myself/"/>
+    <updated>2013-04-22T00:00:00+08:00</updated>
+    <id>http://github.klwang.info/blog/oralce-ofa-expain-of-myself</id>
+    <content type="html"><![CDATA[<p>权限：
+<pre>  chmod 775 dirs
+  chown oracle:oinstall dirs</pre>
+目录说明：
+<pre>  /u01/app/oralce          --oracle用户的基目录$HOME 和 $ORACLE_BASE    
+                    --数据库软件安装的目录]</pre></p>
+
+
+
+
+<p>  $ORACLE_BASE/product/v/type[n] --oracle主目录 $ORACLE_HOME，<br />
+                    --可以安装不同版本的数据库软件 <br />
+                    --可执行文件都在$ORACLE_HOME/bin<br />
+  $ORACLE_BASE/ora_inventory        --清单目录，保存所有的oracle软件信息<br />
+  $ORACLE_BASE/admin/db_name/       --管理文件目录【核心转储，日志，告警，调试】<br />
+  $ORACLE_BASE/flash_recovery/db_name/  --管理文件目录【核心转储，日志，告警，调试】
+<pre>
+  /u01/oradata/db_name          --数据文件</pre>
+<pre>
+  /etc/sysctl.conf          --核心修改
+  /etc/security/limit.conf      --系统限制相关修改
+  /etc/oraInst.loc          --记录oracle安装组和文件清单目录
+  /etc/oratab               --oracle个版本的安装路径ORACLE_HOME
+                    --SID:主目录:是否受服务脚本管理</pre>
+<pre>
+  $ORACLE_HOME/network/admin/tnsnames.ora   --oracle net配置文件的位置
+  /user/local/oraenv                --多个实例的系统上，该文件帮助做出选择</pre>
+其他：
+<pre>
+  TMPDIR                --如果安装时没有/tmp的写权限，
+                    --或者/tmp不够大，安装时设置此值将改变过程中的/tmp目录</pre></p>
+
+]]></content>
+  </entry>
+  
+  <entry>
+    <title type="html"><![CDATA[oracle 常用数据字典]]></title>
+    <link href="http://github.klwang.info/blog/oracle-data-directory-explain/"/>
+    <updated>2013-04-16T00:00:00+08:00</updated>
+    <id>http://github.klwang.info/blog/oracle-data-directory-explain</id>
+    <content type="html"><![CDATA[<p><pre>dba_catalog</pre>
+表、视图、序列、同义词、索引基本信息
+<pre>dba_objects</pre>
+数据库对象创建以及最后更新时间
+<pre>dba_tablespaces</pre>
+表空间及区段管理、空间分配、段管理类型等信息
+<pre>dba_tables</pre>
+表属主，表空间，行长，数据量等
+<pre>dba_indexes</pre>
+索引信息
+<pre>dba_part_tables</pre>
+分区表信息
+<pre>dba_synonyms</pre>
+同义词信息
+<pre>dba_triggers</pre>
+触发器信息，包括定义
+<pre>dba_sequences</pre>
+序列信息
+<pre>dba_constraints</pre>
+约束信息
+<pre>dba_cons_columns</pre>
+约束的表列
+<pre>dba_tab_columns</pre>
+表的列</p>
+
+]]></content>
+  </entry>
+  
+  <entry>
+    <title type="html"><![CDATA[Oracle 表空间管理]]></title>
+    <link href="http://github.klwang.info/blog/manage-of-oracle-tablespace/"/>
+    <updated>2013-04-16T00:00:00+08:00</updated>
+    <id>http://github.klwang.info/blog/manage-of-oracle-tablespace</id>
+    <content type="html"><![CDATA[<p>1. 创建表空间
+<pre>create [temporary] tablespace spc_name
+datafile 'path/name'
+size sizeM
+[ -- 默认值
+extend management local
+autoallocate | uniform xM -- 自动/手动区段分配尺寸
+segment space management auto
+block_size xxK
+]</pre>
+2. 删除表空间
+<pre>drop tablespace spc_name
+[
+including contents -- 绕过回收站，直接擦除 （表/索引等）
+and datafiles    -- 删除表空间
+cascade constraints    --去除其他表的约束依赖
+]</pre>
+3. 修改表空间尺寸：
+<pre>alter tablespace spc_name
+add datafile 'path/file'
+size sizeM
+[
+autoextend on
+next 10M
+maxsize 100000M/unlimited
+]</pre></p>
+
+
+
+
+<p>alter database datafile 'path/name'<br />
+resize  sizeM
+4. 表空间改名：
+<pre>alter tablespace spc_name1 rename to spc_name2;</pre>
+5. 数据文件改名：
+<pre>alter tablespace spc_name offline normal;    --脱机
+mv datafile1 datafile2
+alter tablespace spc_name1 rename datafile 'datafile1' to 'datafile2';
+alter tablespace spc_name online;            --在线</pre>
+6.  表空间只读
+<pre>alter tablespace spc_name read only
+[
+read write
+]</pre>
+7. 默认【临时】表空间
+<pre>alter database default [temporary] tablespace
+spc_name
+[
+spc_grp_name   --表空间【组】作为默认,临时表空间专用
+]</pre>
+8. 临时表空间
+<pre>create [temporary] tablespace spc_name
+datafile 'path/name'
+size sizeM
+[
+tablespace group grp1; --此时自动创建 grp1 组
+]</pre></p>
+
+
+
+
+<p>alter tablespace scp_name<br />
+tablespace group grp1; -- 此时自动创建/修改 grp1 组
+9. 建立用户
+<pre>create user user_name
+identified by pass
+default tablespace spc_name
+temporary tablespace spc_name</pre></p>
+
+
+
+
+<p>alter user user_name<br />
+temporary tablespace spc_name
+10. 大文件表空间：
+<pre>create bigfile tablespace spc_name
+datafile 'path/name'
+size sizeM</pre></p>
+
+
+
+
+<p>alter database set default bigfile tablespace spc_name;    -- 设置默认表空间为bigfile<br />
+alter tablspeace spcname resize sizeG / autoextend on next sizeG; --调整尺寸
+11. 修改表的默认表空间：
+<pre>alter table tb_name move tablespace new_ts;
+alter index inx rebu‎ild tablespace new_ts;</pre>
+12. 将字典管理的表空间转换乘本地管理：
+<pre>execute dbms_space_admin.tablespace_migrage_to_local('SPACE_USER');
+execute dbms_space_admin.tablespace_migrage_to_local('SYSTEM');</pre></p>
+
+]]></content>
+  </entry>
+  
+  <entry>
+    <title type="html"><![CDATA[Oracle表管理]]></title>
+    <link href="http://github.klwang.info/blog/manage-of-oracle-tables/"/>
+    <updated>2013-04-16T00:00:00+08:00</updated>
+    <id>http://github.klwang.info/blog/manage-of-oracle-tables</id>
+    <content type="html"><![CDATA[<p>1. dual
+<p style="padding-left: 30px;">神奇的dual表，属于sys模式</p>
+2. 表尺寸估算/回收
+<p style="padding-left: 30px;">2.1 使用 database control 估算<br />
+2.2 使用 dbms_space.create_table_cost 估算<br />
+2.3 alter table tb_name deallocate unused;</p>
+3. 权限说明
+<p style="padding-left: 30px;">自己模式： create table 系统权限<br />
+其他模式： create any table 系统权限</p>
+4. 建表
+<pre>   create table
+    collist
+    constraints
+    tablespace spc_name
+    [--索引表
+        orgnization index tablespace spc_name
+        pctthreshold num                --溢出百分比
+        overflow tablespace spc_name2   --溢出表空间
+    ]</pre>
+5. 加列
+<pre>   alter table tb_name add(colname type)</pre>
+6. 减列
+<pre>   alter table tb_name drop(colname)   --删除
+    alter table tb_name set unused (col1, col2) --快速删除、标记
+    alter table tb_name drop unused columns --删除所有标记无用的列
+    [
+        checkpoint no --没删除no行执行一个checkpoint
+    ]</pre>
+7. 重命名列
+<pre>   alter table tb_name rename column col1 to col2</pre>
+8. 重命名表
+<pre>   alter table tb_name rename to tb_name_new</pre>
+9. 清空表
+<pre>   truncate table tb_name;</pre>
+10 cats创建表
+<pre>   create table tb1 as
+    select * from tb2
+    [
+        parallel degree 4   --多个进程并行加载数据
+        nologging           --关闭重做日志
+    ]</pre>
+11 修改表所属空间
+<pre>   alter table tb_name move new_tbspace</pre>
+12 删除表
+<pre>   drop table tb_name
+    [
+        purge   --不进入回收站，直接删除
+    ]</pre>
+13 临时表
+<pre>   create global temporary table tb_name
+    (col_list)
+    on commit reserve rows  --会话临时表，事务结束时，记录保留
+    on commit delelte rows  --事务临时表，只对使用该表的事务有效</pre>
+14 分区表
+<p style="padding-left: 30px;">范围分区</p></p>
+
+
+
+
+<p><pre>    create table tb_name
+    (col_list)
+    partition by range(col1, col2, col3)
+    (
+        partition p1 values less than (c1, c2, c3) tablespace sp1,
+        partition p2 values less than (c1, c2, c3) tablespace sp2
+    )</pre>
+<p style="padding-left: 30px;">散列分区</p></p>
+
+
+
+
+<p><pre>    create table tb_name
+    (col_list)
+    partition by hash (col_list)
+    partitions num              --分区数目
+    store in (ts1, ts2, ..)     --储存的表空间</pre>
+<p style="padding-left: 30px;">列表分区</p></p>
+
+
+
+
+<p><pre>    create table tb_name
+    (col_list)
+    partition by list (col1)
+    (
+        partition p1 values (c1, c2, c3) tablespace sp1,
+        partition p2 values (c1, c2, c3) tablespace sp2
+    )</pre>
+<p style="padding-left: 30px;">组合范围-散列分区</p></p>
+
+
+
+
+<p><pre>    create table tb_name
+    (col_list)
+    partition by range(col1) subpartition by hash (col2)
+    subpartitions num
+    store in (ts1, ts ..)
+    (
+        partition p1 values less than (xx),
+        partition p1 values less than (xx)
+    )</pre>
+<p style="padding-left: 30px;">组合范围-列表分区</p></p>
+
+
+
+
+<p><pre>    create table tb_name
+    (col_list)
+    partition by range(col1) subpartition by list (col2)
+    (
+        partition p1 values less than (xx) tablespace sp1
+        (
+            subpartition p1p1 values(vales_list),
+            subpartition p1p2 values(vales_list)
+        ),
+        partition p1 values less than (xx) tablespace sp2
+        (
+            subpartition p2p1 values(vales_list),
+            subpartition p2p2 values(vales_list)
+        )
+    )</pre>
+<p style="padding-left: 30px;">添加分区</p></p>
+
+
+
+
+<p><pre>alter table tb_name add partition p1 values less than (value_list) tablespace sp1;</pre>
+<p style="padding-left: 30px;">分割分区</p></p>
+
+
+
+
+<p><pre>        alter table tb_name split partition p1 at (value) into (partition p1a, p2b)</pre>
+<p style="padding-left: 30px;">合并分区</p></p>
+
+
+
+
+<p><pre>        alter table tb_name merge partitions p1a, p1b into partition p1</pre>
+<p style="padding-left: 30px;">重命名分区</p></p>
+
+
+
+
+<p><pre>        alter table tb_name rename partition p1 to p2;</pre>
+<p style="padding-left: 30px;">转换分区</p></p>
+
+
+
+
+<p><pre>        alter table tb_name exchange partition p_name with tb_other_name</pre>
+<p style="padding-left: 30px;">删除分区</p></p>
+
+
+
+
+<p><pre>        alter table tb_name drop partition p1
+        [ update  global indexes ] --重建全局索引</pre>
+15 相关数据字典
+<pre>   dba_tables      表信息
+    dba_tab_partitions  分区信息
+    dba_tab_columns     字段信息</pre>
+16 获取创建表的ddl语句
+<pre>   dbms_metadata.get_ddl('TABLE', 'TB_NAME);
+    -- 需要设置 long 变量，不然可能无法完全显示 set long 2000</pre></p>
+
+]]></content>
+  </entry>
+  
+  <entry>
+    <title type="html"><![CDATA[Oracle索引管理]]></title>
+    <link href="http://github.klwang.info/blog/manage-of-oracle-inde/"/>
+    <updated>2013-04-16T00:00:00+08:00</updated>
+    <id>http://github.klwang.info/blog/manage-of-oracle-inde</id>
+    <content type="html"><![CDATA[<p>1. 索引有效准则
+<p style="padding-left: 30px;">1.1 访问的数据少于 15%<br />
+1.2 小表<br />
+1.3 为所有表创建主键，主键上自动生成索引<br />
+1.4 为多表链接中的列创建索引<br />
+1.5 WHERE中频繁使用的列创建索引<br />
+1.6 对ORDER BY、GROUP BY涉及的列建立索引<br />
+1.7 常字符串的列通常不要建立索引<br />
+1.8 频繁更新的列，涉及开销，通常不要建立索引<br />
+1.9 保持索引数目尽量少</p>
+2. 估算索引的尺寸
+<pre>   dbms_space.create_index_cost 方法</pre>
+3. 建立索引
+<pre>   create 
+    [
+        bitmap      --位图索引
+    ]
+    index indx1 on table(col_list)
+    [
+        reverse     --反向键索引
+    ]
+    tablespace sp1</pre>
+4. 函数索引
+<pre>   create index ind2 on tb1(func(col1))</pre>
+5. 全局索引
+<p style="padding-left: 30px;">不分区：</p></p>
+
+
+
+
+<p><pre>    create index ind3 on tb2(col1)
+    global partition by range(col1)
+    (
+        partition p1_ind values less than (val1),
+        partition p2_ind values less than (val2)
+    )</pre>
+<p style="padding-left: 30px;">散列分区</p></p>
+
+
+
+
+<p><pre>    create index ind4 on tb3(col1)
+    global partition by hash (v1, v2)
+    (
+        partition p1_ind tablespace ts1,
+        partition p2_ind tablespace ts2
+    )</pre>
+6. 本地索引
+<pre>   create index index_l1 on tb(col) LOCAL
+    tablespace localsp1</pre>
+7. 索引使用情况监控
+<pre>   alter index ind1 monitoring usage;
+    some query;
+    alter index ind1 nomonitoring usage;
+    select * from v$object_usage where index_name = 'ind1';</pre>
+8. 重建索引
+<pre>   alter index ind1 REBUILD
+    [
+        online              --此时可以进行DML操作
+    ]</pre></p>
+
+]]></content>
+  </entry>
+  
+</feed>

@@ -1,0 +1,240 @@
+<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+
+  <title><![CDATA[Category: Ovirt | My Octopress Blog]]></title>
+  <link href="http://github.klwang.info/blog/categories/ovirt/atom.xml" rel="self"/>
+  <link href="http://github.klwang.info/"/>
+  <updated>2013-06-22T23:37:24+08:00</updated>
+  <id>http://github.klwang.info/</id>
+  <author>
+    <name><![CDATA[wklxd]]></name>
+    
+  </author>
+  <generator uri="http://octopress.org/">Octopress</generator>
+
+  
+  <entry>
+    <title type="html"><![CDATA[Ovirt 安装小记]]></title>
+    <link href="http://github.klwang.info/blog/ovirt-install-guide-of-klwang/"/>
+    <updated>2013-05-28T00:00:00+08:00</updated>
+    <id>http://github.klwang.info/blog/ovirt-install-guide-of-klwang</id>
+    <content type="html"><![CDATA[<p>出于工作需要，试了一把Ovirt, 发现其和cloudstack、openstack这种大家伙还是有差距的，不过也有它的长处，今天就记录一下安装的过程，下次也就方便一些了。。。
+<h3>写在前面：</h3>
+硬件要求： CPU支持虚拟化肯定是必须的了<br />
+作为存储的节点，硬盘相应的大一些喽<br />
+运行虚拟机的节点，RAM和CPU肯定是越犀利越<br />
+数据库和管理节点，差不多就ok</p>
+
+
+
+
+<p>操作系统： 本次用的是 CentOS 6.4 x86_64， 反正红帽系列都ok，debian系列的没有试过，但是应该也差不多</p>
+
+
+
+
+<p>文档来源： Ovirt的好处就是文档多（当然，都是红帽的RHEV，工具的名字可能不一样，功能、参数差不多）
+<h3>进入正题：</h3>
+<h4>1. 防火墙设置</h4>
+<h5>管理节点</h5>
+<pre>    8080、8443： --web管理界面
+    8006~8009： --和host通信</pre>
+<h5>存储节点(本次使用nfs)</h5>
+<pre>    $ cat /etc/sysconfig/nfs
+    LOCKD_TCPPORT=32803
+    LOCKD_UDPPORT=32769
+    MOUNTD_PORT=892
+    RQUOTAD_PORT=875
+    STATD_PORT=662
+    STATD_OUTGOING_PORT=2020</pre>
+<h5>host节点</h5>
+<pre>    5634 - 6166： 虚拟机通信(kvm等)
+    16514： libvirt在线迁移
+    49152 - 49216：虚拟机迁移、fencing等
+    54321： host和manager通信（坑爹的端口哦）</pre>
+<h5>Directory节点</h5>
+<pre>    88, 464: Kerberos
+    389, 636: ldap</pre>
+最后，ssh的22端口肯定要开了，我们默认所有节点都安装ssh服务。。</p>
+
+
+
+
+<p>要是单单自己装着玩，为了省事，就直接这样吧
+<pre>    service iptables stop
+    chkconfig --del iptables</pre>
+<h4>2. 准备工作</h4>
+Ovrit比较坑爹，需要一个DNS服务器来给自己干活，hosts文件都抗不住，最好装一个;<br />
+用自己的机子，或者随便一台host或者管理机兼职一下</p>
+
+
+
+
+<p>为每台机子设置好机器名、域名等: 达到以下结果(hosts文件就能办到)
+<pre>    hostname --fqdn
+        nodex.xx.com
+    dnsdomainname
+        xx.com</pre>
+<h4>3. 安装管理节点</h4>
+<pre>    cd /etc/yum.repo.d/
+    wget http://ovirt.org/releases/stable/ovirt-engine.repo
+    yum install ovirt-engine</pre>
+ok,就是这么简单</p>
+
+
+
+
+<p>配置：
+<pre>    # engine-setup</pre>
+会问一大堆东西，一般默认就ok，记住一点，数据库和admin的密码一定要记住，不然就自己后悔去吧
+<pre>    oVirt Manager will be installed using the following configuration:
+    =================================================================
+    http-port: 8080
+    https-port: 8443
+    host-fqdn: engine.demo.ovirt.org
+    auth-pass: ********
+    db-pass: ********
+    org-name: oVirt
+    default-dc-type: NFS
+    nfs-mp: /isoshare
+    iso-domain-name: ISODomain
+    override-iptables: yes
+    Proceed with the configuration listed above? (yes|no):</pre>
+数据库密码忘了还好，用的是postgresql，可以参考我的<a href="http://klwang.info/pgsql%E5%BF%98%E8%AE%B0%E5%AF%86%E7%A0%81%E5%A4%84%E7%90%86%E5%8A%9E%E6%B3%95/">这篇blog</a>搞定<br />
+admin的密码忘了我就不知道怎么搞了，自己重新 engine-setup 吧</p>
+
+
+
+
+<p>装完后，会自动把你的网卡桥接，做一个ovirtmanage的网卡，供它自己使用<br />
+这里，如果你已经把iptables禁用了，就不要让它帮你设置iptables了
+<h4>4. 设置</h4>
+管理节点安装好，就可以进去操作一把了，地址 your_manager_ip:8080<br />
+帐号密码是 admin/你的密码</p>
+
+
+
+
+<p>概念和 cloudstack 差不多，有 datacenter、cluster、host、storage的概念，基本是相互包含的关系<br />
+没有pods的概念，把 secondary 分为了 iso 和 export连个玩意，意思差不多，放iso文件和备份啥的</p>
+
+
+
+
+<p>特别的，storage支持iscsi，大家可以试试</p>
+
+
+
+
+<p>最终安装结果：<br />
+一个default的datacenter、一个default的cluster、加一个放data的storage（我用的是NFS，NFS的安装设置也不是很难，参考我之前<a href="http://klwang.info/category/cloudstack/">转载的那个cludstack</a>里边的做法即可）<br />
+然后，把 data的storage激活(active)，这个云就算是ok了，，，下来可以添加运行虚拟机的节点啦
+<h4>5. 安装host节点</h4>
+红帽就是红帽，不愧是做操作系统的；<br />
+他们做了一个专门运行host的操作系统，也就是说让他们的host直接运行在裸机上<br />
+我们就算了，在centos上装个运行虚拟机的服务就行了，不折腾了<br />
+想折腾的朋友，看看这里：http://resources.ovirt.org/releases/stable/iso， 随便下载个试试</p>
+
+
+
+
+<p>ok，装服务
+<pre>    yum install vdsm vdsm-cli -y</pre>
+就这么简单，同样，它会自己搞定网卡桥接的事情
+<h4>6. 将host节点加入云</h4>
+在管理界面中，点击hosts栏，点击add<br />
+输入 显示名， 地址， root的 密码就ok了，会自动安装需要的软件，完后自动重启</p>
+
+
+
+
+<p>最后，选中一个host机器，点击 active 激活就行了
+<h4>7. 创建虚拟机</h4>
+先把 iso 文件传上去， scp，嘿嘿。放在 engine-setup 时你自己设定的： nfs-mp 目录下（不会忘了吧）<br />
+刷新一下，知道你看见自己上传的系统镜像iso</p>
+
+
+
+
+<p>创建虚拟机很简单，自己设置一下网卡，默认的ovirt-manage网卡会桥接到自己的host机器上去<br />
+完了，根据需要添加一个磁盘<br />
+好了，剩下的就是平时装系统，不浪费篇幅说了
+<h4>8. 制作模版</h4>
+这个比较重要，云就是为了部署起来简单，这样的话，模版就不可或缺了</p>
+
+
+
+
+<p>选一个要作为模版的虚拟机，开始处理：<br />
+Linux
+<pre>    touch /.unconfigured
+    rm -rf /etc/ssh/ssh_host_*
+    rm -rf /etc/udev/rules.d/70-*
+    去除 /etc/sysconfig/network-scripts/ifcfg-eth* 中HWADDR那行
+    删了 /var/log 下的垃圾（可选）
+    init 0</pre>
+好了，可以做模版了</p>
+
+
+
+
+<p>Windows<br />
+运行 Sysprep, 做好模版即可（一般就是一路回车搞定）</p>
+
+
+
+
+<p>ok，有了模版就可以使用模版生成虚拟机了
+<h4>9. 在线迁移</h4>
+云的最大好处就是可以将虚拟机在线迁移到其他节点，操作很简单，图形界面，点击 migrage 就行啦 自己试试吧，只可意会不能言传的，这东西
+<h4>10. 用户管理</h4>
+Ovirt的用户管理真难受，自己还不管，非要搞个认证服务器来，我们使用IPA<br />
+IPA安装（不能和manage在一个节点哦）：
+<pre>    yum install ipa-server bind bind-dyndb-ldap
+    ipa-server-install</pre>
+一路按照提示输入信息<br />
+切记切记要设置好DNS服务器，安装过程后会自动识别机器名和域名<br />
+最后，这句话：
+<pre>    Sample zone file for bind has been created in /tmp/sample.zone.ygzij5.db</pre>
+生成了一个关于ldap、krb等的DNS解析，如下：
+<pre>    ; ldap servers
+    _ldap._tcp              IN SRV 0 100 389        ipaserver.example.com
+    ;kerberos realm
+    _kerberos               IN TXT EXAMPLE.COM
+    ; kerberos servers
+    _kerberos._tcp          IN SRV 0 100 88         ipaserver.example.com
+    _kerberos._udp          IN SRV 0 100 88         ipaserver.example.com
+    _kerberos-master._tcp   IN SRV 0 100 88         ipaserver.example.com
+    _kerberos-master._udp   IN SRV 0 100 88         ipaserver.example.com
+    _kpasswd._tcp           IN SRV 0 100 464        ipaserver.example.com
+    _kpasswd._udp           IN SRV 0 100 464        ipaserver.example.com</pre>
+将这些东西放到你的DNS服务器的 解析文件中去
+<pre>    service named reload</pre>
+添加用户
+<pre>    kinit admin
+    ipa user-add
+    ipa password login-name --循环添加多个用户
+    kdestory</pre>
+然后，在你的Ovirt中Uers中设置用户权限，就可以用新添加的用户登陆啦。。
+<h4>后记</h4>
+文章写的比较简单，默认读者应该 对linux比较熟悉</p>
+
+
+
+
+<p>参考文章:</p>
+
+
+
+
+<p><a href="https://access.redhat.com/site/documentation//en-US/Red_Hat_Enterprise_Linux/6/html/Identity_Management_Guide/index.html">Red_Hat_Identity_Management_Guide</a>
+<a href="http://www.ovirt.org/File:OVirt-3.0-Installation_Guide-en-US.pdf">OVirt-3.0-Installation_Guide</a>
+<a href="https://access.redhat.com/site/documentation/en-US/Red_Hat_Enterprise_Virtualization/3.2-Beta/html/Administration_Guide/index.html" target="_blank">RHEV_Administration_Guide</a>
+<a href="https://access.redhat.com/site/documentation//en-US/Red_Hat_Enterprise_Virtualization/3.2-Beta/html/Installation_Guide/index.html">RHEV_Installation_Guide</a>
+<a href="https://access.redhat.com/site/documentation//en-US/Red_Hat_Enterprise_Virtualization/3.2-Beta/html/Quick_Start_Guide/index.html">RHEV_Quick_Start_Guide</a>
+<a href="http://www.rjsystems.nl/en/2100-dns-discovery-openldap.php">DNS discovery for OpenLDAP</a></p>
+
+]]></content>
+  </entry>
+  
+</feed>

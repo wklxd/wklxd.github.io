@@ -1,0 +1,318 @@
+
+<!DOCTYPE html>
+<!--[if IEMobile 7 ]><html class="no-js iem7"><![endif]-->
+<!--[if lt IE 9]><html class="no-js lte-ie8"><![endif]-->
+<!--[if (gt IE 8)|(gt IEMobile 7)|!(IEMobile)|!(IE)]><!--><html class="no-js" lang="en"><!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  <title>cman and corosync - My Octopress Blog</title>
+  <meta name="author" content="wklxd">
+
+  
+  <meta name="description" content="在pacemaker的经典文档Clusters from Scratch 中，使用到了cman 这个红帽cluster套件中的工具； 奇怪的是，一开始使用的是corosync作为集群的通信层，而到了gfs作为文件系统的active/active时却换成了cman； 同时，corosync. &hellip;">
+  
+
+  <!-- http://t.co/dKP3o1e -->
+  <meta name="HandheldFriendly" content="True">
+  <meta name="MobileOptimized" content="320">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  
+  <link rel="canonical" href="http://github.klwang.info/blog/cman-and-corosync">
+  <link href="/favicon.png" rel="icon">
+  <link href="/stylesheets/screen.css" media="screen, projection" rel="stylesheet" type="text/css">
+  <link href="/atom.xml" rel="alternate" title="My Octopress Blog" type="application/atom+xml">
+  <script src="/javascripts/modernizr-2.0.js"></script>
+  <script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+  <script>!window.jQuery && document.write(unescape('%3Cscript src="./javascripts/lib/jquery.min.js"%3E%3C/script%3E'))</script>
+  <script src="/javascripts/octopress.js" type="text/javascript"></script>
+  <!--Fonts from Google"s Web font directory at http://google.com/webfonts -->
+<link href="http://fonts.googleapis.com/css?family=PT+Serif:regular,italic,bold,bolditalic" rel="stylesheet" type="text/css">
+<link href="http://fonts.googleapis.com/css?family=PT+Sans:regular,italic,bold,bolditalic" rel="stylesheet" type="text/css">
+
+  
+
+</head>
+
+<body   >
+  <header role="banner"><hgroup>
+  <h1><a href="/">My Octopress Blog</a></h1>
+  
+    <h2>A blogging framework for hackers.</h2>
+  
+</hgroup>
+
+</header>
+  <nav role="navigation"><ul class="subscription" data-subscription="rss">
+  <li><a href="/atom.xml" rel="subscribe-rss" title="subscribe via RSS">RSS</a></li>
+  
+</ul>
+  
+<form action="http://google.com/search" method="get">
+  <fieldset role="search">
+    <input type="hidden" name="q" value="site:github.klwang.info" />
+    <input class="search" type="text" name="q" results="0" placeholder="Search"/>
+  </fieldset>
+</form>
+  
+<ul class="main-navigation">
+  <li><a href="/">Blog</a></li>
+  <li><a href="/blog/archives">Archives</a></li>
+</ul>
+
+</nav>
+  <div id="main">
+    <div id="content">
+      <div>
+<article class="hentry" role="article">
+  
+  <header>
+    
+      <h1 class="entry-title">Cman and Corosync</h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2013-06-04T00:00:00+08:00" pubdate data-updated="true">Jun 4<span>th</span>, 2013</time>
+        
+      </p>
+    
+  </header>
+
+
+<div class="entry-content"><p>在pacemaker的经典文档<a href="http://clusterlabs.org/doc/en-US/Pacemaker/1.1-plugin/html/Clusters_from_Scratch/index.html" target="_blank">Clusters from Scratch</a> 中，使用到了cman 这个红帽cluster套件中的工具；</p>
+
+<p>奇怪的是，一开始使用的是corosync作为集群的通信层，而到了gfs作为文件系统的active/active时却换成了cman；</p>
+
+<p>同时，corosync.conf中配置的参数貌似也都不起作用了，想要配置两条心跳线也不知道要怎么搞了；</p>
+
+<p>corosync和cman到底是什么关系，到底能不能配置多条心跳线呢？
+<h3>cman和corosync的关系</h3>
+<p style="padding-left: 30px;">在cman的配置文件cluster.conf中只需要提供集群中节点的机器名就可以了，不需要设置心跳地址；</p>
+<p style="padding-left: 30px;">cman会取出$HOSTNAME，然后在cluster.conf中寻找对应的信息（找不到就把dnsdomainname去掉然后再匹配；实在不行，就取出机器的ip地址，然后再去cluster.conf文件中匹配）</p>
+<p style="padding-left: 30px;">当前，在寻找心跳ip的过程中，hosts文件起了至关重要的作用</p>
+<p style="padding-left: 30px;">cman会自动生成multicast地址，端口号，还有其他的totem参数</p>
+<p style="padding-left: 30px;">如果想要知道cman生成corosync参数是什么，可以执行下面的命令</p>
+<pre>
+    # corosync-objctl -a|grep ^totem
+</pre>
+<p style="padding-left: 30px;">cman首先找到机器的心跳ip地址，并设置好muliticast信息</p>
+<pre>
+    totem.interface.ringnumber=0
+    totem.interface.bindnetaddr=192.168.1.29
+    totem.interface.mcastaddr=239.192.209.5
+    totem.interface.mcastport=5405
+</pre>
+<p style="padding-left: 30px;">然后，cman会将下面的这些参数设置的比一般的corosync集群稍微高一些</p>
+<pre>
+    totem.token=10000
+    totem.join=60
+    totem.fail_recv_const=2500
+    totem.consensus=12000
+</pre>
+<p style="padding-left: 30px;">下来，cman开启通信加密（根据节点的数量，设置rrp_mode的值）</p>
+<pre>
+    totem.rrp_mode=none
+    totem.secauth=1
+    totem.key=composers
+</pre>
+<p style="padding-left: 30px;">最后，cman将集群的quorum提供者设置成它自己</p>
+<pre>
+    quorum.provider=quorum_cman
+</pre></p>
+
+<p><h3>设置多条心跳线</h3>
+<p style="padding-left: 30px;">cman的第一条心跳线是根据hosts文件取出的（当然，也可以在clusternode的name中直接写ip地址）</p>
+<p style="padding-left: 30px;">比如：</p>
+<pre>
+    <clusternode name="LIN01-adm" nodeid="1" votes="1" />
+</pre>
+<p style="padding-left: 30px;">cman会从host文件中取LIN01-adm对应的ip地址作为心跳地址；</p>
+<p style="padding-left: 30px;">需要添加多条心跳线时，就要增加altername选项了</p>
+<p style="padding-left: 30px;">比如：</p></p>
+
+<p><pre>
+    <clusternode name="cent1" nodeid="1">
+      <altname name="192.148.1.1" />
+    </clusternode>
+</pre>
+<p style="padding-left: 30px;">这样，就多了一条192.168.1.1的心跳线了(当然也可以写名字，然后cman自动从hosts文件中解析地址)</p></p>
+
+<p><h3>相关工具的使用</h3>
+<p style="padding-left: 30px;">既然使用了cman，就索性把红帽的其他工具也好好用一下<br />
+ccs-红帽的集群配置工具（专门用来写cluster.conf文件的）</p></p>
+
+<p><p style="padding-left: 30px;">建立集群</p>
+<pre>
+    ccs -f /etc/cluster/cluster.conf --createcluster cluster_name
+</pre>
+<p style="padding-left: 30px;">添加节点</p>
+<pre>
+    ccs -f /etc/cluster/cluster.conf --addnode nodename
+</pre>
+<p style="padding-left: 30px;">删除节点</p>
+<pre>
+    ccs -f /etc/cluster/cluster.conf --rmnode nodename
+</pre>
+<p style="padding-left: 30px;">添加备用名（备用心跳）</p>
+<pre>
+    ccs -f /etc/cluster/cluster.conf --addalt nodename alt_name
+</pre>
+<p style="padding-left: 30px;">删除备用名</p>
+<pre>
+    ccs -f /etc/cluster/cluster.conf --rmalt nodename alt_name
+</pre>
+<p style="padding-left: 30px;">其他命令 man ccs 即可</p>
+    cman_tool
+<p style="padding-left: 30px;">写好了 custer.conf 文件，我们就需要在集群中发布一下，也很简单</p>
+<p style="padding-left: 30px;">前提条件，设置好 ricci 用户的密码，开启 ricci 服务</p>
+<pre>
+    service ricci start &amp;&amp; chkconfig ricci on
+    password ricci
+</pre>
+<p style="padding-left: 30px;">分发配置文件</p>
+<pre>
+    cman_tool versiom -r
+</pre></p>
+
+<p><p style="padding-left: 30px;">其他工具，大家自己探索吧</p></p>
+
+<p>参考文档
+<a href="http://chrissie.fedorapeople.org/CmanYinYang.pdf" title="CmanYinYang">CmanYinYang</a>
+<a href="https://access.redhat.com/site/documentation/en-US/Red_Hat_Enterprise_Linux/6/html-single/Cluster_Administration/index.html" title="RedHat_Cluster_Administration" target="_blank">RedHat_Cluster_Administration</a></p>
+</div>
+
+
+  <footer>
+    <p class="meta">
+      
+  
+
+<span class="byline author vcard">Posted by <span class="fn">wklxd</span></span>
+
+      
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2013-06-04T00:00:00+08:00" pubdate data-updated="true">Jun 4<span>th</span>, 2013</time>
+      
+
+<span class="categories">
+  
+    <a class='category' href='/blog/categories/ha/'>HA</a>
+  
+</span>
+
+
+    </p>
+    
+      <div class="sharing">
+  
+  <a href="http://twitter.com/share" class="twitter-share-button" data-url="http://github.klwang.info/blog/cman-and-corosync/" data-via="" data-counturl="http://github.klwang.info/blog/cman-and-corosync/" >Tweet</a>
+  
+  
+  
+</div>
+
+    
+    <p class="meta">
+      
+        <a class="basic-alignment left" href="/blog/kvm-guest-fence/" title="Previous Post: kvm 虚拟机 fence 设置">&laquo; kvm 虚拟机 fence 设置</a>
+      
+      
+        <a class="basic-alignment right" href="/blog/gfs2-startup/" title="Next Post: GFS2 初级">GFS2 初级 &raquo;</a>
+      
+    </p>
+  </footer>
+</article>
+
+</div>
+
+<aside class="sidebar">
+  
+    <section>
+  <h1>Recent Posts</h1>
+  <ul id="recent_posts">
+    
+      <li class="post">
+        <a href="/blog/about-strace/">About Strace</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/about-ubuntu-no-pubkey-error/">Ubuntu NO_PUBKEY 故障解决方式</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/bash-you-don-not-konw-special-character/">你不知道的bash (特殊字符)</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/about-lvm-skills/">Lvm 实践笔记</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/change-your-resouce-angent-to-multistate/">将 Resouce Angent 改造成 Multi State 类型</a>
+      </li>
+    
+  </ul>
+</section>
+
+
+
+
+
+  
+</aside>
+
+
+    </div>
+  </div>
+  <footer role="contentinfo"><p>
+  Copyright &copy; 2013 - wklxd -
+  <span class="credit">Powered by <a href="http://octopress.org">Octopress</a></span>
+</p>
+
+</footer>
+  
+
+
+
+
+
+
+
+  <script type="text/javascript">
+    (function(){
+      var twitterWidgets = document.createElement('script');
+      twitterWidgets.type = 'text/javascript';
+      twitterWidgets.async = true;
+      twitterWidgets.src = 'http://platform.twitter.com/widgets.js';
+      document.getElementsByTagName('head')[0].appendChild(twitterWidgets);
+    })();
+  </script>
+
+
+
+
+
+</body>
+</html>

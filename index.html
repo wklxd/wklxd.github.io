@@ -9,8 +9,7 @@
   <meta name="author" content="wklxd">
 
   
-  <meta name="description" content="
-">
+  <meta name="description" content="作为软件的使用者而非开发者，平时会遇到很多奇怪的问题 这个程序为什么不动呢，它是不是僵死了？它为什么没有按照预想的方式工作？ 时至今日，应用程序已经完全和硬件隔离，具体的操作（文件读写，网络访问等）都要使用 syscalls（系统调用）来完成 如果可以跟踪程序使用的syscall， &hellip;">
   
 
   <!-- http://t.co/dKP3o1e -->
@@ -22,7 +21,7 @@
   <link rel="canonical" href="http://github.klwang.info">
   <link href="/favicon.png" rel="icon">
   <link href="/stylesheets/screen.css" media="screen, projection" rel="stylesheet" type="text/css">
-  <link href="/wklxd/atom.xml" rel="alternate" title="My Octopress Blog" type="application/atom+xml">
+  <link href="/atom.xml" rel="alternate" title="My Octopress Blog" type="application/atom+xml">
   <script src="/javascripts/modernizr-2.0.js"></script>
   <script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
   <script>!window.jQuery && document.write(unescape('%3Cscript src="./javascripts/lib/jquery.min.js"%3E%3C/script%3E'))</script>
@@ -45,7 +44,7 @@
 
 </header>
   <nav role="navigation"><ul class="subscription" data-subscription="rss">
-  <li><a href="/wklxd/atom.xml" rel="subscribe-rss" title="subscribe via RSS">RSS</a></li>
+  <li><a href="/atom.xml" rel="subscribe-rss" title="subscribe via RSS">RSS</a></li>
   
 </ul>
   
@@ -72,7 +71,7 @@
       
   <header>
     
-      <h1 class="entry-title"><a href="/blog/post-title/">Post Title</a></h1>
+      <h1 class="entry-title"><a href="/blog/about-strace/">About Strace</a></h1>
     
     
       <p class="meta">
@@ -88,14 +87,2090 @@
   
 
 
-<time datetime="2013-06-16T20:58:00+08:00" pubdate data-updated="true">Jun 16<span>th</span>, 2013</time>
+<time datetime="2013-06-21T00:00:00+08:00" pubdate data-updated="true">Jun 21<span>st</span>, 2013</time>
         
       </p>
     
   </header>
 
 
-  <div class="entry-content">
+  <div class="entry-content"><p>作为软件的使用者而非开发者，平时会遇到很多奇怪的问题</p>
+
+<p>这个程序为什么不动呢，它是不是僵死了？它为什么没有按照预想的方式工作？</p>
+
+<p>时至今日，应用程序已经完全和硬件隔离，具体的操作（文件读写，网络访问等）都要使用 syscalls（系统调用）来完成</p>
+
+<p>如果可以跟踪程序使用的syscall，就意味着几乎知道了程序的所有动作，比如</p>
+
+<p><pre>
+    open -> read/write						读写文件
+    socket -> connect -> read -> write		                访问网络
+    fork -> execve						衍生子进程
+    wait, kill, pipe						控制子进程
+    clock_gettime						获知系统时间
+</pre></p>
+
+<p>这时，我们可以寻求系统自带的调试利器 strace 的帮助</p>
+
+<p><pre>
+    strace	跟踪process系统调用或者信号产生的情况
+    ltrace	跟踪process调用库函数的情况
+</pre></p>
+
+<p>strace和ltrace的使用方式差不多，只是跟踪的范围不一样</p>
+
+<p>0. 基本使用<br />
+	
+<pre>
+    strace command args
+</pre></p>
+
+<p>直接使用strace调用具体的程序，会显示程序运行过程中的所有syscall</p>
+
+<p><strong>1. 看看程序正在干什么</strong></p>
+
+<p><pre>
+    strace -p pid
+</pre></p>
+
+<p>除了基本的使用方式，strace还可以在线调试运行中的程序</p>
+
+<p><em>这时，就能够很容易的知道为啥这个程序会不动呢？ 它是在等待别的资源，还是在勤劳的干活？</em></p>
+
+<p><strong>2. 看看程序在启动的时候打开了什么文件</strong></p>
+
+<p><pre>
+    [root@h4-61 tmp]# strace -e read,access ping -c 1 8.8.8.8 > /dev/null
+    access("/etc/ld.so.preload", R_OK)      = -1 ENOENT (No such file or directory)
+    read(3, "\177ELF\2\1\1\0\0\0\0\0\0\0\0\0\3\0>\0) = 832
+    read(3, "\177ELF\2\1\1\3\0\0\0\0\0\0\0\0\3\0>\0\1\0) = 832
+</pre></p>
+
+<p>strace默认会显示所有的系统调用，有时。我们可能只关心少量的syscall，可以使用 -e 参数来实现</p>
+
+<p>多个syscall使用逗号(,)分割；甚至，可以使用 read=3 来查看使用 3 这个描述符的 read 调用</p>
+
+<p><strong>3. 显示syscall的时间戳</strong></p>
+
+<p><pre>
+    [root@h4-61 tmp]# strace -tt -e read,access ping -c 1 8.8.8.8 > /dev/null
+    17:59:05.205188 access("/etc/ld.) = -1 ENOENT (No such file or directory)
+    17:59:05.205660 read(3, "\177ELF\2\1\) = 832
+    17:59:05.205972 read(3, "\177ELF\2\1\1\3\0\0\0\0\0\0\0\0\3\0>\0) = 832
+</pre></p>
+
+<p>有时需要知道syscall发生的时间，可以使用 -t 参数：</p>
+
+<p><em>-t  表示秒</em></p>
+
+<p><em>-tt 表示毫秒</em></p>
+
+<p><em>-T  显示每个系统调用从开始到结束使用的时间</em></p>
+
+<p><strong>4. 控制syscall显示信息的程度</strong></p>
+
+<p><pre>
+    [root@h4-61 tmp]# strace -tt -e read,access -s 10 ping -c 1 8.8.8.8 > /dev/null
+    17:59:42.831239 access("/etc/ld.) = -1 ENOENT (No such file or directory)
+    17:59:42.831660 read(3, "\177ELF\2\1\1\0\0\0"..., 832) = 832
+    17:59:42.831967 read(3, "\177ELF\2\1\1\3\0\0"..., 832) = 832
+</pre></p>
+
+<p>默认情况下，strace对于每个系统调用只显示32个字符的信息，使用 -s 数字可以改变默认行为</p>
+
+<p>-s 0 表示显示所有的信息</p>
+
+<p><strong>5. 分类查看syscall</strong></p>
+
+<p>除了使用 -e syscallname 查看具体的syscall，我们还可以按照类别产看，如</p>
+
+<p><strong>trace=file</strong></p>
+
+<p><em>显示文件操作	open,stat,chmod,unlink,..</em></p>
+
+<p><pre>
+    [root@h4-61 tmp]# strace -e trace=file ping -c 1 8.8.8.8 > /dev/null
+    execve("/bin/ping", ["ping", "-c", "1", "8.8.8.8"], [/* 26 vars */]) = 0
+    access("/etc/ld.so.prel)      = -1 ENOENT (No such file or directory)
+    open("/etc/ld.so.cache", O_RDONLY)      = 3
+    open("/lib64/libidn.so.11", O_RDONLY)   = 3
+    open("/lib64/libc.so.6", O_RDONLY)      = 3
+    open("/usr/lib/locale/locale-archive", O_RDONLY) = 3
+</pre></p>
+
+<p><strong>trace=process</strong></p>
+
+<p><em>显示进程操作 fork, wait, and exec </em></p>
+
+<p><pre>
+    [root@h4-61 tmp]# strace -e trace=process ping -c 1 8.8.8.8 > /dev/null
+    execve("/bin/ping", ["ping", "-c", "1", "8.8) = 0
+    arch_prctl(ARCH_SET_FS, 0x7fc9afee4700) = 0
+    exit_group(0)  = ?
+</pre>
+             
+<strong>trace=network</strong></p>
+
+<p><em>网络操作相关的syscall</em></p>
+
+<p><pre>
+    [root@h4-61 tmp]# strace -e trace=network ping -c 1 8.8.8.8 > /dev/null
+    socket(PF_INET, SOCK_RAW, IPPROTO_ICMP) = 3
+    socket(PF_INET, SOCK_DGRAM, IPPROTO_IP) = 4
+    省略号
+    setsockopt(3, SOL_SOCKET, SO_SNDBUF, [324], 4) = 0
+    setsockopt(3, SOL_SOCKET, SO_RCVBUF, [65536], 4) = 0
+    getsockopt(3, SOL_SOCKET, SO_RCVBUF, [3427721778695372800], [4]) = 0
+    setsockopt(3, SOL_SOCKET, SO_TIMESTAMP, [1], 4) = 0
+    省略号
+</pre></p>
+
+<p><strong>trace=signal</strong></p>
+
+<p><em>信号操作相关的syscall</em></p>
+
+<p><pre>
+    [root@h4-61 tmp]# strace -e trace=signal ping -c 1 8.8.8.8 > /dev/null
+    rt_sigaction(SIGINT, {0x7f8f4d04da40, [], SA_RESTORER|SA_IN) = 0
+    rt_sigaction(SIGALRM, {0x7f8f4d04da40, [], SA_RESTORER|SA_I) = 0
+    rt_sigaction(SIGQUIT, {0x7f8f4d04da50, [], SA_RESTORER|SA_INT) = 0
+</pre></p>
+
+<p><strong>trace=ipc</strong></p>
+
+<p><em>进程间通信相关的syscall</em></p>
+
+<p><strong>trace=desc</strong></p>
+
+<p><em>文件描述符相关的syscall</em></p>
+
+<p><pre>
+    [root@h4-61 tmp]# strace -e trace=desc ping -c 1 8.8.8.8 > /dev/null
+    open("/etc/ld.so.cache", O_RDONLY)      = 3
+    fstat(3, {st_mode=S_IFREG|0644, st_size=61926, ...}) = 0
+    close(3)                                = 0
+    open("/lib64/libidn.so.11", O_RDONLY)   = 3
+    read(3, "\177ELF\2\1\1\0\0\0\0\0\0\0\0\0\3\0>\0\1) = 832
+    省略号
+    write(1, "\n", 1)                       = 1
+    write(1, "--- 8.8.8.8 ping statistics ---\n"..., 146) = 146
+</pre></p>
+
+<p><strong>6. 跟踪子进程</strong></p>
+
+<p><pre>
+    -f 
+</pre></p>
+
+<p>有时候程序会fork出子进程，使用 -f 参数可以跟踪到子进程</p>
+
+<p><strong>7. strace的输出格式</strong>
+	
+<pre>
+    fstat(3, {st_mode=S_IFREG|0644, st_size=61926, ...}) = 0
+</pre></p>
+
+<p>每行的syacall格式为， syscall名字，syscall的参数， syscall的返回值</p>
+
+<p><em>如果返回值为 -1 ，则顺带的返回具体的错误说明</em></p>
+
+<p>To be continued &#8230;</p>
+
+<p>参考文档</p>
+
+<p><a href="https://blogs.oracle.com/ksplice/entry/strace_the_sysadmin_s_microscope" target="_blank">strace_the_sysadmin_s_microscope</a></p>
+
+<p><a href="http://www.hokstad.com/5-simple-ways-to-troubleshoot-using-strace" target="_blank">5-simple-ways-to-troubleshoot-using-strace</a></p>
+
+<p><a href="http://linux.die.net/man/1/strace" target="_blank">strace man page</a>
+</p>
+</div>
+  
+  
+
+
+    </article>
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/about-ubuntu-no-pubkey-error/">Ubuntu NO_PUBKEY 故障解决方式</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2013-06-19T00:00:00+08:00" pubdate data-updated="true">Jun 19<span>th</span>, 2013</time>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p>ubuntu在更新源后出现</p>
+
+<p><pre>
+    W: GPG 错误：http://ppa.launchpad.net hardy Release: 
+    由于没有公钥，无法验证下列签名： NO_PUBKEY 4B82DCA0798F627E
+</pre></p>
+
+<p>原因是对应的公钥没有导入</p>
+
+<p>公钥服务器有很多个，常用的有</p>
+
+<p><pre>
+    subkeys.pgp.net
+    wwwkeys.pgp.net
+</pre></p>
+
+<p>如果一个key server找不到需要的公钥，可以考虑换服务器试试</p>
+
+<p>最终的处理办法</p>
+
+<p><pre>
+    gpg --keyserver subkeys.pgp.net --recv 798F627E  （4B82DCA0798F627E的后八位）
+    gpg --export --armor 798F627E | sudo apt-key add -
+</pre></p>
+
+<p>公钥导入后，就可以正常使用源了</p>
+</div>
+  
+  
+
+
+    </article>
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/bash-you-don-not-konw-special-character/">你不知道的bash (特殊字符)</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2013-06-17T00:00:00+08:00" pubdate data-updated="true">Jun 17<span>th</span>, 2013</time>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p><strong>题记</strong>
+<pre>
+  使用Linux有四年多了
+  曾经有段时间，也静下心来将bash好好的研究了一把，心满意足的感觉自己“会”了
+  随着时间的推移，常用的命令就那么几个，渐渐的，知识面逐渐收缩
+  再次看到bash资料时，才发现：“原来可以不用这么绕，原来可以这么直接”
+  学习就是一个温故知新的过程，技术就是一个在使用过程中逐渐积累的过程
+  这篇文档题目为《你不知道的bash》，其实，更确切的讲，应该是《我不知道的bash》
+  在”写下来“的过程中，不仅仅梳理了忘记的东西，还顺带的整理了一些bash中的经典用法
+  希望以后不要再忘了
+</pre></p>
+
+<p><strong>;; </strong></p>
+
+<p><em>双分号,作为case语句的结束符使用</em>，如：
+<pre>
+  case "$variable" in
+     abc)  echo "\$variable = abc" ;;
+     xyz)  echo "\$variable = xyz" ;;
+  esac
+</pre></p>
+
+<p><strong>**</strong></p>
+
+<p><em>双星号，(立方)</em>，如：
+<pre>
+  # Bash, version 2.02, introduced the "**" exponentiation operator.
+     
+  let "z=5**3"
+  echo "z = $z"   # z = 125
+</pre></p>
+
+<p><strong>$?</strong> </p>
+
+<p><em>结束符，可以是一条命令，一个函数，或者脚本自身的退出码</em>
+<pre>
+  cmd
+  if [ $? ne 0 ]; then
+      exit 2
+  fi
+</pre></p>
+
+<p><strong>$$</strong> </p>
+
+<p><em>进程号，表示脚本自身的进程号，经常看到有人使用$$作为随机数</em>，如：
+<pre>
+  cmd
+  ramdom=$$
+</pre></p>
+
+<p><strong>$!</strong> </p>
+
+<p><em>上一条命令的pid，经典用法，杀掉超时的前一个作业</em>
+<pre>
+  possibly_hanging_job & { sleep ${TIMEOUT}; eval 'kill -9 $!' &> /dev/null; }
+</pre></p>
+
+<p><strong>$_</strong></p>
+
+<p><em>上一条命令的参数</em></p>
+
+<p><strong>{xxx,yyy,zzz,&#8230;}</strong></p>
+
+<p><em>加强扩展</em>，如
+<pre>
+  cat {file1,file2,file3} > combined_file
+  # 将 file1, file2, 和 file3 合并入 combined_file
+     
+  cp file22.{txt,backup}
+  # 将 "file22.txt" 复制为 "file22.backup"
+</pre></p>
+
+<p><strong>=~</strong></p>
+
+<p><em>文本判断时的正则表达式</em>， 如：
+<pre>
+  if [ "$input" =~ "[0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9][0-9][0-9]" ]
+      # 引号可要可不要
+      # 格式 NNN-NN-NNNN
+  then
+      echo "Social Security number."
+      # Process SSN.
+  else
+      echo "Not a Social Security number!"
+      # Or, ask for corrected input.
+  fi
+</pre></p>
+
+<p><strong>&></strong></p>
+
+<p><em>重定向，是不是经常使用这种语句</em>：
+<pre>
+  command > filename 2 >&1
+</pre>
+其实你还可以这样，将标准输出和错误输出同时定向
+<pre>
+  command &>filename 
+</pre></p>
+
+<p><strong>$*</strong></p>
+
+<p><em>所有的位置参数，看作一个整体来使用，具体操作时 $* 需要用引号(&#8220;)引起来</em></p>
+
+<p><strong>$@</strong></p>
+
+<p><em>和 $* 相同，但是在具体操作的时候，bash将每个位置参数分开来看</em>，如:
+<pre>
+  #!/bin/bash</pre></p>
+
+<p>  echo &#8216;$*&#8217;<br />
+  index=1</p>
+
+<p>  for arg in &#8220;$*&#8221; <br />
+  do<br />
+    echo &#8220;Arg #$index = $arg&#8221;<br />
+    let &#8220;index+=1&#8221;<br />
+  done</p>
+
+<p>  echo ‘$@’<br />
+  index=1</p>
+
+<p>  for arg in &#8220;$@&#8221;<br />
+  do<br />
+    echo &#8220;Arg #$index = $arg&#8221;<br />
+    let &#8220;index+=1&#8221;<br />
+  done 
+</p>
+
+<p>执行结果如下， 可以看到 $*将所有的参数看作了整体， $@将参数分开对待了：
+<pre>
+  ./test 1 2 3 4
+  $*
+  Arg #1 = 1 2 3 4
+  $@
+  Arg #1 = 1
+  Arg #2 = 2
+  Arg #3 = 3
+  Arg #4 = 4
+</pre></p>
+
+<p>to be continue &#8230;</p>
+</div>
+  
+  
+
+
+    </article>
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/about-lvm-skills/">Lvm 实践笔记</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2013-06-12T00:00:00+08:00" pubdate data-updated="true">Jun 12<span>th</span>, 2013</time>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p><strong>物理卷</strong></p>
+
+<p>创建物理卷
+<pre>
+# pvcreate /dev/sdd /dev/sde /dev/sdf
+</pre>
+  <br />
+察看已经存在的物理卷信息</p>
+
+<p><pre>
+# pvs				--每行一条，便于脚本调用
+# pvdisplay			--显示pv的详细信息
+</pre></p>
+
+<p>阻止在物理卷上分配空间 （比如，某个物理磁盘发生了硬件故障，需要移除这个硬盘的时候）</p>
+
+<p><pre>
+# pvchange -x n /dev/sdk1
+</pre></p>
+
+<p>重新允许在物理卷上分配空间</p>
+
+<p><pre>
+# pvchange -x y /dev/sdk1
+</pre></p>
+
+<p>移除物理卷（前提，没有卷组使用该pv）     </p>
+
+<p><pre>
+# pvremove /dev/ram15
+  Labels on physical volume "/dev/ram15" successfully wiped
+</pre></p>
+
+<p>替换/移除物理卷</p>
+
+<p><pre>
+# pvmove /dev/sdc1 SourcePhysicalVolume     --从SourcePhysicalVolume中移除sdc1
+</pre></p>
+
+<p>只移除 sdc1 中 MyLV 逻辑卷上的的数据</p>
+
+<p><pre>
+# pvmove -n MyLV /dev/sdc1
+</pre></p>
+
+<p><strong>卷组</strong></p>
+
+<p>创建卷组</p>
+
+<p><pre>
+# vgcreate vg1 /dev/sdd1 /dev/sde1
+</pre></p>
+
+<p>给卷组中加入新的物理卷</p>
+
+<p><pre>
+# vgextend vg1 /dev/sdf1
+</pre></p>
+
+<p>察看已经存在的卷组信息</p>
+
+<p><pre>
+# vgs		--每行一条，便于脚本调用
+# vgdisplay	--现实vg卷组的详细信息
+# vgscan	--重建 /etc/lvm/cache/.cache file cache文件，维护目前的 LVM 设备列表
+</pre></p>
+
+<p>系统启动时，会自动运行vgscan命令。如果集群中在一个节点进行了 vgextend 等命令，在其他节点手动运行 vgscan 将是很好的选择</p>
+
+<p>移动物理卷上的数据（适用于替换硬盘时）</p>
+
+<p><pre>
+# vgreduce my_volume_group /dev/hda1
+</pre>
+该命令会将 /dev/hda1 上的数据挪到同卷组内的其他物理卷上</p>
+
+<p>限制卷组中最大的逻辑卷数量</p>
+
+<p><pre>
+# vgchange -l 128 /dev/vg00
+</pre></p>
+
+<p>将卷组改成闲置状态（维护时使用）</p>
+
+<p><pre>
+# vgchange -a n my_volume_group
+</pre></p>
+
+<p>重新激活卷组</p>
+
+<p><pre>
+# vgchange -a y my_volume_group
+</pre></p>
+
+<p>移除卷组（要保证移除的卷组上的逻辑卷都已经移除了）</p>
+
+<p><pre>
+# vgremove officevg
+  Volume group "officevg" successfully removed
+</pre></p>
+
+<p>卷组拆分（将/dev/ram15 从 bigvg 中拆出来组成名为 smallvg 的卷组）</p>
+
+<p><pre>
+# vgsplit bigvg smallvg /dev/ram15
+  Volume group "smallvg" successfully split from "bigvg"
+</pre></p>
+
+<p>卷组合并（前提条件：两个卷组的 extent sizes 必须相同）</p>
+
+<p><pre>
+# vgmerge -v databases my_vg
+</pre></p>
+
+<p>将 my_vg 合并到 database卷组, -v表示显示详细信息，其中 my_vg 必须处于 inactive 状态， database可以处于active或者inactive状态</p>
+
+<p>卷组改名</p>
+
+<p><pre>
+# vgrename /dev/vg02 /dev/my_volume_group
+</pre></p>
+
+<p><strong>逻辑卷</strong></p>
+
+<p>创建逻辑卷 </p>
+
+<p><pre>
+# lvcreate -L1500 -n testlv testvg   		--1500M 默认单位M
+# lvcreate -l 60%VG -n mylv testvg   		--使用卷组的60%
+# lvcreate -l 100%FREE -n yourlv testvg 	--使用testvg的全部剩余空间
+</pre></p>
+
+<p>创建条带化的逻辑卷</p>
+
+<p><pre>
+# lvcreate -L 50G -i2 -I64 -n gfslv vg0		-i表示设备的数量， -I表示条带的大小（KB）
+</pre></p>
+
+<p>制定条带化时的详细信息</p>
+
+<p><pre>
+# lvcreate -l 100 -i2 -nstripelv testvg /dev/sda1:0-49 /dev/sdb1:50-99
+  Using default stripesize 64.00 KB
+  Logical volume "stripelv" created
+</pre>
+表示大小为 100个PE， 其中，使用 sda1 的0-49和 sda2 的 50-99</p>
+
+<p>创建镜像化的逻辑卷</p>
+
+<p><pre>
+# lvcreate -L 50G -m1 -n mirrorlv vg0		-- -m表示镜像（复制）的数量
+</pre></p>
+
+<p>镜像逻辑卷按照extend来拷贝，默认是512KB，可以使用 -R num M 的方式进行调整</p>
+
+<p>注意：超过1.5T的就不能使用 512K了</p>
+
+<p><strong>拇指定律： 使用2的指数， 3-4T：4M，   5-8T： 8M</strong></p>
+
+<p>使用快照</p>
+
+<p><pre>
+# lvcreate --size 100M --snapshot --name snap /dev/vg00/lvol1
+</pre></p>
+
+<p>为 /dev/vg00/lvol1 创建名为 snap 的快照，可以用于备份<br />
+ 
+使用merge操作</p>
+
+<p><pre>
+# lvconvert --merge vg00/lvol1_snap
+</pre></p>
+
+<p>将 lvol1_snap merge回源逻辑卷，回复备份时可以考虑此操作<br />
+ 
+收缩逻辑卷</p>
+
+<p><pre>
+# lvreduce -l -3 vg00/lvol1
+</pre>
+将逻辑卷减少3个PE</p>
+
+<p>修改逻辑卷的权限</p>
+
+<p><pre>
+# lvchange -pr vg00/lvol1      --将逻辑卷改为只读模式
+# lvchange -prw vg00/lvol1     --将逻辑卷修改为读写模式
+</pre></p>
+
+<p>逻辑卷改名</p>
+
+<p><pre>
+# lvrename /dev/vg02/lvold /dev/vg02/lvnew
+</pre></p>
+
+<p>删除逻辑卷</p>
+
+<p><pre>
+# lvremove /dev/vg02/lvol1
+</pre></p>
+
+<p>增大逻辑卷</p>
+
+<p>增大到 12G</p>
+
+<p><pre>
+# lvextend -L12G /dev/myvg/homevol
+lvextend -- extending logical volume "/dev/myvg/homevol" to 12 GB
+lvextend -- doing automatic backup of volume group "myvg"
+lvextend -- logical volume "/dev/myvg/homevol" successfully extended
+</pre></p>
+
+<p>增大1G</p>
+
+<p><pre>
+# lvextend -L+1G /dev/myvg/homevol
+lvextend -- extending logical volume "/dev/myvg/homevol" to 13 GB
+lvextend -- doing automatic backup of volume group "myvg"
+lvextend -- logical volume "/dev/myvg/homevol" successfully extended
+</pre></p>
+
+<p>将卷组中所有的空闲附加到已经存在的逻辑卷</p>
+
+<p><pre>
+lvextend -l +100%FREE /dev/myvg/testlv
+  Extending logical volume testlv to 68.59 GB
+  Logical volume testlv successfully resized
+</pre></p>
+
+<p>收缩逻辑卷</p>
+
+<p><pre>
+# lvreduce -l -3 vg00/lvol1
+</pre>
+收缩3个PE，在收缩卷之前要保证先将里边的文件系统进行收缩，不然会丢失数据</p>
+
+<p>如果数据量较大，需要使用-n参数后台进行，下面的命令表示将 sdc1 上的数据移动到 sdf1</p>
+
+<p><pre>
+# pvmove -b /dev/sdc1 /dev/sdf1
+</pre></p>
+
+<p><strong>综合操作实例（跨系统的卷组迁移）</strong></p>
+
+<p>1. 卸载卷组上的所有逻辑卷</p>
+
+<p><pre>
+umount 
+</pre></p>
+
+<p>2. 将卷组改成闲置状态</p>
+
+<p><pre>
+vgchange -a n olumeGroupName
+</pre></p>
+
+<p>3. 导出VolumeGroupName的信息</p>
+
+<p><pre>
+vgexport VolumeGroupName
+</pre></p>
+
+<p>4. 做一次重建cache扫描</p>
+
+<p><pre>
+vgscan
+</pre></p>
+
+<p>5. 察看所有相关物理卷的状态，一定要处于export状态</p>
+
+<p><pre>
+pvscan
+    PV /dev/sda1
+    is in exported VG myvg [17.15 GB / 7.15 GB free]
+    PV /dev/sdc1
+    is in exported VG myvg [17.15 GB / 15.15 GB free]
+    PV /dev/sdd1
+    is in exported VG myvg [17.15 GB / 15.15 GB free]
+    ...
+</pre></p>
+
+<p>6. 拔下硬盘装到新的机器</p>
+
+<p>7. 导入VolumeGroupName的信息</p>
+
+<p><pre>
+vgimport VolumeGroupName
+</pre></p>
+
+<p>8. 激活卷组</p>
+
+<p><pre>
+vgchange -a y VolumeGroupName
+</pre></p>
+
+<p>9. 重新挂在相关逻辑卷</p>
+
+<p><pre>
+mount
+</pre></p>
+
+<p>That&#8217;s all</p>
+</div>
+  
+  
+
+
+    </article>
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/change-your-resouce-angent-to-multistate/">将 Resouce Angent 改造成 Multi State 类型</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2013-06-10T00:00:00+08:00" pubdate data-updated="true">Jun 10<span>th</span>, 2013</time>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p>习惯了资源clone的方便快捷</p>
+
+<p>突然发现，有时候我们需要在这些无差异的clone资源中选出一个来，好做一些“不一样“的事情，</p>
+
+<p>就好像是在一群人中选出一个代表，来做一些领导性的工作一样</p>
+
+<p>怎么样来做到这点呢？</p>
+
+<p>pacemaker提供了多态(multi-state)的概念，除了具备clone的特性外，还多出了</p>
+
+<p>master/slave的概念，可以在资源agent中判断自己所处的角色，然后根据角色的不同，做一些不同的操作</p>
+
+<p>那么，如何将自己的agent改造为 master/slave 的呢？</p>
+
+<p>最简单的思路：在每个节点写一个文件，记录下自己所处的角色好了</p>
+
+<p>有了思路就可以开始实施了，这里完全照搬 pacemaker/Stateful 资源的做法</p>
+
+<p>改造开始</p>
+
+<p>1. 设置 $CRM_MASTER</p>
+
+<p><pre>
+    在 # Initialization: 块中加入
+    CRM_MASTER="${HA_SBIN_DIR}/crm_master -l reboot"
+</pre></p>
+
+<p>2. usage 函数改造[可选]</p>
+
+<p>usage函数本来就是给“人”看的，就算不修改，也不会影响功能。可以加入以下的内容对demote和promote进行说明
+<pre>
+    The 'promote' operation xxxxxx xxxxxx.
+    The 'demote' operation xxx xxxxxx.
+</pre></p>
+
+<p>3. meta_data函数处理</p>
+
+<p>加入状态文件的参数
+<pre>
+<parameter name="state" unique="1">
+<longdesc lang="en">
+Location to store the resource state in
+</longdesc>
+<shortdesc lang="en">State file</shortdesc>
+<content type="string" default="${HA_VARRUN}/Stateful-{OCF_RESOURCE_INSTANCE}.state" />
+</parameter>
+</pre></p>
+
+<p>action模块加入monitor的动作</p>
+
+<p><pre>
+<action name="monitor" depth="0" timeout="20" interval="30" role="Master" />
+<action name="monitor" depth="0" timeout="20" interval="30" role="Slave" />
+</pre>
+注意，默认timeout相同时， pacemaker会认为两个timeout是一个操作，需要在crm中进行修改</p>
+
+<p>下面是pacemaker对设置不同interval的说明
+<pre>
+It is crucial that every monitor operation has a different interval!
+This is because Pacemaker currently differentiates between operations only 
+by resource and interval;
+so if eg. a master/slave resource has the same monitor interval for both roles, 
+Pacemaker would ignore the role when checking the status - which would 
+cause unexpected return codes,and therefore unnecessary complications.
+</pre></p>
+
+<p>4. 添加 demote 和 promote 函数</p>
+
+<p><pre>
+    stateful_update() {
+        echo $1 > ${OCF_RESKEY_state}
+    }</pre></p>
+
+<p>    stateful_check_state() {<br />
+        target=$1<br />
+        if [ -f ${OCF_RESKEY_state} ]; then<br />
+            state=`cat ${OCF_RESKEY_state}`<br />
+            if [ &#8220;x$target&#8221; = &#8220;x$state&#8221; ]; then<br />
+                return 0<br />
+            fi</p>
+
+<p>        else<br />
+            if [ &#8220;x$target&#8221; = &#8220;x&#8221; ]; then<br />
+                return 0<br />
+            fi<br />
+        fi</p>
+
+<p>        return 1<br />
+    }</p>
+
+<p>    stateful_demote() {<br />
+        stateful_check_state<br />
+        if [ $? = 0 ]; then<br />
+            # CRM Error - Should never happen<br />
+            return $OCF_NOT_RUNNING<br />
+        fi<br />
+        stateful_update &#8220;slave&#8221;<br />
+        $CRM_MASTER -v ${slave_score}<br />
+        return $OCF_SUCCESS<br />
+    }</p>
+
+<p>    stateful_promote() {<br />
+        stateful_check_state<br />
+        if [ $? = 0 ]; then<br />
+            return $OCF_NOT_RUNNING<br />
+        fi<br />
+        stateful_update &#8220;master&#8221;<br />
+        $CRM_MASTER -v ${master_score}<br />
+        return $OCF_SUCCESS<br />
+    }
+
+对于 master/slave 的agent，必须要有 promote 和 demote 函数</p>
+
+<p>5. start 函数改造</p>
+
+<p><pre>
+    返回之前添加
+    stateful_update "slave"
+    $CRM_MASTER -v ${slave_score}
+</pre>
+标记自己的状态为slave，顺便告诉pacemaker(使用crm_master来实现)</p>
+
+<p><strong>注意：master/slave资源启动的角色必须是 slave， 然后由pacemaker在slave的节点中选择一个promote为master</strong></p>
+
+<p>6 stop 函数改造</p>
+
+<p><pre>
+    $CRM_MASTER -D
+    stateful_check_state "master"
+    if [ $? = 0 ]; then
+        # CRM Error - Should never happen
+        return $OCF_RUNNING_MASTER
+    fi
+    if [ -f ${OCF_RESKEY_state} ]; then
+        rm ${OCF_RESKEY_state}
+    fi
+</pre>
+在发送停止命令之前，先进行demote操作</p>
+
+<p>7 monitor函数改造</p>
+
+<p>    将返回的 $OCF_SUCCESS 那一行修改为
+<pre>
+    stateful_check_state "master"
+    if [ $? = 0 ]; then
+        if [ $OCF_RESKEY_CRM_meta_interval = 0 ]; then
+            # Restore the master setting during probes
+            $CRM_MASTER -v ${master_score}
+        fi
+        return $OCF_RUNNING_MASTER
+    fi</pre></p>
+
+<p>    stateful_check_state &#8220;slave&#8221;<br />
+    if [ $? = 0 ]; then<br />
+        if [ $OCF_RESKEY_CRM_meta_interval = 0 ]; then<br />
+            # Restore the master setting during probes<br />
+            $CRM_MASTER -v ${slave_score}<br />
+        fi<br />
+        return $OCF_SUCCESS<br />
+    fi</p>
+
+<p>    echo &#8220;File &#8216;${OCF_RESKEY_state}&#8217; exists but contains unexpected contents&#8221;<br />
+    return $OCF_ERR_GENERIC
+
+pacemaker充分相信agent，它对资源角色的判断完全来自monitor函数，所有只要我们告诉它自己是 $OCF_RUNNING_MASTER， 它就会认为我们是master</p>
+
+<p>8 加入默认值</p>
+
+<p><pre>
+: ${slave_score=5}
+: ${master_score=10}</pre></p>
+
+<p>: ${OCF_RESKEY_CRM_meta_interval=0}<br />
+: ${OCF_RESKEY_CRM_meta_globally_unique:=&#8221;true&#8221;}</p>
+
+<p>if [ &#8220;x$OCF_RESKEY_state&#8221; = &#8220;x&#8221; ]; then<br />
+    if [ ${OCF_RESKEY_CRM_meta_globally_unique} = &#8220;false&#8221; ]; then<br />
+        state=&#8221;${HA_VARRUN}/Stateful-${OCF_RESOURCE_INSTANCE}.state&#8221;</p>
+
+<p>        # Strip off the trailing clone marker<br />
+        OCF_RESKEY_state=`echo $state | sed s/:[0-9][0-9]*&#46;state/.state/`<br />
+    else<br />
+        OCF_RESKEY_state=&#8221;${HA_VARRUN}/Stateful-${OCF_RESOURCE_INSTANCE}.state&#8221;<br />
+    fi<br />
+fi
+
+上面的操作中多次用到了 slave_score 和 master_score 等，现在就对它们进行赋值，要点：只要 master > slave 即可</p>
+
+<p>9 最后，加入动作</p>
+
+<p><pre>
+case $1 in</pre></p>
+
+<p>    promote)        stateful_promote<br />
+            ;;<br />
+    demote)         stateful_demote<br />
+            ;;
+</p>
+
+<p>好了，agent已经改造完成了，现在展示一下</p>
+
+<p>在pacemaker中的配置如下
+<pre>
+primitive testklwang ocf:test:klwang \
+	op monitor interval="30" role="Master" \
+	op monitor interval="29" role="Slave"
+</pre></p>
+
+<p>下面是crm_mon的结果：
+<pre>
+Last updated: Sat Jun  8 12:28:15 2013
+Last change: Sat Jun  8 12:28:14 2013 via cibadmin on node1
+Stack: cman
+Current DC: cent1 - partition with quorum
+Version: 1.1.8-7.el6-394e906
+5 Nodes configured, 3 expected votes
+32 Resources configured.</pre></p>
+
+<p>Online: [ node1 node2 node3 node4 node5 ]</p>
+
+<p> Master/Slave Set: ms_klwang [testklwang]<br />
+     Masters: [ node1 ]<br />
+     Slaves: [ node2 node3 node4 node5 ]
+</p>
+
+<p>现在，我们的目的达到了，已经在集群中选出了一个作为master的节点，下来我们就可以做一些不一样的事情啦</p>
+
+<p><pre>
+    stateful_check_state "master"
+    if [ $? -eq 0  ]; then
+        # 将你想干的事情放在这里
+        return $OCF_SUCCESS
+    fi
+</pre></p>
+
+<p>上面演示中 test:klwang 是使用自带的Dummy示例改造而来，把代码贴出来，也好做个对照
+<pre>
+#!/bin/sh
+#
+#
+#	Dummy OCF RA. Does nothing but wait a few seconds, can be
+#	configured to fail occassionally.
+#
+# Copyright (c) 2004 SUSE LINUX AG, Lars Marowsky-Brée
+#                    All Rights Reserved.
+#
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of version 2 of the GNU General Public License as
+# published by the Free Software Foundation.
+#
+# This program is distributed in the hope that it would be useful, but
+# WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+#
+# Further, this software is distributed without any warranty that it is
+# free of the rightful claim of any third person regarding infringement
+# or the like.  Any license provided herein, whether implied or
+# otherwise, applies only to this software file.  Patent licenses, if
+# any, provided herein do not apply to combinations of this program with
+# other software, or any other product whatsoever.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write the Free Software Foundation,
+# Inc., 59 Temple Place - Suite 330, Boston MA 02111-1307, USA.
+#</pre></p>
+
+<p>#######################################################################<br />
+# Initialization:</p>
+
+<p>: ${OCF_FUNCTIONS=${OCF_ROOT}/resource.d/heartbeat/.ocf-shellfuncs}<br />
+. ${OCF_FUNCTIONS}<br />
+: ${__OCF_ACTION=$1}<br />
+CRM_MASTER=&#8221;${HA_SBIN_DIR}/crm_master -l reboot&#8221;</p>
+
+<p>#######################################################################</p>
+
+<p>meta_data() {<br />
+	cat <<END
+<?xml version="1.0"?>
+<!DOCTYPE resource-agent SYSTEM "ra-api-1.dtd">
+<resource-agent name="Dummy" version="1.0">
+<version>1.0</version></resource-agent></p>
+
+<p><longdesc lang="en">
+This is a Dummy Resource Agent. It does absolutely nothing except <br />
+keep track of whether its running or not.<br />
+Its purpose in life is for testing and to serve as a template for RA writers.</longdesc></p>
+
+<p>NB: Please pay attention to the timeouts specified in the actions<br />
+section below. They should be meaningful for the kind of resource<br />
+the agent manages. They should be the minimum advised timeouts,<br />
+but they shouldn&#8217;t/cannot cover _all_ possible resource<br />
+instances. So, try to be neither overly generous nor too stingy,<br />
+but moderate. The minimum timeouts should never be below 10 seconds.
+
+<shortdesc lang="en">Example stateless resource agent</shortdesc></p>
+
+<p><parameters>
+<parameter name="state" unique="1">
+<longdesc lang="en">
+Location to store the resource state in.
+</longdesc>
+<shortdesc lang="en">State file</shortdesc>
+<content type="string" default="${HA_VARRUN}/Dummy-{OCF_RESOURCE_INSTANCE}.state" />
+</parameter></parameters></p>
+
+<p><parameter name="fake" unique="0">
+<longdesc lang="en">
+Fake attribute that can be changed to cause a reload
+</longdesc>
+<shortdesc lang="en">Fake attribute that can be changed to cause a reload</shortdesc>
+<content type="string" default="dummy" />
+</parameter></p>
+
+<p><parameter name="op_sleep" unique="1">
+<longdesc lang="en">
+Number of seconds to sleep during operations.  This can be used to test how<br />
+the cluster reacts to operation timeouts.
+</longdesc>
+<shortdesc lang="en">Operation sleep duration in seconds.</shortdesc>
+<content type="string" default="0" />
+</parameter></p>
+
+<p><parameter name="stateful" unique="1">
+<longdesc lang="en">
+Location to store the resource stateful in
+</longdesc>
+<shortdesc lang="en">stateful file</shortdesc>
+<content type="string" default="${HA_VARRUN}/Dummy-{OCF_RESOURCE_INSTANCE}.stateful" />
+</parameter></p>
+
+<p></p>
+
+<p><actions>
+<action name="start" timeout="20" />
+<action name="stop" timeout="20" />
+<action name="monitor" depth="0" timeout="20" interval="30" role="Master" />
+<action name="monitor" depth="0" timeout="20" interval="30" role="Slave" />
+<action name="reload" timeout="20" />
+<action name="migrate_to" timeout="20" />
+<action name="migrate_from" timeout="20" />
+<action name="validate-all" timeout="20" />
+<action name="meta-data" timeout="5" />
+</actions>
+
+END<br />
+}</p>
+
+<p>#######################################################################</p>
+
+<p># don&#8217;t exit on TERM, to test that lrmd makes sure that we do exit<br />
+trap sigterm_handler TERM<br />
+sigterm_handler() {<br />
+	ocf_log info &#8220;They use TERM to bring us down. No such luck.&#8221;<br />
+	return<br />
+}</p>
+
+<p>dummy_usage() {<br />
+	cat <<END<br />
+usage: $0 {start|stop|monitor|migrate_to|migrate_from|validate-all|meta-data}</p>
+
+<p>Expects to have a fully populated OCF RA-compliant environment set.<br />
+END<br />
+}</p>
+
+<p>stateful_update() {<br />
+	echo $1 > ${OCF_RESKEY_state}<br />
+}</p>
+
+<p>stateful_check_state() {<br />
+	target=$1<br />
+	if [ -f ${OCF_RESKEY_state} ]; then<br />
+		state=`cat ${OCF_RESKEY_state}`<br />
+		if [ &#8220;x$target&#8221; = &#8220;x$state&#8221; ]; then<br />
+		    return 0<br />
+		fi</p>
+
+<p>	else<br />
+		if [ &#8220;x$target&#8221; = &#8220;x&#8221; ]; then<br />
+		    return 0<br />
+		fi<br />
+	fi</p>
+
+<p>	return 1<br />
+}</p>
+
+<p>stateful_demote() {<br />
+	stateful_check_state<br />
+	if [ $? = 0 ]; then<br />
+		# CRM Error - Should never happen<br />
+		return $OCF_NOT_RUNNING<br />
+	fi<br />
+	stateful_update &#8220;slave&#8221;<br />
+	$CRM_MASTER -v ${slave_score}<br />
+	return $OCF_SUCCESS<br />
+}</p>
+
+<p>stateful_promote() {<br />
+	stateful_check_state<br />
+	if [ $? = 0 ]; then<br />
+		return $OCF_NOT_RUNNING<br />
+	fi<br />
+	stateful_update &#8220;master&#8221;<br />
+	$CRM_MASTER -v ${master_score}<br />
+	return $OCF_SUCCESS<br />
+}</p>
+
+<p>dummy_start() {<br />
+    dummy_monitor<br />
+    if [ $? =  $OCF_SUCCESS ]; then<br />
+		return $OCF_SUCCESS<br />
+    fi<br />
+    touch ${OCF_RESKEY_state}<br />
+	stateful_update &#8220;slave&#8221;<br />
+	$CRM_MASTER -v ${slave_score}<br />
+}</p>
+
+<p>dummy_stop() {<br />
+    dummy_monitor<br />
+    if [ $? = $OCF_SUCCESS ]; then<br />
+    	$CRM_MASTER -D<br />
+    	stateful_check_state &#8220;master&#8221;<br />
+    	if [ $? = 0 ]; then<br />
+    	    # CRM Error - Should never happen<br />
+    	    return $OCF_RUNNING_MASTER<br />
+    	fi<br />
+    	if [ -f ${OCF_RESKEY_state} ]; then<br />
+    	    rm ${OCF_RESKEY_state}<br />
+    	fi<br />
+		rm ${OCF_RESKEY_state}<br />
+    fi<br />
+    return $OCF_SUCCESS<br />
+}</p>
+
+<p>dummy_monitor() {<br />
+	# Monitor _MUST!_ differentiate correctly between running<br />
+	# (SUCCESS), failed (ERROR) or _cleanly_ stopped (NOT RUNNING).<br />
+	# That is THREE states, not just yes/no.</p>
+
+<p>	sleep ${OCF_RESKEY_op_sleep}<br />
+	
+	if [ -f ${OCF_RESKEY_state} ]; then<br />
+		    stateful_check_state &#8220;master&#8221;<br />
+		    if [ $? = 0 ]; then<br />
+		        if [ $OCF_RESKEY_CRM_meta_interval = 0 ]; then<br />
+		            # Restore the master setting during probes<br />
+		            $CRM_MASTER -v ${master_score}<br />
+		        fi<br />
+		        return $OCF_RUNNING_MASTER<br />
+		    fi</p>
+
+<p>		    stateful_check_state &#8220;slave&#8221;<br />
+		    if [ $? = 0 ]; then<br />
+		        if [ $OCF_RESKEY_CRM_meta_interval = 0 ]; then<br />
+		            # Restore the master setting during probes<br />
+		            $CRM_MASTER -v ${slave_score}<br />
+		        fi<br />
+		        return $OCF_SUCCESS<br />
+		    fi<br />
+		<br />
+		    echo &#8220;File &#8216;${OCF_RESKEY_state}&#8217; exists but contains unexpected contents&#8221;<br />
+		    return $OCF_ERR_GENERIC<br />
+	fi<br />
+	if false ; then<br />
+		return $OCF_ERR_GENERIC<br />
+	fi<br />
+	return $OCF_NOT_RUNNING<br />
+}</p>
+
+<p>dummy_validate() {<br />
+    <br />
+    # Is the state directory writable? <br />
+    state_dir=`dirname &#8220;$OCF_RESKEY_state&#8221;`<br />
+    touch &#8220;$state_dir/$$&#8221;<br />
+    if [ $? != 0 ]; then<br />
+	return $OCF_ERR_ARGS<br />
+    fi<br />
+    rm &#8220;$state_dir/$$&#8221;</p>
+
+<p>    return $OCF_SUCCESS<br />
+}</p>
+
+<p>: ${slave_score=5}<br />
+: ${master_score=10}<br />
+: ${OCF_RESKEY_fake=dummy}<br />
+: ${OCF_RESKEY_op_sleep=0}<br />
+: ${OCF_RESKEY_CRM_meta_interval=0}<br />
+: ${OCF_RESKEY_CRM_meta_globally_unique:=&#8221;true&#8221;}</p>
+
+<p>if [ &#8220;x$OCF_RESKEY_state&#8221; = &#8220;x&#8221; ]; then<br />
+    if [ ${OCF_RESKEY_CRM_meta_globally_unique} = &#8220;false&#8221; ]; then<br />
+	state=&#8221;${HA_VARRUN}/Dummy-${OCF_RESOURCE_INSTANCE}.state&#8221;<br />
+	
+	# Strip off the trailing clone marker<br />
+	OCF_RESKEY_state=`echo $state | sed s/:[0-9][0-9]*&#46;state/.state/`<br />
+    else <br />
+	OCF_RESKEY_state=&#8221;${HA_VARRUN}/Dummy-${OCF_RESOURCE_INSTANCE}.state&#8221;<br />
+    fi<br />
+fi</p>
+
+<p>case $__OCF_ACTION in<br />
+meta-data)	meta_data<br />
+		exit $OCF_SUCCESS<br />
+		;;<br />
+start)		dummy_start;;<br />
+stop)		dummy_stop;;<br />
+monitor)	dummy_monitor;;<br />
+migrate_to)	ocf_log info &#8220;Migrating ${OCF_RESOURCE_INSTANCE} to ${OCF_RESKEY_CRM_meta_migrate_target}.&#8221;<br />
+	        dummy_stop<br />
+		;;<br />
+migrate_from)	ocf_log info &#8220;Migrating ${OCF_RESOURCE_INSTANCE} to ${OCF_RESKEY_CRM_meta_migrate_source}.&#8221;<br />
+	        dummy_start<br />
+		;;<br />
+promote)	stateful_promote<br />
+		;;<br />
+demote)		stateful_demote<br />
+		;;</p>
+
+<p>reload)		ocf_log err &#8220;Reloading&#8230;&#8221;<br />
+	        dummy_start<br />
+		;;<br />
+validate-all)	dummy_validate;;<br />
+usage|help)	dummy_usage<br />
+		exit $OCF_SUCCESS<br />
+		;;<br />
+*)		dummy_usage<br />
+		exit $OCF_ERR_UNIMPLEMENTED<br />
+		;;<br />
+esac<br />
+rc=$?<br />
+ocf_log debug &#8220;${OCF_RESOURCE_INSTANCE} $__OCF_ACTION : $rc&#8221;<br />
+exit $rc
+</p>
+
+<p><strong>申明：本文中大量的代码来自<a href="http://clusterlabs.org/" target="_blank">ClusterLabs</a>， 使用时请遵守相关约束</strong></p>
+</div>
+  
+  
+
+
+    </article>
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/wordpress-enable-mobile-access/">让 Wordpress 支持手机访问</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2013-06-08T00:00:00+08:00" pubdate data-updated="true">Jun 8<span>th</span>, 2013</time>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p>一时兴起，用手机打开了 <a href="http://klwang.info" target="_blank">klwang.info</a>。竟然是无法访问，真是太让人遗憾了。</p>
+
+<p>网上搜了一下，很多人都说使用要 wp-wap， 完了还要改变访问的地址为 <a href="http://klwang.info/?mobile=1" target="_blank">klwang.info/wap</a>， 为了还看，还要另外设置一个域名解析。</p>
+
+<p>我就在想了，既然有了新的访问地址，那可不可以在index.php中加一些代码，判断访问的来源，如果是手机访问，就重定向到 <a href="http://klwang.info/?mobile=1" target="_blank">klwang.info/wap</a> 好了，这样还免得设置解析，最重要的是访问者可以不用输入专门的手机版域名。</p>
+
+<p>接着找了PHP关于$_SERVER的所有变量，挑了一些 可能有用的变量，如</p>
+
+<p><pre>
+HTTP_USER_AGENT
+VIA
+</pre></p>
+
+<p>关于 HTTP_USER_AGENT， 实在是比较强大，可以知道所有的访问来自什么设备，只要grep就行了，具体的设备和 HTTP_USER_AGENT 值的关系，可以参考这篇文档： Mobile Browser ID (User-Agent) Strings， 文章里列出了几乎世界上所有的移动设备HTTP_USER_AGENT信息，为了方便，还提供了下面这么一段代码，来获取这写 AGENT</p>
+
+<p><pre>
+// Marc Gray's PHP script (untested by us)
+// use at your discretion
+<?php
+$page = file_get_contents('1.html');
+preg_match_all('/<(p) class="g-c-[ns]"[^>]*>(.*?)<\/p>/s', $page, $m); </pre></p>
+
+<p>$agents = array();<br />
+foreach($m[2] as $agent) {<br />
+  $split = explode(&#8220;\n&#8221;, trim($agent));<br />
+  foreach($split as $item) {<br />
+    $agents[] = trim($item);<br />
+  }<br />
+}
+// $agents now holds every user agent string, one per array index, trimmed<br />
+foreach($agents as $agent) {<br />
+ echo($agent.&#8221;\n&#8221;);<br />
+}
+?>
+</p>
+
+<p>代码里边说他们没有测试过，我可以告诉大家，我测试了，确实可以用，但是结果确实很多， 一共 477 行， 下面是其中的几行，写在这里让大家看看 HTTP_USER_AGENT 到底长啥样</p>
+
+<p><pre>
+Mobile/9B206 Safari/7534.48.3
+Mozilla/5.0 (iPhone; CPU iPhone OS 5_1 like Mac OS X)
+AppleWebKit/534.46 (KHTML, like Gecko) Version/5.1 Mobile/9B176
+Safari/7534.48.3
+Mozilla/5.0 (iPhone; CPU iPhone OS 5_0_1 like Mac OS X)
+AppleWebKit/534.46 (KHTML, like Gecko) Version/5.1 Mobile/9A405
+Safari/7534.48.3</pre></p>
+
+<p>这里是大量的省略号</p>
+
+<p>Mozilla/5.0 (iPhone; CPU iPhone OS 5_0_1 like Mac OS X)<br />
+AppleWebKit/534.46 (KHTML, like Gecko) Version/5.1 Mobile/9A405<br />
+Safari/7534.48.3<br />
+Mozilla/5.0 (iPod; U; CPU iPhone OS 4_3_3 like Mac OS<br />
+X; en-us) AppleWebKit/533.17.9 (KHTML, like Gecko) Version/5.0.2
+</p>
+
+<p>有了所有的移动设备，就好办了，只要在 HTTP_USER_AGENT 中找这些东东就ok了，只要找到一个，就 Location 到 <a href="http://klwang.info/?mobile=1" target="_blank">klwang.info/wap</a>。<br />
+上边的代码改成这样就行了</p>
+
+<p><pre>
+// $agents now holds every user agent string, one per array index, trimmed
+foreach($agents as $agent) {
+ if($agent == $_SERVER['HTTP_USER_AGENT']){
+    header("Location: http://klwang.info/wap");
+}
+</pre></p>
+
+<p>好了，思路有了，也知道怎么搞了，可以动手了， 打开 wordpress，搜索 wap-wp</p>
+
+<p><a href="http://klwang.info/blog/wp-content/uploads/2013/06/wap-wp-search.png"><img src="http://klwang.info/blog/wp-content/uploads/2013/06/wap-wp-search-300x229.png" alt="wap-wp-search" width="300" height="229" /></a></p>
+
+<p>咦？ 这个 Wireless-Wordpress 是啥？ 看了介绍，突然发现我半天的思考白费了，竟然有人已经把我想的事情全做好了，而且还做的更好。</p>
+
+<p>好吧，就直接用人家的插件吧，照着引导设置，也很简单，就不废话了</p>
+
+<p>这下玩大了， 上面说了一大堆，都暴露除了 <a href="http://klwang.info/?mobile=1" target="_blank">klwang.info/wap </a>这个地址，最后竟然不搞了，这怎么能行呢？</p>
+
+<p>嘿嘿，这是难不倒咱们的</p>
+
+<p>在根目录下创建一个 wap/index.php， 里边就一句话</p>
+
+<p><pre>
+cat >>wap/index.php<<EOF
+<?php
+    header("Location: http://klwang.info/?mobile=1");
+?>
+EOF
+</pre></p>
+
+<p>这样，用户就可以正常访问 <a href="http://klwang.info/?mobile=1" target="_blank">klwang.info/wap</a> 啦<br />
+总算前面说了那么多没有骗人，也不用收回那么多的废话（打字都打了好久呢）</p>
+
+<p>无图无真相，上两张截图，看看<a href="http://klwang.info/?mobile=1" target="_blank">klwang.info</a>在手机中长得啥样</p>
+
+<p><a href="http://klwang.info/blog/wp-content/uploads/2013/06/wap-klwang-index.png"><img src="http://klwang.info/blog/wp-content/uploads/2013/06/wap-klwang-index.png" alt="wap-klwang-index" width="300" /></a>
+主页效果图</p>
+
+<p><a href="http://klwang.info/blog/wp-content/uploads/2013/06/wap-klwang-wordpress-mobile.png"><img src="http://klwang.info/blog/wp-content/uploads/2013/06/wap-klwang-wordpress-mobile.png" alt="wap-klwang-wordpress-mobile" width="300" /></a>
+本文效果图</p>
+
+<p>总结：</p>
+
+<p><strong>正式动手前，一定要多观察，说不定别人已经做了你要做的事情了呢</strong>
+</p>
+</div>
+  
+  
+
+
+    </article>
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/pacemaker-cososync-cman-setup/">Clusters From Scratch 实验笔记</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2013-06-06T00:00:00+08:00" pubdate data-updated="true">Jun 6<span>th</span>, 2013</time>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p>pacemaker 经典文档 Clusters_from_Scratch 的实验笔记，留作以后参考
+<h3>hosts文件设置</h3>
+<pre>
+# grep node /etc/hosts
+192.168.15.11 node1.cluster.com node1
+192.168.15.12 node2.cluster.com node2
+192.168.15.13 node3.cluster.com node2
+</pre></p>
+
+<p>将hosts文件设置成类似上面的样子，并且保证各机器之间网络相通
+<h3>配置ssh</h3>
+<pre>
+# ssh-keygen -t dsa --生成公钥文件，在所有的节点执行
+# for i in {1..3}; do ssh node${i} cat /root/.ssh/id_dsa.pub >> /root/.ssh/authorized_keys; done
+# for i in {1..3}; do scp /root/.ssh/authorized_keys node${i}:/root/.ssh; done
+# for i in {1..3}; do ssh node${i} hostname; done
+</pre></p>
+
+<p><h3>设置主机名</h3>
+<pre>
+# for i in {1..3}; do ssh node${i} sed -i 's/.*//g' /etc/sysconfig/network; done
+# for i in {1..3}; do ssh node${i} source /etc/sysconfig/network; done
+# for i in {1..3}; do ssh node${i} hostname \$HOSTNAME; done --反斜线很重要，不然所有的机器都长一样啦
+</pre></p>
+
+<p>最终的效果：
+<pre>
+# hostname
+node1
+# dnsdomainname
+cluster.com
+</pre></p>
+
+<p><h3>配置软件源</h3>
+软件源的配置比较多样化，可以操作俺的另外一篇文章 <a href="http://klwang.info/centos-%E4%BD%BF%E7%94%A8%E7%AC%AC%E4%B8%89%E6%96%B9%E6%BA%90%EF%BC%88redhat%EF%BC%89/">centos-使用第三方源（redhat）</a>
+<h3>安装软件包</h3>
+<pre>
+# for i in {1..3}; do ssh node${i} yum install -y pacemaker corosync; done
+</pre></p>
+
+<p><h3>配置corosync</h3>
+在/etc/corosync/corosync.conf文件中，主要调整这些参数
+<pre>
+mcastaddr: 226.94.1.1 --组播地址
+mcastport: 4000 --组播端口(UDP比TCP小一个端口，比如目前设置就使用了tcp:4000和udp:3999)
+bindnetaddr: 192.168.16.0 --最后一位是掩码,为（256 - your_mask)，比如我的掩码是255.255.240.0，则第三个点分十进制是16
+rrp_mode: passive --文中的集群是3个节点（如果是两个节点的话，就可以保留rrp_mode为none）
+</pre></p>
+
+<p>为了让corosync使用pacemaker，需要配置这个文件
+<pre>
+# cat /etc/corosync/service.d/pcmk
+service {
+    # Load the Pacemaker Cluster Resource Manager
+    name: pacemaker
+    ver: 1
+}
+</pre></p>
+
+<p>完成后，将corosync.conf和pcmk配置文件分发到所有节点上
+<h3>启动集群</h3>
+<pre>
+# service pacemaker start
+# crm_mon
+Last updated: Thu Aug 27 16:54:55 2009Stack: openais
+Current DC: node-1 - partition with quorum
+Version: 1.1.5-bdd89e69ba545404d02445be1f3d72e6a203ba2f
+3 Nodes configured, 2 expected votes
+0 Resources configured.
+============
+Online: [ node1 node2 node3]
+</pre></p>
+
+<p><h3>关闭stonith和忽略quorum</h3>
+(虽然三个节点，但是还是希望剩下一个节点的时候可以工作)
+<pre>
+# crm configure property no-quorum-policy=ignore
+# crm configure property stonith-enabled=false
+</pre></p>
+
+<p><h3>配置第一个测试资源</h3>
+(飘移ip地址)</p>
+
+<p><pre>
+# crm configure primitive ClusterIP ocf:heartbeat:IPaddr2 \
+> params ip=192.168.15.200 cidr_netmask=32 \
+> op monitor interval=30s timeout=60s
+# crm_mon
+============
+Last updated: Fri Aug 28 15:23:48 2009
+Stack: openais
+Current DC: pcmk-1 - partition WITHOUT quorum
+Version: 1.1.5-bdd89e69ba545404d02445be1f3d72e6a203ba2f
+3 Nodes configured, 3 expected votes
+1 Resources configured.
+============</pre></p>
+
+<p>Online: [ node1 node2 node3 ]<br />
+ClusterIP (ocf::heartbeat:IPaddr): Started node1
+</p>
+
+<p><h3>添加apache服务</h3>
+<pre>
+# for i in {1..3}; do ssh node${i} yum install -y httpd wget; done
+</pre></p>
+
+<p><h3>配置web首页内容</h3>
+<pre>
+<html>
+ <body>My Test Site - node2</body>
+</html>
+</pre></p>
+
+<p>注意，为了测试ip地址在哪个节点，每个节点的首页文件不能相同</p>
+
+<p>开启apache的状态监控功能
+<pre>
+<Location /server-status>
+   SetHandler server-status
+   Order deny,allow
+   Deny from all
+   Allow from 127.0.0.1
+
+</pre></p>
+
+<p><h3>添加apache的资源</h3>
+<pre>
+# crm configure primitive WebSite ocf:heartbeat:apache \
+> params configfile=/etc/httpd/conf/httpd.conf \
+> op monitor interval=1min
+</pre></p>
+
+<p><h3>设置colocation约束，将apache和ip地址绑定在一起</h3>
+<pre>
+# crm configure colocation website-with-ip INFINITY: WebSite ClusterIP
+</pre></p>
+
+<p><h3>设置资源的启动和停止顺序</h3>
+<pre>
+# crm configure order apache-after-ip mandatory: ClusterIP WebSite
+</pre></p>
+
+<p><h3>修改资源的prefer节点</h3>
+<pre>
+# crm configure location prefer-node1 WebSite 100: node1
+</pre></p>
+
+<p><h3>增加gfs2支持</h3>
+<pre>
+# for i in {1..3}; do ssh node${i} yum install -y cman gfs2-utils ccs; done
+</pre></p>
+
+<p><h3>修改cman的默认quorum等待时间</h3>
+<pre>
+# for i in {1..3}; do \
+> do ssh node${i} sed -i.sed "s/.*CMAN_QUORUM_TIMEOUT=.*/CMAN_QUORUM_TIMEOUT=0/g" /etc/sysconfig/cman; \
+> done
+</pre></p>
+
+<p><h3>建立cman的配置文件</h3>
+<pre>
+# ccs -f /etc/cluster/cluster.conf --createcluster cluster
+# for i in {1..3}; do \
+> ccs -f /etc/cluster/cluster.conf --addnode node{i}; \
+> done
+</pre></p>
+
+<p>分发cluster.conf配置文件到各个节点的相应位置<br />
+此时，已经不使用corosync.conf配置文件了，其功能由cluster.conf全权代替，关于 cman 和 corosync 之间的不正常关系，请参考我的另外一篇博文 <a href="http://klwang.info/cman-and-corosync/" target="_blank">cman and corosync</a>
+<h3>启动集群</h3>
+<pre>
+service pacemaker start --此时pacemaker会自动启动cman
+</pre></p>
+
+<p><h3>建立 gfs2 文件系统资源</h3>
+<pre>
+# mkfs.gfs2 -p lock_dlm -j 2 -t pcmk:web /dev/drbd1
+</pre></p>
+
+<p>关于gfs文件系统的相关问题，可以参考我的另外一篇博文 <a href="http://klwang.info/gfs2-startup/" target="_blank">GFS2 初级</a></p>
+
+<p><h3>在共享文件系统上建立主页测试文件</h3>
+<pre>
+# mount /dev/drbd1 /mnt/
+# cat /mnt/index.html
+<html>
+ <body>My Test Site - GFS2</body>
+</html>
+# umount /mnt
+</pre></p>
+
+<p><h3>配置文件系统资源</h3>
+<pre>
+# configure primitive WebFS ocf:heartbeat:Filesystem \
+> params device="/dev/drbd/by-res/wwwdata" directory="/var/www/html" fstype="gfs2"
+# configure colocation WebSite-with-WebFS inf: WebSite WebFS
+# configure order WebSite-after-WebFS inf: WebFS WebSite
+</pre></p>
+
+<p><h3>将系统设置为双active的模式</h3>
+<pre>
+# configure clone WebIP ClusterIP \
+> meta globally-unique="true" clone-max="2" clone-node-max="2"
+# configure edit ClusterIP
+# crm configure clone WebFSClone WebFS
+# crm configure clone WebSiteClone WebSite
+</pre></p>
+
+<p>至此，整个实验已经搭建完成，整篇博文只是记录了该如何做，没有阐述为什么这么做；关于为什么，可以参考下面的文档，一定会找到比较满意的答案</p>
+
+<p>参考文章
+<a href="http://clusterlabs.org/doc/en-US/Pacemaker/1.1-plugin/html/Clusters_from_Scratch/index.html" target="_blank">Clusters from Scratch</a>
+<a href="http://clusterlabs.org/doc/en-US/Pacemaker/1.1-plugin/html/Pacemaker_Explained/index.html" target="_blank">Configuration Explained</a></p>
+</div>
+  
+  
+
+
+    </article>
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/gfs2-startup/">GFS2 初级</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2013-06-05T00:00:00+08:00" pubdate data-updated="true">Jun 5<span>th</span>, 2013</time>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p><h4>建立文件系统</h4>
+<pre># mkfs.gfs2 -p lock_dlm -t alpha:mydata1 -j 8 /dev/vg01/lvol0</pre>
+-p 指定要使用的锁定协议名称，集群的锁定协议为 lock_dlm<br />
+-t 这个参数是用来指定集群配置中的 GFS2 文件系统。它有两部分：ClusterName:FSName
+<p style="padding-left: 30px;">ClusterName，用来创建 GFS2 文件系统的集群名称<br />
+FSName，文件系统名称</p>
+-j 指定由 mkfs.gfs2 命令生成的日志数目
+<h4>挂载文件系统</h4>
+<pre># mount -t gfs2 -o noatime /dev/mapper/mpathap1 /mnt</pre>
+使用 noatime 可以避免gfs2在读取文件时更新文件的access时间戳，进而实现读写分离<br />
+如果在未启动集群时想单机挂载文件系统，可以使用 lockproto=lock_nolock 参数
+<h4>卸载文件系统</h4>
+<pre># umount /mnt</pre>
+没啥好说的
+<h4>配额管理</h4>
+挂载的时候使用 quota 选项即可
+<pre># mount -o quota=on /dev/vg01/lvol0 /mnt
+# quotacheck -ug /mnt                          --创建配额数据库文件
+# edquota username                             --设置用户的配额
+# quota username                               --验证用户的配额
+# edquota -g devel                             --设置组的配额
+# quota -g devel                               --验证组的配额</pre>
+<h4>容量管理</h4>
+<pre># gfs2_grow /mnt</pre>
+前提：扩容之前一定要保证gfs2所在的是逻辑卷，并且已经被增大(使用： lvextend)<br />
+注意：gfs2只能增大，不能缩小！
+<h4>添加日志文件</h4>
+gfs2 系统在集群中挂载时，每个节点对应一个日志文件，如果要加入新的节点，就需要添加日志文件
+<pre># gfs2_tool journals /mnt                  --察看现在的日志数量
+# gfs2_jadd -j1 /mnt                            --添加一个日志文件
+</pre>
+<h4>挂起gfs2的写入操作</h4>
+挂起gfs2的写入操作，可以给管理员提供拷贝文件的机会
+<pre>
+# dmsetup suspend /mnt                          --挂起写入操作
+# dmsetup resume /mnt                           --恢复
+</pre></p>
+
+<p><h4>修复文件系统</h4>
+<pre>
+# fsck.gfs2 -y /mnt
+</pre></p>
+
+<p><h4>绑定挂载</h4>
+gfs2不支持软链接，可以使用bind多处挂载代替
+<pre>
+# mount --bind olddir newdir
+</pre></p>
+
+<p>参考文档
+<a href="https://access.redhat.com/site/documentation/en-US/Red_Hat_Enterprise_Linux/6/html/Global_File_System_2/index.html" title="Global_File_System_2">RedHat_Global_File_System_2</a>
+<a href="http://sourceware.org/cluster/doc/usage.txt">gfs2_usage</a></p>
+</div>
+  
+  
+
+
+    </article>
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/cman-and-corosync/">Cman and Corosync</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2013-06-04T00:00:00+08:00" pubdate data-updated="true">Jun 4<span>th</span>, 2013</time>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p>在pacemaker的经典文档<a href="http://clusterlabs.org/doc/en-US/Pacemaker/1.1-plugin/html/Clusters_from_Scratch/index.html" target="_blank">Clusters from Scratch</a> 中，使用到了cman 这个红帽cluster套件中的工具；</p>
+
+<p>奇怪的是，一开始使用的是corosync作为集群的通信层，而到了gfs作为文件系统的active/active时却换成了cman；</p>
+
+<p>同时，corosync.conf中配置的参数貌似也都不起作用了，想要配置两条心跳线也不知道要怎么搞了；</p>
+
+<p>corosync和cman到底是什么关系，到底能不能配置多条心跳线呢？
+<h3>cman和corosync的关系</h3>
+<p style="padding-left: 30px;">在cman的配置文件cluster.conf中只需要提供集群中节点的机器名就可以了，不需要设置心跳地址；</p>
+<p style="padding-left: 30px;">cman会取出$HOSTNAME，然后在cluster.conf中寻找对应的信息（找不到就把dnsdomainname去掉然后再匹配；实在不行，就取出机器的ip地址，然后再去cluster.conf文件中匹配）</p>
+<p style="padding-left: 30px;">当前，在寻找心跳ip的过程中，hosts文件起了至关重要的作用</p>
+<p style="padding-left: 30px;">cman会自动生成multicast地址，端口号，还有其他的totem参数</p>
+<p style="padding-left: 30px;">如果想要知道cman生成corosync参数是什么，可以执行下面的命令</p>
+<pre>
+    # corosync-objctl -a|grep ^totem
+</pre>
+<p style="padding-left: 30px;">cman首先找到机器的心跳ip地址，并设置好muliticast信息</p>
+<pre>
+    totem.interface.ringnumber=0
+    totem.interface.bindnetaddr=192.168.1.29
+    totem.interface.mcastaddr=239.192.209.5
+    totem.interface.mcastport=5405
+</pre>
+<p style="padding-left: 30px;">然后，cman会将下面的这些参数设置的比一般的corosync集群稍微高一些</p>
+<pre>
+    totem.token=10000
+    totem.join=60
+    totem.fail_recv_const=2500
+    totem.consensus=12000
+</pre>
+<p style="padding-left: 30px;">下来，cman开启通信加密（根据节点的数量，设置rrp_mode的值）</p>
+<pre>
+    totem.rrp_mode=none
+    totem.secauth=1
+    totem.key=composers
+</pre>
+<p style="padding-left: 30px;">最后，cman将集群的quorum提供者设置成它自己</p>
+<pre>
+    quorum.provider=quorum_cman
+</pre></p>
+
+<p><h3>设置多条心跳线</h3>
+<p style="padding-left: 30px;">cman的第一条心跳线是根据hosts文件取出的（当然，也可以在clusternode的name中直接写ip地址）</p>
+<p style="padding-left: 30px;">比如：</p>
+<pre>
+    <clusternode name="LIN01-adm" nodeid="1" votes="1" />
+</pre>
+<p style="padding-left: 30px;">cman会从host文件中取LIN01-adm对应的ip地址作为心跳地址；</p>
+<p style="padding-left: 30px;">需要添加多条心跳线时，就要增加altername选项了</p>
+<p style="padding-left: 30px;">比如：</p></p>
+
+<p><pre>
+    <clusternode name="cent1" nodeid="1">
+      <altname name="192.148.1.1" />
+    </clusternode>
+</pre>
+<p style="padding-left: 30px;">这样，就多了一条192.168.1.1的心跳线了(当然也可以写名字，然后cman自动从hosts文件中解析地址)</p></p>
+
+<p><h3>相关工具的使用</h3>
+<p style="padding-left: 30px;">既然使用了cman，就索性把红帽的其他工具也好好用一下<br />
+ccs-红帽的集群配置工具（专门用来写cluster.conf文件的）</p></p>
+
+<p><p style="padding-left: 30px;">建立集群</p>
+<pre>
+    ccs -f /etc/cluster/cluster.conf --createcluster cluster_name
+</pre>
+<p style="padding-left: 30px;">添加节点</p>
+<pre>
+    ccs -f /etc/cluster/cluster.conf --addnode nodename
+</pre>
+<p style="padding-left: 30px;">删除节点</p>
+<pre>
+    ccs -f /etc/cluster/cluster.conf --rmnode nodename
+</pre>
+<p style="padding-left: 30px;">添加备用名（备用心跳）</p>
+<pre>
+    ccs -f /etc/cluster/cluster.conf --addalt nodename alt_name
+</pre>
+<p style="padding-left: 30px;">删除备用名</p>
+<pre>
+    ccs -f /etc/cluster/cluster.conf --rmalt nodename alt_name
+</pre>
+<p style="padding-left: 30px;">其他命令 man ccs 即可</p>
+    cman_tool
+<p style="padding-left: 30px;">写好了 custer.conf 文件，我们就需要在集群中发布一下，也很简单</p>
+<p style="padding-left: 30px;">前提条件，设置好 ricci 用户的密码，开启 ricci 服务</p>
+<pre>
+    service ricci start &amp;&amp; chkconfig ricci on
+    password ricci
+</pre>
+<p style="padding-left: 30px;">分发配置文件</p>
+<pre>
+    cman_tool versiom -r
+</pre></p>
+
+<p><p style="padding-left: 30px;">其他工具，大家自己探索吧</p></p>
+
+<p>参考文档
+<a href="http://chrissie.fedorapeople.org/CmanYinYang.pdf" title="CmanYinYang">CmanYinYang</a>
+<a href="https://access.redhat.com/site/documentation/en-US/Red_Hat_Enterprise_Linux/6/html-single/Cluster_Administration/index.html" title="RedHat_Cluster_Administration" target="_blank">RedHat_Cluster_Administration</a></p>
+</div>
+  
+  
+
+
+    </article>
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/kvm-guest-fence/">Kvm 虚拟机 Fence 设置</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2013-06-03T00:00:00+08:00" pubdate data-updated="true">Jun 3<span>rd</span>, 2013</time>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p>习惯于使用 虚拟机 测试HA配置文件，但是对于fence这块，一直没有办法搞定</p>
+
+<p>之前看到有人用external/ssh的，就想试试，但是后知后觉的发现，这玩意竟然被pacemaker给枪毙了（<a href="http://hg.linux-ha.org/glue/rev/5ef3f9370458">相关链接</a>）官方说来说去就是一句话来解释这个问题(No. external/ssh simply cannot be relied on)
+<pre>
+>> You really don't want to rely on SSH STONITH in a production environment.
+>>
+>> Regards,
+>>
+>> Tim
+>>
+>> Sure, but I'm in a lab environment at the moment without
+>> UPS-based STONITH capabilities, so having SSH STONITH working
+>> to test things out would be helpful.</pre></p>
+
+<p>The development package should contain external/ssh.</p>
+
+<p>> Also, even in production,<br />
+> what would be the harm of having both SSH and UPS-based STONITH<br />
+> available? Wouldn&#8217;t more routes to STONITH a node be better?</p>
+
+<p>No. external/ssh simply cannot be relied on.
+算了，不给用就不用好了，kvm 反正还有其他的方式来实现fence呢
+<h3>host机操作</h3>
+<h4>1 把包先装上</h4>
+<pre># yum install -y fence-virt fence-virtd fence-virtd-libvirt fence-virtd-multicast</pre>
+<h4>2 搞一个认证文件</h4>
+没有啥限制，主要是内部通信用，通信机器之间文件一致即可
+<pre># mkdir /etc/cluster
+# dd if=/dev/urandom of=/etc/cluster/fence_xvm.key bs=4096 count=1</pre>
+<h4>3. 生成配置文件</h4>
+<pre># fence_virtd -c</pre>
+有一点需要改改，其他的按照提示一路回车就ok
+<pre># Backend module [checkpoint]: libvirt  --因为我们只安装了fence-virtd-libvirt这个backend</pre>
+<h4>4.配置文件review</h4>
+生成的配置文件长这个样 /etc/fence_virt.conf
+<pre>backends {
+    libvirt {
+        uri = "qemu:///system";
+    }</pre></p>
+
+<p>}</p>
+
+<p>listeners {<br />
+    multicast {<br />
+        interface = &#8220;br0&#8221;;<br />
+        port = &#8220;1229&#8221;;<br />
+        family = &#8220;ipv4&#8221;;<br />
+        address = &#8220;225.0.0.12&#8221;;<br />
+        key_file = &#8220;/etc/cluster/fence_xvm.key&#8221;;<br />
+    }</p>
+
+<p>}</p>
+
+<p>fence_virtd {<br />
+    module_path = &#8220;/usr/lib64/fence-virt&#8221;;<br />
+    backend = &#8220;libvirt&#8221;;<br />
+    listener = &#8220;multicast&#8221;;<br />
+}
+就是一般的配置文件，对于不明白的地方，man fence_virt.conf 即可找到喜欢的解释
+<strong><em>特别注意： interface = &#8220;br0&#8221;; 这个参数一定要仔细对待，不要被它的默认提示给忽悠了，这个监听的网卡一定要选择一个host机和guest机能够相互通信的网卡（像virtbr0这种kvm默认的网卡要仔细喽），比如，如果你的guest机是bridge的，那就写host的对外网卡就ok了</em></strong>
+<h4><strong><em></em></strong> 5.启动服务</h4>
+<pre># service fence_virtd start
+# chkconfig --add fence_virtd
+# chkconfig fence_virtd on</pre>
+<h4>6. 验证配置</h4>
+<pre># fence_xvm -o list</pre></p>
+
+<p>cluster_node1             f2bd9d70-411e-393c-0720-3311985a63bf on<br />
+cluster_node2             3fd4a9cd-aa43-11b1-a943-9f8623b790b3 on<br />
+cluster_node3             f2bd9d70-411e-393c-0720-3314335a34bf on<br />
+cluster_node4             3fd4a9cd-aa43-11b1-a943-9f234b7934b3 on
+重启一个guest机试试？（不要说我没告诉你-o reboot是重启的意思哦）
+<pre># fence_xvm -o reboot -H cluster_node2</pre>
+<h3>guest机配置</h3>
+<h4>1. 安装软件包</h4>
+这个 fence-virt 就是为了试试 fence_xvm 命令的，其实不装也ok的
+<pre># yum install -y fence-virt</pre>
+<h4>2. 同步配置文件</h4>
+把之前在host上生成的 /etc/cluster/fence_xvm.key 文件拷贝到所有guest的对应位置
+<h4>3. 测试</h4>
+<pre># fence_xvm -o list</pre></p>
+
+<p>cluster_node1             f2bd9d70-411e-393c-0720-3311985a63bf on<br />
+cluster_node2             3fd4a9cd-aa43-11b1-a943-9f8623b790b3 on<br />
+cluster_node3             f2bd9d70-411e-393c-0720-3314335a34bf on<br />
+cluster_node4             3fd4a9cd-aa43-11b1-a943-9f234b7934b3 on
+同样，可以看到其它的机器，<br />
+试试？别把自己fence掉啦
+<pre># fence_xvm -o reboot -H cluster_node2</pre>
+ok啦，可以使用这个fence设备了
+<pre> crm configure primitive st-virt stonith:fence_xvm \
+ params port="cluster_node1 cluster_node2 cluster_node3 cluster_node4"</pre>
+这个port就是fence机器的列表</p>
+
+<p>&nbsp;</p>
+
+<p>参考文章
+<a href="http://www.daemonzone.net/e/3/" target="_blank">Guest fencing on a RHEL KVM host</a>
+<a href="http://clusterlabs.org/wiki/Guest_Fencing" target="_blank">Guest Fencing</a></p>
 </div>
   
   
@@ -104,6 +2179,8 @@
     </article>
   
   <div class="pagination">
+    
+      <a class="prev" href="/blog/page/2/">&larr; Older</a>
     
     <a href="/blog/archives">Blog Archives</a>
     
@@ -116,7 +2193,23 @@
   <ul id="recent_posts">
     
       <li class="post">
-        <a href="/blog/post-title/">Post Title</a>
+        <a href="/blog/about-strace/">About Strace</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/about-ubuntu-no-pubkey-error/">Ubuntu NO_PUBKEY 故障解决方式</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/bash-you-don-not-konw-special-character/">你不知道的bash (特殊字符)</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/about-lvm-skills/">Lvm 实践笔记</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/change-your-resouce-angent-to-multistate/">将 Resouce Angent 改造成 Multi State 类型</a>
       </li>
     
   </ul>

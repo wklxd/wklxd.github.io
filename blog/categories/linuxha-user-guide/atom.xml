@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+
+  <title><![CDATA[Category: LinuxHA User Guide | My Octopress Blog]]></title>
+  <link href="http://github.klwang.info/blog/categories/linuxha-user-guide/atom.xml" rel="self"/>
+  <link href="http://github.klwang.info/"/>
+  <updated>2013-06-22T23:37:24+08:00</updated>
+  <id>http://github.klwang.info/</id>
+  <author>
+    <name><![CDATA[wklxd]]></name>
+    
+  </author>
+  <generator uri="http://octopress.org/">Octopress</generator>
+
+  
+  <entry>
+    <title type="html"><![CDATA[前言]]></title>
+    <link href="http://github.klwang.info/blog/before-the-article/"/>
+    <updated>2013-03-08T00:00:00+08:00</updated>
+    <id>http://github.klwang.info/blog/before-the-article</id>
+    <content type="html"><![CDATA[<p>本指南的目标是： 成为用户在 heartbeat集群通讯层、Linux-HA集群资源代理、以及其他由 Linux-HA 项目组维护的集群模块 最权威的参考指南。</p>
+
+
+
+
+<p>我们欢迎并积极鼓励有关本文档的任何、所有的反馈。请使用linux-ha@lists.linux-ha.org 邮件列表来发表意见、修正、建议来进一步提升该用户指南</p>
+
+
+
+
+<p><a href="http://www.linux-ha.org/doc/users-guide/_preface.html" target="_blank">原文链接</a>，欢迎指正</p>
+
+]]></content>
+  </entry>
+  
+</feed>

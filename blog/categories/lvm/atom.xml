@@ -1,0 +1,670 @@
+<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+
+  <title><![CDATA[Category: lvm | My Octopress Blog]]></title>
+  <link href="http://github.klwang.info/blog/categories/lvm/atom.xml" rel="self"/>
+  <link href="http://github.klwang.info/"/>
+  <updated>2013-06-22T23:37:24+08:00</updated>
+  <id>http://github.klwang.info/</id>
+  <author>
+    <name><![CDATA[wklxd]]></name>
+    
+  </author>
+  <generator uri="http://octopress.org/">Octopress</generator>
+
+  
+  <entry>
+    <title type="html"><![CDATA[lvm 实践笔记]]></title>
+    <link href="http://github.klwang.info/blog/about-lvm-skills/"/>
+    <updated>2013-06-12T00:00:00+08:00</updated>
+    <id>http://github.klwang.info/blog/about-lvm-skills</id>
+    <content type="html"><![CDATA[<p><strong>物理卷</strong></p>
+
+
+
+
+<p>创建物理卷
+<pre>
+# pvcreate /dev/sdd /dev/sde /dev/sdf
+</pre>
+  <br />
+察看已经存在的物理卷信息</p>
+
+
+
+
+<p><pre>
+# pvs               --每行一条，便于脚本调用
+# pvdisplay         --显示pv的详细信息
+</pre></p>
+
+
+
+
+<p>阻止在物理卷上分配空间 （比如，某个物理磁盘发生了硬件故障，需要移除这个硬盘的时候）</p>
+
+
+
+
+<p><pre>
+# pvchange -x n /dev/sdk1
+</pre></p>
+
+
+
+
+<p>重新允许在物理卷上分配空间</p>
+
+
+
+
+<p><pre>
+# pvchange -x y /dev/sdk1
+</pre></p>
+
+
+
+
+<p>移除物理卷（前提，没有卷组使用该pv）     </p>
+
+
+
+
+<p><pre>
+# pvremove /dev/ram15
+  Labels on physical volume "/dev/ram15" successfully wiped
+</pre></p>
+
+
+
+
+<p>替换/移除物理卷</p>
+
+
+
+
+<p><pre>
+# pvmove /dev/sdc1 SourcePhysicalVolume     --从SourcePhysicalVolume中移除sdc1
+</pre></p>
+
+
+
+
+<p>只移除 sdc1 中 MyLV 逻辑卷上的的数据</p>
+
+
+
+
+<p><pre>
+# pvmove -n MyLV /dev/sdc1
+</pre></p>
+
+
+
+
+<p><strong>卷组</strong></p>
+
+
+
+
+<p>创建卷组</p>
+
+
+
+
+<p><pre>
+# vgcreate vg1 /dev/sdd1 /dev/sde1
+</pre></p>
+
+
+
+
+<p>给卷组中加入新的物理卷</p>
+
+
+
+
+<p><pre>
+# vgextend vg1 /dev/sdf1
+</pre></p>
+
+
+
+
+<p>察看已经存在的卷组信息</p>
+
+
+
+
+<p><pre>
+# vgs       --每行一条，便于脚本调用
+# vgdisplay --现实vg卷组的详细信息
+# vgscan    --重建 /etc/lvm/cache/.cache file cache文件，维护目前的 LVM 设备列表
+</pre></p>
+
+
+
+
+<p>系统启动时，会自动运行vgscan命令。如果集群中在一个节点进行了 vgextend 等命令，在其他节点手动运行 vgscan 将是很好的选择</p>
+
+
+
+
+<p>移动物理卷上的数据（适用于替换硬盘时）</p>
+
+
+
+
+<p><pre>
+# vgreduce my_volume_group /dev/hda1
+</pre>
+该命令会将 /dev/hda1 上的数据挪到同卷组内的其他物理卷上</p>
+
+
+
+
+<p>限制卷组中最大的逻辑卷数量</p>
+
+
+
+
+<p><pre>
+# vgchange -l 128 /dev/vg00
+</pre></p>
+
+
+
+
+<p>将卷组改成闲置状态（维护时使用）</p>
+
+
+
+
+<p><pre>
+# vgchange -a n my_volume_group
+</pre></p>
+
+
+
+
+<p>重新激活卷组</p>
+
+
+
+
+<p><pre>
+# vgchange -a y my_volume_group
+</pre></p>
+
+
+
+
+<p>移除卷组（要保证移除的卷组上的逻辑卷都已经移除了）</p>
+
+
+
+
+<p><pre>
+# vgremove officevg
+  Volume group "officevg" successfully removed
+</pre></p>
+
+
+
+
+<p>卷组拆分（将/dev/ram15 从 bigvg 中拆出来组成名为 smallvg 的卷组）</p>
+
+
+
+
+<p><pre>
+# vgsplit bigvg smallvg /dev/ram15
+  Volume group "smallvg" successfully split from "bigvg"
+</pre></p>
+
+
+
+
+<p>卷组合并（前提条件：两个卷组的 extent sizes 必须相同）</p>
+
+
+
+
+<p><pre>
+# vgmerge -v databases my_vg
+</pre></p>
+
+
+
+
+<p>将 my_vg 合并到 database卷组, -v表示显示详细信息，其中 my_vg 必须处于 inactive 状态， database可以处于active或者inactive状态</p>
+
+
+
+
+<p>卷组改名</p>
+
+
+
+
+<p><pre>
+# vgrename /dev/vg02 /dev/my_volume_group
+</pre></p>
+
+
+
+
+<p><strong>逻辑卷</strong></p>
+
+
+
+
+<p>创建逻辑卷 </p>
+
+
+
+
+<p><pre>
+# lvcreate -L1500 -n testlv testvg          --1500M 默认单位M
+# lvcreate -l 60%VG -n mylv testvg          --使用卷组的60%
+# lvcreate -l 100%FREE -n yourlv testvg     --使用testvg的全部剩余空间
+</pre></p>
+
+
+
+
+<p>创建条带化的逻辑卷</p>
+
+
+
+
+<p><pre>
+# lvcreate -L 50G -i2 -I64 -n gfslv vg0     -i表示设备的数量， -I表示条带的大小（KB）
+</pre></p>
+
+
+
+
+<p>制定条带化时的详细信息</p>
+
+
+
+
+<p><pre>
+# lvcreate -l 100 -i2 -nstripelv testvg /dev/sda1:0-49 /dev/sdb1:50-99
+  Using default stripesize 64.00 KB
+  Logical volume "stripelv" created
+</pre>
+表示大小为 100个PE， 其中，使用 sda1 的0-49和 sda2 的 50-99</p>
+
+
+
+
+<p>创建镜像化的逻辑卷</p>
+
+
+
+
+<p><pre>
+# lvcreate -L 50G -m1 -n mirrorlv vg0       -- -m表示镜像（复制）的数量
+</pre></p>
+
+
+
+
+<p>镜像逻辑卷按照extend来拷贝，默认是512KB，可以使用 -R num M 的方式进行调整</p>
+
+
+
+
+<p>注意：超过1.5T的就不能使用 512K了</p>
+
+
+
+
+<p><strong>拇指定律： 使用2的指数， 3-4T：4M，   5-8T： 8M</strong></p>
+
+
+
+
+<p>使用快照</p>
+
+
+
+
+<p><pre>
+# lvcreate --size 100M --snapshot --name snap /dev/vg00/lvol1
+</pre></p>
+
+
+
+
+<p>为 /dev/vg00/lvol1 创建名为 snap 的快照，可以用于备份<br />
+ 
+使用merge操作</p>
+
+
+
+
+<p><pre>
+# lvconvert --merge vg00/lvol1_snap
+</pre></p>
+
+
+
+
+<p>将 lvol1_snap merge回源逻辑卷，回复备份时可以考虑此操作<br />
+ 
+收缩逻辑卷</p>
+
+
+
+
+<p><pre>
+# lvreduce -l -3 vg00/lvol1
+</pre>
+将逻辑卷减少3个PE</p>
+
+
+
+
+<p>修改逻辑卷的权限</p>
+
+
+
+
+<p><pre>
+# lvchange -pr vg00/lvol1      --将逻辑卷改为只读模式
+# lvchange -prw vg00/lvol1     --将逻辑卷修改为读写模式
+</pre></p>
+
+
+
+
+<p>逻辑卷改名</p>
+
+
+
+
+<p><pre>
+# lvrename /dev/vg02/lvold /dev/vg02/lvnew
+</pre></p>
+
+
+
+
+<p>删除逻辑卷</p>
+
+
+
+
+<p><pre>
+# lvremove /dev/vg02/lvol1
+</pre></p>
+
+
+
+
+<p>增大逻辑卷</p>
+
+
+
+
+<p>增大到 12G</p>
+
+
+
+
+<p><pre>
+# lvextend -L12G /dev/myvg/homevol
+lvextend -- extending logical volume "/dev/myvg/homevol" to 12 GB
+lvextend -- doing automatic backup of volume group "myvg"
+lvextend -- logical volume "/dev/myvg/homevol" successfully extended
+</pre></p>
+
+
+
+
+<p>增大1G</p>
+
+
+
+
+<p><pre>
+# lvextend -L+1G /dev/myvg/homevol
+lvextend -- extending logical volume "/dev/myvg/homevol" to 13 GB
+lvextend -- doing automatic backup of volume group "myvg"
+lvextend -- logical volume "/dev/myvg/homevol" successfully extended
+</pre></p>
+
+
+
+
+<p>将卷组中所有的空闲附加到已经存在的逻辑卷</p>
+
+
+
+
+<p><pre>
+lvextend -l +100%FREE /dev/myvg/testlv
+  Extending logical volume testlv to 68.59 GB
+  Logical volume testlv successfully resized
+</pre></p>
+
+
+
+
+<p>收缩逻辑卷</p>
+
+
+
+
+<p><pre>
+# lvreduce -l -3 vg00/lvol1
+</pre>
+收缩3个PE，在收缩卷之前要保证先将里边的文件系统进行收缩，不然会丢失数据</p>
+
+
+
+
+<p>如果数据量较大，需要使用-n参数后台进行，下面的命令表示将 sdc1 上的数据移动到 sdf1</p>
+
+
+
+
+<p><pre>
+# pvmove -b /dev/sdc1 /dev/sdf1
+</pre></p>
+
+
+
+
+<p><strong>综合操作实例（跨系统的卷组迁移）</strong></p>
+
+
+
+
+<p>1. 卸载卷组上的所有逻辑卷</p>
+
+
+
+
+<p><pre>
+umount 
+</pre></p>
+
+
+
+
+<p>2. 将卷组改成闲置状态</p>
+
+
+
+
+<p><pre>
+vgchange -a n olumeGroupName
+</pre></p>
+
+
+
+
+<p>3. 导出VolumeGroupName的信息</p>
+
+
+
+
+<p><pre>
+vgexport VolumeGroupName
+</pre></p>
+
+
+
+
+<p>4. 做一次重建cache扫描</p>
+
+
+
+
+<p><pre>
+vgscan
+</pre></p>
+
+
+
+
+<p>5. 察看所有相关物理卷的状态，一定要处于export状态</p>
+
+
+
+
+<p><pre>
+pvscan
+    PV /dev/sda1
+    is in exported VG myvg [17.15 GB / 7.15 GB free]
+    PV /dev/sdc1
+    is in exported VG myvg [17.15 GB / 15.15 GB free]
+    PV /dev/sdd1
+    is in exported VG myvg [17.15 GB / 15.15 GB free]
+    ...
+</pre></p>
+
+
+
+
+<p>6. 拔下硬盘装到新的机器</p>
+
+
+
+
+<p>7. 导入VolumeGroupName的信息</p>
+
+
+
+
+<p><pre>
+vgimport VolumeGroupName
+</pre></p>
+
+
+
+
+<p>8. 激活卷组</p>
+
+
+
+
+<p><pre>
+vgchange -a y VolumeGroupName
+</pre></p>
+
+
+
+
+<p>9. 重新挂在相关逻辑卷</p>
+
+
+
+
+<p><pre>
+mount
+</pre></p>
+
+
+
+
+<p>That's all</p>
+
+]]></content>
+  </entry>
+  
+  <entry>
+    <title type="html"><![CDATA[GFS2 初级]]></title>
+    <link href="http://github.klwang.info/blog/gfs2-startup/"/>
+    <updated>2013-06-05T00:00:00+08:00</updated>
+    <id>http://github.klwang.info/blog/gfs2-startup</id>
+    <content type="html"><![CDATA[<p><h4>建立文件系统</h4>
+<pre># mkfs.gfs2 -p lock_dlm -t alpha:mydata1 -j 8 /dev/vg01/lvol0</pre>
+-p 指定要使用的锁定协议名称，集群的锁定协议为 lock_dlm<br />
+-t 这个参数是用来指定集群配置中的 GFS2 文件系统。它有两部分：ClusterName:FSName
+<p style="padding-left: 30px;">ClusterName，用来创建 GFS2 文件系统的集群名称<br />
+FSName，文件系统名称</p>
+-j 指定由 mkfs.gfs2 命令生成的日志数目
+<h4>挂载文件系统</h4>
+<pre># mount -t gfs2 -o noatime /dev/mapper/mpathap1 /mnt</pre>
+使用 noatime 可以避免gfs2在读取文件时更新文件的access时间戳，进而实现读写分离<br />
+如果在未启动集群时想单机挂载文件系统，可以使用 lockproto=lock_nolock 参数
+<h4>卸载文件系统</h4>
+<pre># umount /mnt</pre>
+没啥好说的
+<h4>配额管理</h4>
+挂载的时候使用 quota 选项即可
+<pre># mount -o quota=on /dev/vg01/lvol0 /mnt
+# quotacheck -ug /mnt                          --创建配额数据库文件
+# edquota username                             --设置用户的配额
+# quota username                               --验证用户的配额
+# edquota -g devel                             --设置组的配额
+# quota -g devel                               --验证组的配额</pre>
+<h4>容量管理</h4>
+<pre># gfs2_grow /mnt</pre>
+前提：扩容之前一定要保证gfs2所在的是逻辑卷，并且已经被增大(使用： lvextend)<br />
+注意：gfs2只能增大，不能缩小！
+<h4>添加日志文件</h4>
+gfs2 系统在集群中挂载时，每个节点对应一个日志文件，如果要加入新的节点，就需要添加日志文件
+<pre># gfs2_tool journals /mnt                  --察看现在的日志数量
+# gfs2_jadd -j1 /mnt                            --添加一个日志文件
+</pre>
+<h4>挂起gfs2的写入操作</h4>
+挂起gfs2的写入操作，可以给管理员提供拷贝文件的机会
+<pre>
+# dmsetup suspend /mnt                          --挂起写入操作
+# dmsetup resume /mnt                           --恢复
+</pre></p>
+
+
+
+
+<p><h4>修复文件系统</h4>
+<pre>
+# fsck.gfs2 -y /mnt
+</pre></p>
+
+
+
+
+<p><h4>绑定挂载</h4>
+gfs2不支持软链接，可以使用bind多处挂载代替
+<pre>
+# mount --bind olddir newdir
+</pre></p>
+
+
+
+
+<p>参考文档
+<a href="https://access.redhat.com/site/documentation/en-US/Red_Hat_Enterprise_Linux/6/html/Global_File_System_2/index.html" title="Global_File_System_2">RedHat_Global_File_System_2</a>
+<a href="http://sourceware.org/cluster/doc/usage.txt">gfs2_usage</a></p>
+
+]]></content>
+  </entry>
+  
+</feed>

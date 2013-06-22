@@ -1,0 +1,357 @@
+
+<!DOCTYPE html>
+<!--[if IEMobile 7 ]><html class="no-js iem7"><![endif]-->
+<!--[if lt IE 9]><html class="no-js lte-ie8"><![endif]-->
+<!--[if (gt IE 8)|(gt IEMobile 7)|!(IEMobile)|!(IE)]><!--><html class="no-js" lang="en"><!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  <title>Oracle表管理 - My Octopress Blog</title>
+  <meta name="author" content="wklxd">
+
+  
+  <meta name="description" content="1. dual
+神奇的dual表，属于sys模式
+2. 表尺寸估算/回收
+2.1 使用 database control 估算
+2.2 使用 dbms_space.create_table_cost 估算
+2.3 alter table tb_name deallocate unused;
+3. &hellip;">
+  
+
+  <!-- http://t.co/dKP3o1e -->
+  <meta name="HandheldFriendly" content="True">
+  <meta name="MobileOptimized" content="320">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  
+  <link rel="canonical" href="http://github.klwang.info/blog/manage-of-oracle-tables">
+  <link href="/favicon.png" rel="icon">
+  <link href="/stylesheets/screen.css" media="screen, projection" rel="stylesheet" type="text/css">
+  <link href="/atom.xml" rel="alternate" title="My Octopress Blog" type="application/atom+xml">
+  <script src="/javascripts/modernizr-2.0.js"></script>
+  <script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+  <script>!window.jQuery && document.write(unescape('%3Cscript src="./javascripts/lib/jquery.min.js"%3E%3C/script%3E'))</script>
+  <script src="/javascripts/octopress.js" type="text/javascript"></script>
+  <!--Fonts from Google"s Web font directory at http://google.com/webfonts -->
+<link href="http://fonts.googleapis.com/css?family=PT+Serif:regular,italic,bold,bolditalic" rel="stylesheet" type="text/css">
+<link href="http://fonts.googleapis.com/css?family=PT+Sans:regular,italic,bold,bolditalic" rel="stylesheet" type="text/css">
+
+  
+
+</head>
+
+<body   >
+  <header role="banner"><hgroup>
+  <h1><a href="/">My Octopress Blog</a></h1>
+  
+    <h2>A blogging framework for hackers.</h2>
+  
+</hgroup>
+
+</header>
+  <nav role="navigation"><ul class="subscription" data-subscription="rss">
+  <li><a href="/atom.xml" rel="subscribe-rss" title="subscribe via RSS">RSS</a></li>
+  
+</ul>
+  
+<form action="http://google.com/search" method="get">
+  <fieldset role="search">
+    <input type="hidden" name="q" value="site:github.klwang.info" />
+    <input class="search" type="text" name="q" results="0" placeholder="Search"/>
+  </fieldset>
+</form>
+  
+<ul class="main-navigation">
+  <li><a href="/">Blog</a></li>
+  <li><a href="/blog/archives">Archives</a></li>
+</ul>
+
+</nav>
+  <div id="main">
+    <div id="content">
+      <div>
+<article class="hentry" role="article">
+  
+  <header>
+    
+      <h1 class="entry-title">Oracle表管理</h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2013-04-16T00:00:00+08:00" pubdate data-updated="true">Apr 16<span>th</span>, 2013</time>
+        
+      </p>
+    
+  </header>
+
+
+<div class="entry-content"><p>1. dual
+<p style="padding-left: 30px;">神奇的dual表，属于sys模式</p>
+2. 表尺寸估算/回收
+<p style="padding-left: 30px;">2.1 使用 database control 估算<br />
+2.2 使用 dbms_space.create_table_cost 估算<br />
+2.3 alter table tb_name deallocate unused;</p>
+3. 权限说明
+<p style="padding-left: 30px;">自己模式： create table 系统权限<br />
+其他模式： create any table 系统权限</p>
+4. 建表
+<pre>	create table
+	collist
+	constraints
+	tablespace spc_name
+	[--索引表
+		orgnization index tablespace spc_name
+		pctthreshold num				--溢出百分比
+		overflow tablespace spc_name2	--溢出表空间
+	]</pre>
+5. 加列
+<pre>	alter table tb_name add(colname type)</pre>
+6. 减列
+<pre>	alter table tb_name drop(colname)	--删除
+	alter table tb_name set unused (col1, col2)	--快速删除、标记
+	alter table tb_name drop unused columns	--删除所有标记无用的列
+	[
+		checkpoint no --没删除no行执行一个checkpoint
+	]</pre>
+7. 重命名列
+<pre>	alter table tb_name rename column col1 to col2</pre>
+8. 重命名表
+<pre>	alter table tb_name rename to tb_name_new</pre>
+9. 清空表
+<pre>	truncate table tb_name;</pre>
+10 cats创建表
+<pre>	create table tb1 as
+	select * from tb2
+	[
+		parallel degree 4	--多个进程并行加载数据
+		nologging			--关闭重做日志
+	]</pre>
+11 修改表所属空间
+<pre>	alter table tb_name move new_tbspace</pre>
+12 删除表
+<pre>	drop table tb_name
+	[
+		purge	--不进入回收站，直接删除
+	]</pre>
+13 临时表
+<pre>	create global temporary table tb_name
+	(col_list)
+	on commit reserve rows	--会话临时表，事务结束时，记录保留
+	on commit delelte rows	--事务临时表，只对使用该表的事务有效</pre>
+14 分区表
+<p style="padding-left: 30px;">范围分区</p></p>
+
+<p><pre>	create table tb_name
+	(col_list)
+	partition by range(col1, col2, col3)
+	(
+		partition p1 values less than (c1, c2, c3) tablespace sp1,
+		partition p2 values less than (c1, c2, c3) tablespace sp2
+	)</pre>
+<p style="padding-left: 30px;">散列分区</p></p>
+
+<p><pre>	create table tb_name
+	(col_list)
+	partition by hash (col_list)
+	partitions num				--分区数目
+	store in (ts1, ts2, ..)		--储存的表空间</pre>
+<p style="padding-left: 30px;">列表分区</p></p>
+
+<p><pre>	create table tb_name
+	(col_list)
+	partition by list (col1)
+	(
+		partition p1 values (c1, c2, c3) tablespace sp1,
+		partition p2 values (c1, c2, c3) tablespace sp2
+	)</pre>
+<p style="padding-left: 30px;">组合范围-散列分区</p></p>
+
+<p><pre>	create table tb_name
+	(col_list)
+	partition by range(col1) subpartition by hash (col2)
+	subpartitions num
+	store in (ts1, ts ..)
+	(
+		partition p1 values less than (xx),
+		partition p1 values less than (xx)
+	)</pre>
+<p style="padding-left: 30px;">组合范围-列表分区</p></p>
+
+<p><pre>	create table tb_name
+	(col_list)
+	partition by range(col1) subpartition by list (col2)
+	(
+		partition p1 values less than (xx) tablespace sp1
+		(
+			subpartition p1p1 values(vales_list),
+			subpartition p1p2 values(vales_list)
+		),
+		partition p1 values less than (xx) tablespace sp2
+		(
+			subpartition p2p1 values(vales_list),
+			subpartition p2p2 values(vales_list)
+		)
+	)</pre>
+<p style="padding-left: 30px;">添加分区</p></p>
+
+<p><pre>alter table tb_name add partition p1 values less than (value_list) tablespace sp1;</pre>
+<p style="padding-left: 30px;">分割分区</p></p>
+
+<p><pre>		alter table tb_name split partition p1 at (value) into (partition p1a, p2b)</pre>
+<p style="padding-left: 30px;">合并分区</p></p>
+
+<p><pre>		alter table tb_name merge partitions p1a, p1b into partition p1</pre>
+<p style="padding-left: 30px;">重命名分区</p></p>
+
+<p><pre>		alter table tb_name rename partition p1 to p2;</pre>
+<p style="padding-left: 30px;">转换分区</p></p>
+
+<p><pre>		alter table tb_name exchange partition p_name with tb_other_name</pre>
+<p style="padding-left: 30px;">删除分区</p></p>
+
+<p><pre>		alter table tb_name drop partition p1
+		[ update  global indexes ] --重建全局索引</pre>
+15 相关数据字典
+<pre>	dba_tables		表信息
+	dba_tab_partitions	分区信息
+	dba_tab_columns		字段信息</pre>
+16 获取创建表的ddl语句
+<pre>	dbms_metadata.get_ddl('TABLE', 'TB_NAME);
+	-- 需要设置 long 变量，不然可能无法完全显示 set long 2000</pre></p>
+</div>
+
+
+  <footer>
+    <p class="meta">
+      
+  
+
+<span class="byline author vcard">Posted by <span class="fn">wklxd</span></span>
+
+      
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2013-04-16T00:00:00+08:00" pubdate data-updated="true">Apr 16<span>th</span>, 2013</time>
+      
+
+<span class="categories">
+  
+    <a class='category' href='/blog/categories/oracle/'>oracle</a>
+  
+</span>
+
+
+    </p>
+    
+      <div class="sharing">
+  
+  <a href="http://twitter.com/share" class="twitter-share-button" data-url="http://github.klwang.info/blog/manage-of-oracle-tables/" data-via="" data-counturl="http://github.klwang.info/blog/manage-of-oracle-tables/" >Tweet</a>
+  
+  
+  
+</div>
+
+    
+    <p class="meta">
+      
+        <a class="basic-alignment left" href="/blog/manage-of-oracle-inde/" title="Previous Post: Oracle索引管理">&laquo; Oracle索引管理</a>
+      
+      
+        <a class="basic-alignment right" href="/blog/manage-of-oracle-tablespace/" title="Next Post: Oracle 表空间管理">Oracle 表空间管理 &raquo;</a>
+      
+    </p>
+  </footer>
+</article>
+
+</div>
+
+<aside class="sidebar">
+  
+    <section>
+  <h1>Recent Posts</h1>
+  <ul id="recent_posts">
+    
+      <li class="post">
+        <a href="/blog/about-strace/">About Strace</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/about-ubuntu-no-pubkey-error/">Ubuntu NO_PUBKEY 故障解决方式</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/bash-you-don-not-konw-special-character/">你不知道的bash (特殊字符)</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/about-lvm-skills/">Lvm 实践笔记</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/change-your-resouce-angent-to-multistate/">将 Resouce Angent 改造成 Multi State 类型</a>
+      </li>
+    
+  </ul>
+</section>
+
+
+
+
+
+  
+</aside>
+
+
+    </div>
+  </div>
+  <footer role="contentinfo"><p>
+  Copyright &copy; 2013 - wklxd -
+  <span class="credit">Powered by <a href="http://octopress.org">Octopress</a></span>
+</p>
+
+</footer>
+  
+
+
+
+
+
+
+
+  <script type="text/javascript">
+    (function(){
+      var twitterWidgets = document.createElement('script');
+      twitterWidgets.type = 'text/javascript';
+      twitterWidgets.async = true;
+      twitterWidgets.src = 'http://platform.twitter.com/widgets.js';
+      document.getElementsByTagName('head')[0].appendChild(twitterWidgets);
+    })();
+  </script>
+
+
+
+
+
+</body>
+</html>

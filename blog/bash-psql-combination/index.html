@@ -1,0 +1,425 @@
+
+<!DOCTYPE html>
+<!--[if IEMobile 7 ]><html class="no-js iem7"><![endif]-->
+<!--[if lt IE 9]><html class="no-js lte-ie8"><![endif]-->
+<!--[if (gt IE 8)|(gt IEMobile 7)|!(IEMobile)|!(IE)]><!--><html class="no-js" lang="en"><!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  <title>bash和psql结合处理批量任务 - My Octopress Blog</title>
+  <meta name="author" content="wklxd">
+
+  
+  <meta name="description" content="文中的例子来自http://www.manniwood.com/postgresql_and_bash_stuff/index.html,经过了翻译整理。 通常，我们想要批量的执行sql，或者想要在数据库中处理一些逻辑时，会使用plsql，或者在命令行中一步一步的执行单条sql。 &hellip;">
+  
+
+  <!-- http://t.co/dKP3o1e -->
+  <meta name="HandheldFriendly" content="True">
+  <meta name="MobileOptimized" content="320">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  
+  <link rel="canonical" href="http://github.klwang.info/blog/bash-psql-combination">
+  <link href="/favicon.png" rel="icon">
+  <link href="/stylesheets/screen.css" media="screen, projection" rel="stylesheet" type="text/css">
+  <link href="/atom.xml" rel="alternate" title="My Octopress Blog" type="application/atom+xml">
+  <script src="/javascripts/modernizr-2.0.js"></script>
+  <script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+  <script>!window.jQuery && document.write(unescape('%3Cscript src="./javascripts/lib/jquery.min.js"%3E%3C/script%3E'))</script>
+  <script src="/javascripts/octopress.js" type="text/javascript"></script>
+  <!--Fonts from Google"s Web font directory at http://google.com/webfonts -->
+<link href="http://fonts.googleapis.com/css?family=PT+Serif:regular,italic,bold,bolditalic" rel="stylesheet" type="text/css">
+<link href="http://fonts.googleapis.com/css?family=PT+Sans:regular,italic,bold,bolditalic" rel="stylesheet" type="text/css">
+
+  
+
+</head>
+
+<body   >
+  <header role="banner"><hgroup>
+  <h1><a href="/">My Octopress Blog</a></h1>
+  
+    <h2>A blogging framework for hackers.</h2>
+  
+</hgroup>
+
+</header>
+  <nav role="navigation"><ul class="subscription" data-subscription="rss">
+  <li><a href="/atom.xml" rel="subscribe-rss" title="subscribe via RSS">RSS</a></li>
+  
+</ul>
+  
+<form action="http://google.com/search" method="get">
+  <fieldset role="search">
+    <input type="hidden" name="q" value="site:github.klwang.info" />
+    <input class="search" type="text" name="q" results="0" placeholder="Search"/>
+  </fieldset>
+</form>
+  
+<ul class="main-navigation">
+  <li><a href="/">Blog</a></li>
+  <li><a href="/blog/archives">Archives</a></li>
+</ul>
+
+</nav>
+  <div id="main">
+    <div id="content">
+      <div>
+<article class="hentry" role="article">
+  
+  <header>
+    
+      <h1 class="entry-title">Bash和psql结合处理批量任务</h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2013-03-14T00:00:00+08:00" pubdate data-updated="true">Mar 14<span>th</span>, 2013</time>
+        
+      </p>
+    
+  </header>
+
+
+<div class="entry-content"><p>文中的例子来自<a href="http://www.manniwood.com/postgresql_and_bash_stuff/index.html">http://www.manniwood.com/postgresql_and_bash_stuff/index.html</a>,经过了翻译整理。</p>
+
+<p>通常，我们想要批量的执行sql，或者想要在数据库中处理一些逻辑时，会使用plsql，或者在命令行中一步一步的执行单条sql。</p>
+
+<p>单步执行sql的方式肯定不是我们希望的；而对于plsql，如果不熟悉plsql的语法，也会比较纠结的；况且，目前调试函数或者存储过程也比较耗时间；如果我们的批量操作只进行一次的话，调试存储过程的代价难免会比较大。</p>
+
+<p>下面，我们就来探索一种bash和psql共同工作的方式来实现这些功能；of cource，收益者就只限于熟悉bash语法和sql语法的同学了。
+<h5>1. 最简单的批量sql执行方式,(paql 的 -f 参数)</h5>
+<pre>#!/bin/sh</pre></p>
+
+<p>if [ $# != 2 ]; then<br />
+    echo &#8220;please enter a db host and a table suffix&#8221;<br />
+    exit 1<br />
+fi</p>
+
+<p>export DBHOST=$1<br />
+export TSUFF=$2</p>
+
+<p>psql \<br />
+    -X \<br />
+    -U user \<br />
+    -h $DBHOST \<br />
+    -f /path/to/sql/file.sql \<br />
+    &#8211;echo-all \<br />
+    &#8211;set AUTOCOMMIT=off \<br />
+    &#8211;set ON_ERROR_STOP=on \<br />
+    &#8211;set TSUFF=$TSUFF \ &#8211;set QTSUFF=&#39;$TSUFF&#39; \<br />
+    mydatabase</p>
+
+<p>psql_exit_status=$?</p>
+
+<p>if [ $psql_exit_status != 0 ]; then<br />
+    echo &#8220;psql failed while trying to run this sql script&#8221; 1&gt;&amp;2<br />
+    exit $psql_exit_status<br />
+fi</p>
+
+<p>echo &#8220;sql script successful&#8221;<br />
+exit 0
+<ol>
+	<li>在命令行设置了两个变量 TSUFF 和 QTSUFF，进而，可以在sql文件中应用变量，增加了sql的灵活性</li>
+	<li>使用 -X 选项来阻止 psql 读取 .psqlrc 文件</li>
+	<li>使用 &#8211;echo-all 来观察所有的执行日志</li>
+	<li>使用 ON_ERROR_STOP， 在出错的时候，停止执行；当然，有时候我们可能不想要这个参数</li>
+	<li>关闭 AUTOCOMMIT 来阻止sql的自动提交，在批量sql时，这个参数很重要；当然，有时我们可以考率一下 -l 参数来将所有的sql放在一个事务中运行；</li>
+</ol>
+下面是一个可能的sql文件：（注意，其中用到了之前SET的变量）
+<pre>begin;
+drop index this_index_:TSUFF;
+commit;</pre></p>
+
+<p>begin;<br />
+create table new_table_:TSUFF (<br />
+    greeting text not null default &#8221;);<br />
+commit;</p>
+
+<p>begin;<br />
+insert into new_table_:TSUFF (greeting)<br />
+values (&#8216;Hello from table &#8217; || :QTSUFF);<br />
+commit;
+<h5>2. 熟练使用psql的 &lt; 操作</h5>
+可能有些人还不知道，使用&lt;重定向符号，可以将文件中的sql发送给psql来执行，下面，我们就来试试这种方式
+<pre>#!/bin/bash</pre></p>
+
+<p>set -e</p>
+
+<p>RUN_ON_MYDB=&#8221;psql -X -U myuser -h myhost &#8211;set ON_ERROR_STOP=on &#8211;set AUTOCOMMIT=off mydb&#8221;</p>
+
+<p>$RUN_ON_MYDB &lt;
+甚至，我们可以将多个事务进行拆分和叠加操作
+<pre>--注意，下面的句子还在上个bash脚本中哦
+CREATE_MY_TABLE_SQL=$(cat &lt;</pre>
+<h5>3. 将select执行出单独的结果赋值给shell变量，然后在shell中使用这个值怎么样？（我们又离存储过程的功能近了一步）</h5>
+<pre>CURRENT_ID=`$PSQL -X -U $PROD_USER -h myhost -P t -P format=unaligned $PROD_DB -c "select max(id) from users"`
+let NEXT_ID=CURRENT_ID+1
+echo "next user.id is $NEXT_ID"</pre></p>
+
+<p>echo &#8220;about to reset user id sequence on other database&#8221;<br />
+$PSQL -X -U $DEV_USER $DEV_DB -c &#8220;alter sequence user_ids restart with $NEXT_ID&#8221;
+神奇的-c参数将select的结果拿了出来，在shell中进行您喜欢的计算后，又放回postgresql中，怎么样？</p>
+
+<p>有人会问，select出来的结果一般是一个结果集，或着，至少是多个列吧，要怎么处理呢？ok，看这个神奇的数组
+<h5>4. 使用数组来处理select出来单条记录的多个列</h5>
+<pre>#!/bin/bash</pre></p>
+
+<p>set -e</p>
+
+<p>declare -a ROW=(`psql \<br />
+    -X \<br />
+    -h myhost \<br />
+    -U myuser \<br />
+    -c &#8220;select username, first_name, last_name from users where id = 5489&#8221; \<br />
+    &#8211;single-transaction \<br />
+    &#8211;set AUTOCOMMIT=off \<br />
+    &#8211;set ON_ERROR_STOP=on \<br />
+    &#8211;no-align \<br />
+    -t \<br />
+    &#8211;field-separator &#8217; &#8217; \<br />
+    &#8211;quiet \<br />
+    mydb`)</p>
+
+<p>username=${ROW[0]}<br />
+first_name=${ROW[1]}<br />
+last_name=${ROW[2]}</p>
+
+<p>echo &#8220;username: $username, first_name: $first_name, last_name: $last_name&#8221;
+梦想又近了一步啦，下面看怎么处理一个结果集
+<h5>5. 使用数组+循环来处理select出来包含多个列的结果集</h5>
+<pre>#!/bin/bash</pre></p>
+
+<p>PSQL=/usr/bin/psql</p>
+
+<p>DB_USER=myuser<br />
+DB_HOST=myhost<br />
+DB_NAME=mydb</p>
+
+<p>$PSQL \<br />
+    -X \<br />
+    -h $DB_HOST \<br />
+    -U $DB_USER \<br />
+    -c &#8220;select username, password, first_name, last_name from users&#8221; \<br />
+    &#8211;no-align \<br />
+    -t \<br />
+    &#8211;field-separator &#8217; &#8217; \<br />
+    &#8211;quiet \<br />
+    $DB_NAME | while read -a Record ; do</p>
+
+<p>    username=${Record[0]}<br />
+    password=${Record[1]}<br />
+    first_name=${Record[2]}<br />
+    last_name=${Record[3]}</p>
+
+<p>    echo &#8220;USER: $username $password $first_name $last_name&#8221;<br />
+done
+ok，大工告成，以上5种 sql + bash 的方式，已经足够我们应付在工作中遇到的大部分需要plsql才可以解决的问题了</p>
+
+<p>以下是一些bash+psql处理事情的具体例子，和上面的五种方式没有深层的联系
+<h5>附录A：使用独立表来控制事务的处理</h5>
+假如我们有好多事情要干（当然，仅限于数据库中的数据处理），我们知道干活的具体办法，只有一个唯一的限制：这些事情必须是串行执行的。</p>
+
+<p>呆在电脑前，一个一个的处理事情肯定不是我们想要的方式，那我们何不做一个表来控制事情的进行呢？结束的工作标记为done，下次在没有done的事情中挑出一件来做，直到所有的事情都为done状态；如下：
+<pre>#!/bin/bash</pre></p>
+
+<p>set -e</p>
+
+<p>PSQL=&#8221;/u99/pgsql-9.1/bin/psql&#8221;<br />
+DNL_TABLE=&#8221;items_to_process&#8221;<br />
+#DNL_TABLE=&#8221;test&#8221;<br />
+FETCH_QUERY=&#8221;select item_id from my_schema.${DNL_TABLE} where done is false order by item_id limit 1&#8221;</p>
+
+<p>process_item() {<br />
+    local item_id=$1<br />
+    local dt=`date`<br />
+    echo &#8220;[${dt}] processing item_id $item_id&#8221;<br />
+    $PSQL -X -U myuser -h myhost -c &#8220;insert into my_schema.thingies select thingie_id, salutation, name, ddr from thingies where item_id = $item_id and salutation like &#8216;Mr.%&#8217;&#8221; mydb<br />
+    #我们可以将处理具体事情的操作放在这里， ^ ^<br />
+}</p>
+
+<p>item_id=`$PSQL -X -U myuser -h myhost -P t -P format=unaligned -c &#8220;${FETCH_QUERY}&#8221; mydb`<br />
+dt=`date`<br />
+while [ -n &#8220;$item_id&#8221; ]; do<br />
+    process_item $item_id<br />
+    echo &#8220;[${dt}] marking item_id $item_id as done&#8230;&#8221; #随时记录日志是好孩子<br />
+    $PSQL -X -U myuser -h myhost -c &#8220;update my_schema.${DNL_TABLE} set done = true where item_id = $item_id&#8221; mydb<br />
+    item_id=`$PSQL -X -U myuser -h myhost -P t -P format=unaligned -c &#8220;${FETCH_QUERY}&#8221; mydb`<br />
+    dt=`date`<br />
+done
+<h5></h5>
+<h5>附录B不同库之间的数据传输</h5>
+数据导入导出的方式简直是太多了，也不差再多这一种，或许会有意想不到的好处呢，如下：
+<pre>psql \
+    -X \
+    -U user \
+    -h oldhost \
+    -c "\\copy users to stdout" \
+    olddb \
+| \
+psql \
+    -X \
+    -U user \
+    -h $DBHOST \
+    -c "\\copy users from stdin" \
+    newdb \</pre>
+如何？如果旧表和新表的列数不一样呢？（这也是超过pg_dump的地方）
+<ul>
+	<li>first_name</li>
+	<li>middle_name</li>
+	<li>last_name</li>
+</ul>
+新表如下：
+<ul>
+	<li>first_name</li>
+	<li>last_name</li>
+</ul>
+依然，我们可以使用如下的方式来实现：
+<pre>psql \
+    -X \
+    -U user \
+    -h oldhost \
+    -c "\\copy (select first_name, last_name from users) to stdout" \
+    olddb \
+| \
+psql \
+    -X \
+    -U user \
+    -h $DBHOST \
+    -c "\\copy users from stdin" \
+    newdb \</pre></p>
+</div>
+
+
+  <footer>
+    <p class="meta">
+      
+  
+
+<span class="byline author vcard">Posted by <span class="fn">wklxd</span></span>
+
+      
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2013-03-14T00:00:00+08:00" pubdate data-updated="true">Mar 14<span>th</span>, 2013</time>
+      
+
+<span class="categories">
+  
+    <a class='category' href='/blog/categories/postgresql/'>postgresql</a>
+  
+</span>
+
+
+    </p>
+    
+      <div class="sharing">
+  
+  <a href="http://twitter.com/share" class="twitter-share-button" data-url="http://github.klwang.info/blog/bash-psql-combination/" data-via="" data-counturl="http://github.klwang.info/blog/bash-psql-combination/" >Tweet</a>
+  
+  
+  
+</div>
+
+    
+    <p class="meta">
+      
+        <a class="basic-alignment left" href="/blog/pgsql-aduit-method-of-trigger/" title="Previous Post: 使用触发器来实现postgresql数据库的审计功能">&laquo; 使用触发器来实现postgresql数据库的审计功能</a>
+      
+      
+        <a class="basic-alignment right" href="/blog/introduction-to-postgresql-rules-making-entries-which-cant-be-altered/" title="Next Post: PostgreSQL Rules 的简单介绍 - Making entries which can't be altered">PostgreSQL Rules 的简单介绍 - Making entries which can't be altered &raquo;</a>
+      
+    </p>
+  </footer>
+</article>
+
+</div>
+
+<aside class="sidebar">
+  
+    <section>
+  <h1>Recent Posts</h1>
+  <ul id="recent_posts">
+    
+      <li class="post">
+        <a href="/blog/about-strace/">About Strace</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/about-ubuntu-no-pubkey-error/">Ubuntu NO_PUBKEY 故障解决方式</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/bash-you-don-not-konw-special-character/">你不知道的bash (特殊字符)</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/about-lvm-skills/">Lvm 实践笔记</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/change-your-resouce-angent-to-multistate/">将 Resouce Angent 改造成 Multi State 类型</a>
+      </li>
+    
+  </ul>
+</section>
+
+
+
+
+
+  
+</aside>
+
+
+    </div>
+  </div>
+  <footer role="contentinfo"><p>
+  Copyright &copy; 2013 - wklxd -
+  <span class="credit">Powered by <a href="http://octopress.org">Octopress</a></span>
+</p>
+
+</footer>
+  
+
+
+
+
+
+
+
+  <script type="text/javascript">
+    (function(){
+      var twitterWidgets = document.createElement('script');
+      twitterWidgets.type = 'text/javascript';
+      twitterWidgets.async = true;
+      twitterWidgets.src = 'http://platform.twitter.com/widgets.js';
+      document.getElementsByTagName('head')[0].appendChild(twitterWidgets);
+    })();
+  </script>
+
+
+
+
+
+</body>
+</html>

@@ -1,0 +1,352 @@
+
+<!DOCTYPE html>
+<!--[if IEMobile 7 ]><html class="no-js iem7"><![endif]-->
+<!--[if lt IE 9]><html class="no-js lte-ie8"><![endif]-->
+<!--[if (gt IE 8)|(gt IEMobile 7)|!(IEMobile)|!(IE)]><!--><html class="no-js" lang="en"><!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  <title>SBD Fencing - My Octopress Blog</title>
+  <meta name="author" content="wklxd">
+
+  
+  <meta name="description" content="原文链接 SBD Fencing SBD expands to storage-based death, and is named in reference to Novell&#8217;s Cluster Services, which used SBD to exchange poison &hellip;">
+  
+
+  <!-- http://t.co/dKP3o1e -->
+  <meta name="HandheldFriendly" content="True">
+  <meta name="MobileOptimized" content="320">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  
+  <link rel="canonical" href="http://github.klwang.info/blog/sbd-fencing">
+  <link href="/favicon.png" rel="icon">
+  <link href="/stylesheets/screen.css" media="screen, projection" rel="stylesheet" type="text/css">
+  <link href="/atom.xml" rel="alternate" title="My Octopress Blog" type="application/atom+xml">
+  <script src="/javascripts/modernizr-2.0.js"></script>
+  <script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+  <script>!window.jQuery && document.write(unescape('%3Cscript src="./javascripts/lib/jquery.min.js"%3E%3C/script%3E'))</script>
+  <script src="/javascripts/octopress.js" type="text/javascript"></script>
+  <!--Fonts from Google"s Web font directory at http://google.com/webfonts -->
+<link href="http://fonts.googleapis.com/css?family=PT+Serif:regular,italic,bold,bolditalic" rel="stylesheet" type="text/css">
+<link href="http://fonts.googleapis.com/css?family=PT+Sans:regular,italic,bold,bolditalic" rel="stylesheet" type="text/css">
+
+  
+
+</head>
+
+<body   >
+  <header role="banner"><hgroup>
+  <h1><a href="/">My Octopress Blog</a></h1>
+  
+    <h2>A blogging framework for hackers.</h2>
+  
+</hgroup>
+
+</header>
+  <nav role="navigation"><ul class="subscription" data-subscription="rss">
+  <li><a href="/atom.xml" rel="subscribe-rss" title="subscribe via RSS">RSS</a></li>
+  
+</ul>
+  
+<form action="http://google.com/search" method="get">
+  <fieldset role="search">
+    <input type="hidden" name="q" value="site:github.klwang.info" />
+    <input class="search" type="text" name="q" results="0" placeholder="Search"/>
+  </fieldset>
+</form>
+  
+<ul class="main-navigation">
+  <li><a href="/">Blog</a></li>
+  <li><a href="/blog/archives">Archives</a></li>
+</ul>
+
+</nav>
+  <div id="main">
+    <div id="content">
+      <div>
+<article class="hentry" role="article">
+  
+  <header>
+    
+      <h1 class="entry-title">SBD Fencing</h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2013-05-19T00:00:00+08:00" pubdate data-updated="true">May 19<span>th</span>, 2013</time>
+        
+      </p>
+    
+  </header>
+
+
+<div class="entry-content"><p>原文链接 <a href="http://www.linux-ha.org/wiki/SBD_Fencing">SBD Fencing</a></p>
+
+<p>SBD expands to storage-based death, and is named in reference to Novell&#8217;s Cluster Services, which used SBD to exchange poison pill messages.</p>
+
+<p>The sbd daemon, combined with the external/sbd STONITH agent, provides a way to enable STONITH and fencing in clusters without external power switches, but with shared storage.</p>
+
+<p>The sbd daemon runs on all nodes in the cluster, monitoring the shared storage. When it either loses access to the majority of sbd devices, or sees that another node has written a fencing request to its mailbox slot, the node will immediately fence itself.</p>
+
+<p>sbd can be used in virtual environments where the hypervisor layer is not cluster-enabled, but a shared storage device between the guests is available; for other scenarios, please see DomUClusters.</p>
+
+<p>While this mechanism requires minimal cooperation from the node to be fenced, the code has proven very stable over the course of several years.
+<h4>Requirements</h4>
+You must have shared storage.<br />
+You can use one, two, or three devices.<br />
+This can be connected via Fibre Channel, Fibre Channel over Eterhnet, or even iSCSI.</p>
+
+<p>Thus, an iSCSI target can become a sort-of network-based quorum server; the advantage is that it does not require a smart host at your third location, just block storage.</p>
+
+<p>You must dedicate a small partition of each as the SBD device.<br />
+The SBD devices must not make use of host-based RAID.<br />
+The SBD devices must not reside on a DRBD instance.</p>
+
+<p>Why? Because DRBD is not shared, but replicated storage. If your cluster communication breaks down, and you finally need to actually use stonith, chances are that the DRBD replication link broke down as well, whatever you write to your local instance of DRBD cannot reach the peer, and the peer&#8217;s sbd daemon has no way to know about that poison pill it is supposed to commit suicide uppon.<br />
+The SBD device may of course be an iSCSI LU, which in turn may be exported from a DRBD based iSCSI target cluster.</p>
+
+<p>A SBD device can be shared between different clusters, as long as no more than 255 nodes share the device.
+<h4>Configuration</h4>
+How many devices should I use?</p>
+
+<p>SBD supports one, two, or three devices. This affects the operation of SBD as follows:<br />
+One device</p>
+
+<p>In its most simple implementation, you use one device only. (Older versions of SBD did not support more.) This is appropriate for clusters where all your data is on the same shared storage (with internal redundancy) anyway; the SBD device does not introduce an additional single point of failure then.<br />
+Three devices</p>
+
+<p>In this most reliable configuration, SBD will only commit suicide if more than one device is lost; hence, this configuration is resilient against one device outages (be it due to failures or maintenance). Fencing messages can be successfully relayed if at least two devices remain up.</p>
+
+<p>This configuration is appropriate for more complex scenarios where storage is not confined to a single array.</p>
+
+<p>Host-based mirroring solutions could have one SBD per mirror leg (not mirrored itself), and an additional tie-breaker on iSCSI.</p>
+
+<p>Two devices</p>
+
+<p>This configuration is a trade-off, primarily aimed at environments where host-based mirroring is used, but no third storage device is available.</p>
+
+<p>SBD will not commit suicide if it loses access to one mirror leg; this allows the cluster to continue to function even in the face of one outage.</p>
+
+<p>However, SBD will not fence the other side while only one mirror leg is available, since it does not have enough knowledge to detect an asymmetric split of the storage. So it will not be able to automatically tolerate a second failure while one of the storage arrays is down. (Though you can use the appropriate crm command to acknowledge the fence manually.)<br />
+Initialize the sbd device(s)</p>
+
+<p>All these steps must be performed as root.</p>
+
+<p>Decide which block device(s) will serve as the SBD device(s). This can be a logical unit, partition, or a logical volume; but it must be accessible from all nodes. Substitute the full path to this device wherever /dev/sbd is referenced below.</p>
+
+<p>If you have selected more than one device, provide them by specifying the -d options multiple times, as in: sbd -d /dev/sda -d /dev/sdb -d /dev/sdc &#8230;</p>
+
+<p>After having made very sure that these are indeed the devices you want to use, and do not hold any data you need - as the sbd command will overwrite it without further requests for confirmation -, initialize the sbd devices:
+<pre> # sbd -d /dev/sbd create
+ # sbd -d /dev/sbd3 -d /dev/sdc2 -d /dev/disk/by-id/foo-part1 create</pre>
+This will write a header to the device, and create slots for up to 255 nodes sharing this device. You can look at what was written to the device using:
+<pre> # sbd -d /dev/sbd dump
+ Header version     : 2
+ Number of slots    : 255
+ Sector size        : 512
+ Timeout (watchdog) : 5
+ Timeout (allocate) : 2
+ Timeout (loop)     : 1
+ Timeout (msgwait)  : 10</pre>
+As you can see, the timeouts are also stored in the header, to ensure that all participating nodes agree on them.
+<h4>Setup the software watchdog</h4>
+It is most strongly suggested that you set up your Linux system to use a watchdog. Use the watchdog driver, which fits best to your hardware, e. g. hpwdt for HP server. A list of available watchdogs can be found in /usr/src/linux/drivers/watchdog/</p>
+
+<p>If no watchdog matches to your hardware then use softdog.</p>
+
+<p>You can do this by adding the line
+<pre> modprobe softdog</pre>
+to
+<pre> /etc/init.d/boot.local</pre>
+<h4>Start the sbd daemon</h4>
+The sbd daemon is a critical piece of the cluster stack. It must always be running when the cluster stack is up, or even when it has crashed.</p>
+
+<p>The heartbeat/openais init script starts and stops SBD if configured; add the following to /etc/sysconfig/sbd:
+<pre> SBD_DEVICE="/dev/sbd"
+ SBD_OPTS="-W"</pre>
+-W enables the watchdog support, which you are most strongly suggested to do. If you need to specify multiple devices here, use a semicolon to separate them (their order does not matter):
+<pre> SBD_DEVICE="/dev/sbd;/dev/sde;/dev/sdc"</pre>
+If the SBD device is not accessible, the daemon will fail to start and prevent the cluster stack from coming up, too.
+<h4>Testing the sbd daemon</h4>
+<pre> sbd -d /dev/sbd list</pre>
+Will dump the node slots, and their current messages, from the sbd device. You should see all cluster nodes being listed there; most likely with a message clear.</p>
+
+<p>You can now try sending a test message to one of the nodes:
+<pre> sbd -d /dev/sbd message nodea test</pre>
+The node will acknowledge the receipt of the message in the system logs:
+<pre> Aug 29 14:10:00 nodea sbd: [13412]: info: Received command test from nodeb</pre>
+Messages are considered to have been delivered successfully if they have been sent to more than half of the configured devices.
+<h4>Configure the fencing resource</h4>
+All that is required is to add a STONITH resource of type external/sbd to the CIB. Newer versions of the agent will automatically source the devices from the host&#8217;s /etc/sysconfig/sbd. If this does not match your configuration, or if you are running an older version of the agent, set the sbd_device instance attribute accordingly.</p>
+
+<p>Sample configuration for crm configure:
+<pre> primitive stonith_sbd stonith:external/sbd</pre>
+Or, if you need to specify the device name:
+<pre> primitive stonith_sbd stonith:external/sbd \
+ 	params sbd_device="/dev/sbd"</pre>
+The sbd agent does not need to and should not be cloned. If all of your nodes run SBD, as is most likely, not even a monitor action provides a real benefit, since the daemon would suicide the node if there was a problem.</p>
+
+<p>SBD also supports turning the reset request into a crash request, which may be helpful for debugging if you have kernel crashdumping configured; then, every fence request will cause the node to dump core. You can enable this via the crashdump=&#8221;true&#8221; setting on the fencing resource. This is not recommended for on-going production use, but for debugging phases.
+<h4>Multipathing</h4>
+If your single sbd device resides on a multipath group, you may need to adjust the timeouts sbd uses, as MPIO&#8217;s path down detection can cause delays. (If you have multiple devices, transient timeouts of a single device will not negatively affect SBD. However, if they all go through the same FC switches, you will still need to do this.)</p>
+
+<p>After the msgwait timeout, the message is assumed to have been delivered to the node. For multipath, this should be the time required for MPIO to detect a path failure and switch to the next path. You may have to test this in your environment.</p>
+
+<p>The node will perform suicide if it has not updated the watchdog timer fast enough; the watchdog timeout must be shorter than the msgwait timeout - half the value is a good rule of thumb.</p>
+
+<p>You would set these values by adding -4 msgwait -1 watchdogtimeout to the create command:
+<pre> /usr/sbin/sbd -d /dev/sbd -4 20 -1 10 create</pre>
+(All timeouts are in seconds.)</p>
+
+<p>Note: This can incur significant delays to fail-over, unfortunately.
+<h4>Recovering from temporary device outages</h4>
+If you have multiple devices, failure of a single device is not immediately fatal. SBD will retry ten times in succession to reattach to the device, and then pause (as to not flood the system) for an hour before retrying. Thus, SBD should automatically recover from temporary outages.</p>
+
+<p>Should you wish to try reattach to the device right now, you can send a SIGUSR1 to the SBD parent daemon.</p>
+
+<p>The timeout can be tuned via the -t 3600 option. Setting the timeout to 0 will disable automatic restarts.
+<h4>Limitations</h4>
+Again, the sbd device must not use host-based RAID.<br />
+sbd is currently limited to 255 nodes per partition. If you have a need to configure larger clusters, create multiple sbd partitions, split the watch daemons across them, and configure one external/sbd STONITH resource per sbd device.
+<h4>Misc</h4>
+Slot allocation is automatic; when a daemon is started in watch mode, it will allocate one slot for itself if needed and then monitor it for incoming requests.</p>
+
+<p>Similarly, no hostlist has to be provided to external/sbd; it retrieves this list automatically from the sbd device.</p>
+
+<p>To overcome the MPIO delays, sbd should handle several paths internally, submitting the requests to all paths concurrently. However, this is not quite as trivial, as IO ordering is not guaranteed.</p>
+</div>
+
+
+  <footer>
+    <p class="meta">
+      
+  
+
+<span class="byline author vcard">Posted by <span class="fn">wklxd</span></span>
+
+      
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2013-05-19T00:00:00+08:00" pubdate data-updated="true">May 19<span>th</span>, 2013</time>
+      
+
+<span class="categories">
+  
+    <a class='category' href='/blog/categories/ha/'>HA</a>
+  
+</span>
+
+
+    </p>
+    
+      <div class="sharing">
+  
+  <a href="http://twitter.com/share" class="twitter-share-button" data-url="http://github.klwang.info/blog/sbd-fencing/" data-via="" data-counturl="http://github.klwang.info/blog/sbd-fencing/" >Tweet</a>
+  
+  
+  
+</div>
+
+    
+    <p class="meta">
+      
+        <a class="basic-alignment left" href="/blog/move-my-wordpress-to-a-subdir/" title="Previous Post: 将wordpress博客站点移动到子目录">&laquo; 将wordpress博客站点移动到子目录</a>
+      
+      
+        <a class="basic-alignment right" href="/blog/split-brain-quorum-and-fencing/" title="Next Post: Split-brain, Quorum, and Fencing">Split-brain, Quorum, and Fencing &raquo;</a>
+      
+    </p>
+  </footer>
+</article>
+
+</div>
+
+<aside class="sidebar">
+  
+    <section>
+  <h1>Recent Posts</h1>
+  <ul id="recent_posts">
+    
+      <li class="post">
+        <a href="/blog/about-strace/">About Strace</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/about-ubuntu-no-pubkey-error/">Ubuntu NO_PUBKEY 故障解决方式</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/bash-you-don-not-konw-special-character/">你不知道的bash (特殊字符)</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/about-lvm-skills/">Lvm 实践笔记</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/change-your-resouce-angent-to-multistate/">将 Resouce Angent 改造成 Multi State 类型</a>
+      </li>
+    
+  </ul>
+</section>
+
+
+
+
+
+  
+</aside>
+
+
+    </div>
+  </div>
+  <footer role="contentinfo"><p>
+  Copyright &copy; 2013 - wklxd -
+  <span class="credit">Powered by <a href="http://octopress.org">Octopress</a></span>
+</p>
+
+</footer>
+  
+
+
+
+
+
+
+
+  <script type="text/javascript">
+    (function(){
+      var twitterWidgets = document.createElement('script');
+      twitterWidgets.type = 'text/javascript';
+      twitterWidgets.async = true;
+      twitterWidgets.src = 'http://platform.twitter.com/widgets.js';
+      document.getElementsByTagName('head')[0].appendChild(twitterWidgets);
+    })();
+  </script>
+
+
+
+
+
+</body>
+</html>

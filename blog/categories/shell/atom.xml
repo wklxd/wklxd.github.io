@@ -1,0 +1,617 @@
+<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+
+  <title><![CDATA[Category: shell | My Octopress Blog]]></title>
+  <link href="http://github.klwang.info/blog/categories/shell/atom.xml" rel="self"/>
+  <link href="http://github.klwang.info/"/>
+  <updated>2013-06-22T23:37:24+08:00</updated>
+  <id>http://github.klwang.info/</id>
+  <author>
+    <name><![CDATA[wklxd]]></name>
+    
+  </author>
+  <generator uri="http://octopress.org/">Octopress</generator>
+
+  
+  <entry>
+    <title type="html"><![CDATA[About strace]]></title>
+    <link href="http://github.klwang.info/blog/about-strace/"/>
+    <updated>2013-06-21T00:00:00+08:00</updated>
+    <id>http://github.klwang.info/blog/about-strace</id>
+    <content type="html"><![CDATA[<p>作为软件的使用者而非开发者，平时会遇到很多奇怪的问题</p>
+
+
+
+
+<p>这个程序为什么不动呢，它是不是僵死了？它为什么没有按照预想的方式工作？</p>
+
+
+
+
+<p>时至今日，应用程序已经完全和硬件隔离，具体的操作（文件读写，网络访问等）都要使用 syscalls（系统调用）来完成</p>
+
+
+
+
+<p>如果可以跟踪程序使用的syscall，就意味着几乎知道了程序的所有动作，比如</p>
+
+
+
+
+<p><pre>
+    open -> read/write                      读写文件
+    socket -> connect -> read -> write                      访问网络
+    fork -> execve                      衍生子进程
+    wait, kill, pipe                        控制子进程
+    clock_gettime                       获知系统时间
+</pre></p>
+
+
+
+
+<p>这时，我们可以寻求系统自带的调试利器 strace 的帮助</p>
+
+
+
+
+<p><pre>
+    strace  跟踪process系统调用或者信号产生的情况
+    ltrace  跟踪process调用库函数的情况
+</pre></p>
+
+
+
+
+<p>strace和ltrace的使用方式差不多，只是跟踪的范围不一样</p>
+
+
+
+
+<p>0. 基本使用<br />
+    
+<pre>
+    strace command args
+</pre></p>
+
+
+
+
+<p>直接使用strace调用具体的程序，会显示程序运行过程中的所有syscall</p>
+
+
+
+
+<p><strong>1. 看看程序正在干什么</strong></p>
+
+
+
+
+<p><pre>
+    strace -p pid
+</pre></p>
+
+
+
+
+<p>除了基本的使用方式，strace还可以在线调试运行中的程序</p>
+
+
+
+
+<p><em>这时，就能够很容易的知道为啥这个程序会不动呢？ 它是在等待别的资源，还是在勤劳的干活？</em></p>
+
+
+
+
+<p><strong>2. 看看程序在启动的时候打开了什么文件</strong></p>
+
+
+
+
+<p><pre>
+    [root@h4-61 tmp]# strace -e read,access ping -c 1 8.8.8.8 > /dev/null
+    access("/etc/ld.so.preload", R_OK)      = -1 ENOENT (No such file or directory)
+    read(3, "\177ELF\2\1\1\0\0\0\0\0\0\0\0\0\3\0>\0) = 832
+    read(3, "\177ELF\2\1\1\3\0\0\0\0\0\0\0\0\3\0>\0\1\0) = 832
+</pre></p>
+
+
+
+
+<p>strace默认会显示所有的系统调用，有时。我们可能只关心少量的syscall，可以使用 -e 参数来实现</p>
+
+
+
+
+<p>多个syscall使用逗号(,)分割；甚至，可以使用 read=3 来查看使用 3 这个描述符的 read 调用</p>
+
+
+
+
+<p><strong>3. 显示syscall的时间戳</strong></p>
+
+
+
+
+<p><pre>
+    [root@h4-61 tmp]# strace -tt -e read,access ping -c 1 8.8.8.8 > /dev/null
+    17:59:05.205188 access("/etc/ld.) = -1 ENOENT (No such file or directory)
+    17:59:05.205660 read(3, "\177ELF\2\1\) = 832
+    17:59:05.205972 read(3, "\177ELF\2\1\1\3\0\0\0\0\0\0\0\0\3\0>\0) = 832
+</pre></p>
+
+
+
+
+<p>有时需要知道syscall发生的时间，可以使用 -t 参数：</p>
+
+
+
+
+<p><em>-t  表示秒</em></p>
+
+
+
+
+<p><em>-tt 表示毫秒</em></p>
+
+
+
+
+<p><em>-T  显示每个系统调用从开始到结束使用的时间</em></p>
+
+
+
+
+<p><strong>4. 控制syscall显示信息的程度</strong></p>
+
+
+
+
+<p><pre>
+    [root@h4-61 tmp]# strace -tt -e read,access -s 10 ping -c 1 8.8.8.8 > /dev/null
+    17:59:42.831239 access("/etc/ld.) = -1 ENOENT (No such file or directory)
+    17:59:42.831660 read(3, "\177ELF\2\1\1\0\0\0"..., 832) = 832
+    17:59:42.831967 read(3, "\177ELF\2\1\1\3\0\0"..., 832) = 832
+</pre></p>
+
+
+
+
+<p>默认情况下，strace对于每个系统调用只显示32个字符的信息，使用 -s 数字可以改变默认行为</p>
+
+
+
+
+<p>-s 0 表示显示所有的信息</p>
+
+
+
+
+<p><strong>5. 分类查看syscall</strong></p>
+
+
+
+
+<p>除了使用 -e syscallname 查看具体的syscall，我们还可以按照类别产看，如</p>
+
+
+
+
+<p><strong>trace=file</strong></p>
+
+
+
+
+<p><em>显示文件操作   open,stat,chmod,unlink,..</em></p>
+
+
+
+
+<p><pre>
+    [root@h4-61 tmp]# strace -e trace=file ping -c 1 8.8.8.8 > /dev/null
+    execve("/bin/ping", ["ping", "-c", "1", "8.8.8.8"], [/* 26 vars */]) = 0
+    access("/etc/ld.so.prel)      = -1 ENOENT (No such file or directory)
+    open("/etc/ld.so.cache", O_RDONLY)      = 3
+    open("/lib64/libidn.so.11", O_RDONLY)   = 3
+    open("/lib64/libc.so.6", O_RDONLY)      = 3
+    open("/usr/lib/locale/locale-archive", O_RDONLY) = 3
+</pre></p>
+
+
+
+
+<p><strong>trace=process</strong></p>
+
+
+
+
+<p><em>显示进程操作 fork, wait, and exec </em></p>
+
+
+
+
+<p><pre>
+    [root@h4-61 tmp]# strace -e trace=process ping -c 1 8.8.8.8 > /dev/null
+    execve("/bin/ping", ["ping", "-c", "1", "8.8) = 0
+    arch_prctl(ARCH_SET_FS, 0x7fc9afee4700) = 0
+    exit_group(0)  = ?
+</pre>
+             
+<strong>trace=network</strong></p>
+
+
+
+
+<p><em>网络操作相关的syscall</em></p>
+
+
+
+
+<p><pre>
+    [root@h4-61 tmp]# strace -e trace=network ping -c 1 8.8.8.8 > /dev/null
+    socket(PF_INET, SOCK_RAW, IPPROTO_ICMP) = 3
+    socket(PF_INET, SOCK_DGRAM, IPPROTO_IP) = 4
+    省略号
+    setsockopt(3, SOL_SOCKET, SO_SNDBUF, [324], 4) = 0
+    setsockopt(3, SOL_SOCKET, SO_RCVBUF, [65536], 4) = 0
+    getsockopt(3, SOL_SOCKET, SO_RCVBUF, [3427721778695372800], [4]) = 0
+    setsockopt(3, SOL_SOCKET, SO_TIMESTAMP, [1], 4) = 0
+    省略号
+</pre></p>
+
+
+
+
+<p><strong>trace=signal</strong></p>
+
+
+
+
+<p><em>信号操作相关的syscall</em></p>
+
+
+
+
+<p><pre>
+    [root@h4-61 tmp]# strace -e trace=signal ping -c 1 8.8.8.8 > /dev/null
+    rt_sigaction(SIGINT, {0x7f8f4d04da40, [], SA_RESTORER|SA_IN) = 0
+    rt_sigaction(SIGALRM, {0x7f8f4d04da40, [], SA_RESTORER|SA_I) = 0
+    rt_sigaction(SIGQUIT, {0x7f8f4d04da50, [], SA_RESTORER|SA_INT) = 0
+</pre></p>
+
+
+
+
+<p><strong>trace=ipc</strong></p>
+
+
+
+
+<p><em>进程间通信相关的syscall</em></p>
+
+
+
+
+<p><strong>trace=desc</strong></p>
+
+
+
+
+<p><em>文件描述符相关的syscall</em></p>
+
+
+
+
+<p><pre>
+    [root@h4-61 tmp]# strace -e trace=desc ping -c 1 8.8.8.8 > /dev/null
+    open("/etc/ld.so.cache", O_RDONLY)      = 3
+    fstat(3, {st_mode=S_IFREG|0644, st_size=61926, ...}) = 0
+    close(3)                                = 0
+    open("/lib64/libidn.so.11", O_RDONLY)   = 3
+    read(3, "\177ELF\2\1\1\0\0\0\0\0\0\0\0\0\3\0>\0\1) = 832
+    省略号
+    write(1, "\n", 1)                       = 1
+    write(1, "--- 8.8.8.8 ping statistics ---\n"..., 146) = 146
+</pre></p>
+
+
+
+
+<p><strong>6. 跟踪子进程</strong></p>
+
+
+
+
+<p><pre>
+    -f 
+</pre></p>
+
+
+
+
+<p>有时候程序会fork出子进程，使用 -f 参数可以跟踪到子进程</p>
+
+
+
+
+<p><strong>7. strace的输出格式</strong>
+    
+<pre>
+    fstat(3, {st_mode=S_IFREG|0644, st_size=61926, ...}) = 0
+</pre></p>
+
+
+
+
+<p>每行的syacall格式为， syscall名字，syscall的参数， syscall的返回值</p>
+
+
+
+
+<p><em>如果返回值为 -1 ，则顺带的返回具体的错误说明</em></p>
+
+
+
+
+<p>To be continued ...</p>
+
+
+
+
+<p>参考文档</p>
+
+
+
+
+<p><a href="https://blogs.oracle.com/ksplice/entry/strace_the_sysadmin_s_microscope" target="_blank">strace_the_sysadmin_s_microscope</a></p>
+
+
+
+
+<p><a href="http://www.hokstad.com/5-simple-ways-to-troubleshoot-using-strace" target="_blank">5-simple-ways-to-troubleshoot-using-strace</a></p>
+
+
+
+
+<p><a href="http://linux.die.net/man/1/strace" target="_blank">strace man page</a>
+</p>
+
+]]></content>
+  </entry>
+  
+  <entry>
+    <title type="html"><![CDATA[你不知道的bash (特殊字符)]]></title>
+    <link href="http://github.klwang.info/blog/bash-you-don-not-konw-special-character/"/>
+    <updated>2013-06-17T00:00:00+08:00</updated>
+    <id>http://github.klwang.info/blog/bash-you-don-not-konw-special-character</id>
+    <content type="html"><![CDATA[<p><strong>题记</strong>
+<pre>
+  使用Linux有四年多了
+  曾经有段时间，也静下心来将bash好好的研究了一把，心满意足的感觉自己“会”了
+  随着时间的推移，常用的命令就那么几个，渐渐的，知识面逐渐收缩
+  再次看到bash资料时，才发现：“原来可以不用这么绕，原来可以这么直接”
+  学习就是一个温故知新的过程，技术就是一个在使用过程中逐渐积累的过程
+  这篇文档题目为《你不知道的bash》，其实，更确切的讲，应该是《我不知道的bash》
+  在”写下来“的过程中，不仅仅梳理了忘记的东西，还顺带的整理了一些bash中的经典用法
+  希望以后不要再忘了
+</pre></p>
+
+
+
+
+<p><strong>;; </strong></p>
+
+
+
+
+<p><em>双分号,作为case语句的结束符使用</em>，如：
+<pre>
+  case "$variable" in
+     abc)  echo "\$variable = abc" ;;
+     xyz)  echo "\$variable = xyz" ;;
+  esac
+</pre></p>
+
+
+
+
+<p><strong>**</strong></p>
+
+
+
+
+<p><em>双星号，(立方)</em>，如：
+<pre>
+  # Bash, version 2.02, introduced the "**" exponentiation operator.
+     
+  let "z=5**3"
+  echo "z = $z"   # z = 125
+</pre></p>
+
+
+
+
+<p><strong>$?</strong> </p>
+
+
+
+
+<p><em>结束符，可以是一条命令，一个函数，或者脚本自身的退出码</em>
+<pre>
+  cmd
+  if [ $? ne 0 ]; then
+      exit 2
+  fi
+</pre></p>
+
+
+
+
+<p><strong>$$</strong> </p>
+
+
+
+
+<p><em>进程号，表示脚本自身的进程号，经常看到有人使用$$作为随机数</em>，如：
+<pre>
+  cmd
+  ramdom=$$
+</pre></p>
+
+
+
+
+<p><strong>$!</strong> </p>
+
+
+
+
+<p><em>上一条命令的pid，经典用法，杀掉超时的前一个作业</em>
+<pre>
+  possibly_hanging_job & { sleep ${TIMEOUT}; eval 'kill -9 $!' &> /dev/null; }
+</pre></p>
+
+
+
+
+<p><strong>$_</strong></p>
+
+
+
+
+<p><em>上一条命令的参数</em></p>
+
+
+
+
+<p><strong>{xxx,yyy,zzz,...}</strong></p>
+
+
+
+
+<p><em>加强扩展</em>，如
+<pre>
+  cat {file1,file2,file3} > combined_file
+  # 将 file1, file2, 和 file3 合并入 combined_file
+     
+  cp file22.{txt,backup}
+  # 将 "file22.txt" 复制为 "file22.backup"
+</pre></p>
+
+
+
+
+<p><strong>=~</strong></p>
+
+
+
+
+<p><em>文本判断时的正则表达式</em>， 如：
+<pre>
+  if [ "$input" =~ "[0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9][0-9][0-9]" ]
+      # 引号可要可不要
+      # 格式 NNN-NN-NNNN
+  then
+      echo "Social Security number."
+      # Process SSN.
+  else
+      echo "Not a Social Security number!"
+      # Or, ask for corrected input.
+  fi
+</pre></p>
+
+
+
+
+<p><strong>&></strong></p>
+
+
+
+
+<p><em>重定向，是不是经常使用这种语句</em>：
+<pre>
+  command > filename 2 >&1
+</pre>
+其实你还可以这样，将标准输出和错误输出同时定向
+<pre>
+  command &>filename 
+</pre></p>
+
+
+
+
+<p><strong>$*</strong></p>
+
+
+
+
+<p><em>所有的位置参数，看作一个整体来使用，具体操作时 $* 需要用引号(")引起来</em></p>
+
+
+
+
+<p><strong>$@</strong></p>
+
+
+
+
+<p><em>和 $* 相同，但是在具体操作的时候，bash将每个位置参数分开来看</em>，如:
+<pre>
+  #!/bin/bash</pre></p>
+
+
+
+
+<p>  echo '$*'<br />
+  index=1</p>
+
+
+
+
+<p>  for arg in "$*" <br />
+  do<br />
+    echo "Arg #$index = $arg"<br />
+    let "index+=1"<br />
+  done</p>
+
+
+
+
+<p>  echo ‘$@’<br />
+  index=1</p>
+
+
+
+
+<p>  for arg in "$@"<br />
+  do<br />
+    echo "Arg #$index = $arg"<br />
+    let "index+=1"<br />
+  done 
+</p>
+
+
+
+
+<p>执行结果如下， 可以看到 $*将所有的参数看作了整体， $@将参数分开对待了：
+<pre>
+  ./test 1 2 3 4
+  $*
+  Arg #1 = 1 2 3 4
+  $@
+  Arg #1 = 1
+  Arg #2 = 2
+  Arg #3 = 3
+  Arg #4 = 4
+</pre></p>
+
+
+
+
+<p>to be continue ...</p>
+
+]]></content>
+  </entry>
+  
+</feed>

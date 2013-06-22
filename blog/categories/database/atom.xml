@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+
+  <title><![CDATA[Category: Database | My Octopress Blog]]></title>
+  <link href="http://github.klwang.info/blog/categories/database/atom.xml" rel="self"/>
+  <link href="http://github.klwang.info/"/>
+  <updated>2013-06-22T23:37:24+08:00</updated>
+  <id>http://github.klwang.info/</id>
+  <author>
+    <name><![CDATA[wklxd]]></name>
+    
+  </author>
+  <generator uri="http://octopress.org/">Octopress</generator>
+
+  
+  <entry>
+    <title type="html"><![CDATA[Oracle实用小工具]]></title>
+    <link href="http://github.klwang.info/blog/oracle-tools-explain/"/>
+    <updated>2013-04-11T00:00:00+08:00</updated>
+    <id>http://github.klwang.info/blog/oracle-tools-explain</id>
+    <content type="html"><![CDATA[<p>ipcs:
+<p style="padding-left: 30px;">查看共享内存</p>
+lsnrctl:
+<p style="padding-left: 30px;">监听进程控制： lsnrctl strat/status/stop</p>
+isqlplusctl:
+<p style="padding-left: 30px;">iSQL*PLus工具控制 isqlplusctl start/stop</p>
+emctl:
+<p style="padding-left: 30px;">企业管理器控制：emctl start/status/stop dbconsole</p>
+dbca:
+<p style="padding-left: 30px;">数据库初始化工具</p>
+netca:
+<p style="padding-left: 30px;">网路/监听进程配置工具</p>
+tips:
+<p style="padding-left: 30px;">stty earse ^h :可以去除sqlplus在删除时出现^H符号</p></p>
+
+]]></content>
+  </entry>
+  
+  <entry>
+    <title type="html"><![CDATA[忘记mysql密码的处理方式]]></title>
+    <link href="http://github.klwang.info/blog/mysql-password-come-back/"/>
+    <updated>2013-03-07T00:00:00+08:00</updated>
+    <id>http://github.klwang.info/blog/mysql-password-come-back</id>
+    <content type="html"><![CDATA[<p>一次又一次的忘记mysql密码，一次又一次的在网上搜索解决方式。</p>
+
+
+
+
+<p>博客真是个好东西，赶紧记录下来吧</p>
+
+
+
+
+<p>废话少说，进入正题</p>
+
+
+
+
+<p>1. 跳过权限检测方式，启动数据库
+<pre>linux:
+  mysqld --skip-grant-tables
+windows:
+  mysqld-nt.exe --skip-grant-tables</pre>
+2. 登陆进去后，修改密码
+<pre>mysql -uroot mysql
+update user set password = password('forget') where user = 'root';
+quit</pre>
+3. ok，万事大吉</p>
+
+]]></content>
+  </entry>
+  
+</feed>

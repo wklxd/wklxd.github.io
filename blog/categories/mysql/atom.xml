@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+
+  <title><![CDATA[Category: mysql | My Octopress Blog]]></title>
+  <link href="http://github.klwang.info/blog/categories/mysql/atom.xml" rel="self"/>
+  <link href="http://github.klwang.info/"/>
+  <updated>2013-06-22T23:37:24+08:00</updated>
+  <id>http://github.klwang.info/</id>
+  <author>
+    <name><![CDATA[wklxd]]></name>
+    
+  </author>
+  <generator uri="http://octopress.org/">Octopress</generator>
+
+  
+  <entry>
+    <title type="html"><![CDATA[忘记mysql密码的处理方式]]></title>
+    <link href="http://github.klwang.info/blog/mysql-password-come-back/"/>
+    <updated>2013-03-07T00:00:00+08:00</updated>
+    <id>http://github.klwang.info/blog/mysql-password-come-back</id>
+    <content type="html"><![CDATA[<p>一次又一次的忘记mysql密码，一次又一次的在网上搜索解决方式。</p>
+
+
+
+
+<p>博客真是个好东西，赶紧记录下来吧</p>
+
+
+
+
+<p>废话少说，进入正题</p>
+
+
+
+
+<p>1. 跳过权限检测方式，启动数据库
+<pre>linux:
+  mysqld --skip-grant-tables
+windows:
+  mysqld-nt.exe --skip-grant-tables</pre>
+2. 登陆进去后，修改密码
+<pre>mysql -uroot mysql
+update user set password = password('forget') where user = 'root';
+quit</pre>
+3. ok，万事大吉</p>
+
+]]></content>
+  </entry>
+  
+</feed>

@@ -1,0 +1,2676 @@
+
+<!DOCTYPE html>
+<!--[if IEMobile 7 ]><html class="no-js iem7"><![endif]-->
+<!--[if lt IE 9]><html class="no-js lte-ie8"><![endif]-->
+<!--[if (gt IE 8)|(gt IEMobile 7)|!(IEMobile)|!(IE)]><!--><html class="no-js" lang="en"><!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  <title>My Octopress Blog</title>
+  <meta name="author" content="wklxd">
+
+  
+  <meta name="description" content="考虑到blog的安全性，决定改一下登陆界面，百度了好久，做了好多无用功，还是没有成功； 在plugin搜索里边找了着，找到了一个比较简单的东东，分享一下； Stealth Login Page 设置起来也很简单，如下，只要输入问题和密码，就ok了 Stealth Login Page &hellip;">
+  
+
+  <!-- http://t.co/dKP3o1e -->
+  <meta name="HandheldFriendly" content="True">
+  <meta name="MobileOptimized" content="320">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  
+  <link rel="canonical" href="http://github.klwang.info/blog/page/3">
+  <link href="/favicon.png" rel="icon">
+  <link href="/stylesheets/screen.css" media="screen, projection" rel="stylesheet" type="text/css">
+  <link href="/atom.xml" rel="alternate" title="My Octopress Blog" type="application/atom+xml">
+  <script src="/javascripts/modernizr-2.0.js"></script>
+  <script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+  <script>!window.jQuery && document.write(unescape('%3Cscript src="./javascripts/lib/jquery.min.js"%3E%3C/script%3E'))</script>
+  <script src="/javascripts/octopress.js" type="text/javascript"></script>
+  <!--Fonts from Google"s Web font directory at http://google.com/webfonts -->
+<link href="http://fonts.googleapis.com/css?family=PT+Serif:regular,italic,bold,bolditalic" rel="stylesheet" type="text/css">
+<link href="http://fonts.googleapis.com/css?family=PT+Sans:regular,italic,bold,bolditalic" rel="stylesheet" type="text/css">
+
+  
+
+</head>
+
+<body   >
+  <header role="banner"><hgroup>
+  <h1><a href="/">My Octopress Blog</a></h1>
+  
+    <h2>A blogging framework for hackers.</h2>
+  
+</hgroup>
+
+</header>
+  <nav role="navigation"><ul class="subscription" data-subscription="rss">
+  <li><a href="/atom.xml" rel="subscribe-rss" title="subscribe via RSS">RSS</a></li>
+  
+</ul>
+  
+<form action="http://google.com/search" method="get">
+  <fieldset role="search">
+    <input type="hidden" name="q" value="site:github.klwang.info" />
+    <input class="search" type="text" name="q" results="0" placeholder="Search"/>
+  </fieldset>
+</form>
+  
+<ul class="main-navigation">
+  <li><a href="/">Blog</a></li>
+  <li><a href="/blog/archives">Archives</a></li>
+</ul>
+
+</nav>
+  <div id="main">
+    <div id="content">
+      <div class="blog-index">
+  
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/change-default-wordpress-login-address/">修改wordpress的登陆地址</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2013-05-19T00:00:00+08:00" pubdate data-updated="true">May 19<span>th</span>, 2013</time>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p>考虑到blog的安全性，决定改一下登陆界面，百度了好久，做了好多无用功，还是没有成功；</p>
+
+<p>在plugin搜索里边找了着，找到了一个比较简单的东东，分享一下；</p>
+
+<p><strong>Stealth Login Page</strong> 设置起来也很简单，如下，只要输入问题和密码，就ok了</p>
+
+<p><a href="http://klwang.info/blog/wp-content/uploads/2013/05/login-change.png"><img alt="login-change" src="http://klwang.info/blog/wp-content/uploads/2013/05/login-change.png" width="500" /></a></p>
+
+<p><strong>Stealth Login Page </strong>会自动生成新的登陆页面，使用新的页面登陆就好了</p>
+
+<p>good luck！</p>
+</div>
+  
+  
+
+
+    </article>
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/cloudstack-virtualmachine-vnc-config/">Cloudstack 虚拟机vnc配置</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2013-05-09T00:00:00+08:00" pubdate data-updated="true">May 9<span>th</span>, 2013</time>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p><h4>1. cloudstack使用kvm实现虚拟机时 ps aux | grep kvm，可以发现神奇的东西</h4>
+<a href="http://klwang.info/blog/wp-content/uploads/2013/05/kvm.png"><img alt="kvm" src="http://klwang.info/blog/wp-content/uploads/2013/05/kvm.png" width="650" /></a>
+<h4>2. 有了vnc的监听地址和端口，我们就能很容易的链接虚拟机了。</h4>
+<p style="padding-left: 30px;">例如：运行vm的host地址为192.171.1.1，则我们就可以使用任意一台和该host机器互通的机器访问该vm了</p>
+<p style="padding-left: 30px;">vncviewer 192.171.1.1:11（假设我们使用vncviewer来链接虚拟机）</p>
+<p style="padding-left: 30px;">至此，我们就可以越过cloudstack的web界面来访问vm了</p></p>
+
+<p><h4>3. 下面是我写的一个用来获取每个虚拟机链接地址的脚本</h4>
+<pre>    #!/bin/bash</pre></p>
+
+<p>    ip=$(ifconfig cloudbr0 | grep &#8216;inet addr&#8217; | awk -F &#8216;:&#8217; &#8216;{print $2}&#8217; | awk &#8216;{print $1}&#8217;)<br />
+    ps aux | grep vnc | awk &#8216;{print $21, $(NF-4)}&#8217; | grep &#8216;0.0.0.0&#8217; \<br />
+    | while read name vnc; do<br />
+	mysql -ucloud -pcloudstack cloud -e \<br />
+        &#8220;select concat(name, &#8217; : &#8216;, &#8216;$vnc&#8217;, &#8217; : &#8216;, private_ip_address ) as d \<br />
+        from vm_instance where instance_name = &#8216;$name&#8217;&#8221;<br />
+        | grep -v d | sed &#8220;s/0.0.0.0/$ip/g&#8221;<br />
+    done | grep -v VM
+从脚本中，你也应该能看出来挂关于虚拟机的信息都是放在 vm_instance 中的（其他的问题，大家自己探索吧）</p>
+</div>
+  
+  
+
+
+    </article>
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/cloudstack-basic-concept/">Cloudstack 基本概念</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2013-05-09T00:00:00+08:00" pubdate data-updated="true">May 9<span>th</span>, 2013</time>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p><strong>Zone:</strong></p>
+
+<p>区域是 CloudStack 部署中最大的组织单位。一个区域通常会对应到一个单一的数据中心。将基础设施组织进区域的好处是提供物理隔离和冗余。例如,每个区域都可以有自己的电源和网络上行；Zone 包含一个或者多个 Pods, 区域中二级存储被所有 pods 进行共享。</p>
+
+<p><strong>Pod:</strong></p>
+
+<p>一般代表一个机架,同一 pod 中的主机处于同一子网内。pods中包含一个或者多个一级存储服务器</p>
+
+<p><strong>Cluster:</strong></p>
+
+<p>就是&#8211;集群,由多个主机组成的集群。集群中机器共享一个一级存储服务器；</p>
+
+<p><strong>Host:</strong></p>
+
+<p>一个主机,集群中的主机,此处可以理解成一台装有 xenserver 的物理机器。</p>
+
+<p><strong>Primary storage:</strong></p>
+
+<p><strong></strong> 一级存储跟集群相关联,用于为集群中所有运行在主机(hosts)上面的虚拟机存储硬盘 跟卷文件,一般来说,至少需要一个一级存储,为提高性能,尽量部署在接近主机(hosts)的位 置。可以通过 ISCSI或者 NFS 技术实现</p>
+
+<p><strong>Secondary storage:</strong></p>
+
+<p><strong></strong> 二级存储跟zone相关联,其存储了模版文件&#8212;可以启动虚拟机的操作系统镜像 、 ISO镜像&#8212;-操作系统光盘镜像、 硬盘卷快照—存储了用户恢复或者创建新模版的虚拟机数据副本。二级存储可以使用NFS服务或者Openstack对象存储技术(Swift),最小的容量为100GB,其 需要部署在跟客户机同一区域(zone)中,并且对于区域中的主机都是可用的。</p>
+
+<p><strong>Management server:</strong></p>
+
+<p>运行 CloudStack 管理服务跟 Mysql 数据库的机器(也就是搭建 CloudStack 云系统的机器),管 理服务器也可以安装在虚拟机上面。</p>
+
+<p><strong>Mysql cloud db:</strong></p>
+
+<p><strong></strong> 用于存放相关数据信息,诸如网络地址等等,可以通过mysql 客户 端登入查看相关表以及相关属性。</p>
+
+<p><strong>系统虚机:</strong></p>
+
+<p>cloudstack 的每加入一个个区域就会创建相应的系统虚拟机, 一般一个区域会创建三个,分别控制模板,虚拟机系统,和网络。</p>
+
+<p><a href="http://heylinux.com/wp-content/uploads/2012/11/map.png"><img alt="" src="http://heylinux.com/wp-content/uploads/2012/11/map.png" width="521" height="301" /></a></p>
+</div>
+  
+  
+
+
+    </article>
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/ubuntu-tips/">Ubuntu Tips</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2013-05-07T00:00:00+08:00" pubdate data-updated="true">May 7<span>th</span>, 2013</time>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p>配置静态ip
+<pre>    修改 /etc/network/interfaces 文件，如下所示：</pre></p>
+
+<p>    auto eth0 <br />
+    iface eth0 inet static <br />
+    address 192.168.1.5 <br />
+    netmask 255.255.255.0 <br />
+    gateway 192.168.1.1
+删除中划线开头的文件
+<pre>    rm -- -foo
+    rm ./-foo</pre></p>
+</div>
+  
+  
+
+
+    </article>
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/vrrp-protocol-explain/">VRRP协议介绍</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2013-05-06T00:00:00+08:00" pubdate data-updated="true">May 6<span>th</span>, 2013</time>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p>点击<a title="原文来源" href="http://bbs.ywlm.net/thread-790-1-1.html" target="_blank">这里</a>查看原文，所有权利归原作者所有。
+<h4>1. 前言</h4>
+VRRP(Virtual Router Redundancy Protocol)协议是用于实现路由器冗余的协议，最新协议在RFC3768中定义，原来的定义RFC2338被废除，新协议相对还简化了一些功能。
+<h4>2. 协议说明</h4>
+<h5>2.1 协议</h5>
+VRRP协议是为消除在静态缺省路由环境下的缺省路由器单点故障引起的网络失效而设计的主备模式的协议，使得在发生故障而进行设备功能切换时可以不影响内外数据通信，不需要再修改内部网络的网络参数。VRRP协议需要具有IP地址备份，优先路由选择，减少不必要的路由器间通信等功能。</p>
+
+<p>VRRP协议将两台或多台路由器设备虚拟成一个设备，对外提供虚拟路由器IP(一个或多个)，而在路由器组内部，如果实际拥有这个对外IP的路由器如果工作正常的话就是MASTER，或者是通过算法选举产生，MASTER实现针对虚拟路由器IP的各种网络功能，如ARP请求，ICMP，以及数据的转发等；其他设备不拥有该IP，状态是BACKUP，除了接收MASTER的VRRP状态通告信息外，不执行对外的网络功能。当主机失效时，BACKUP将接管原先MASTER的网络功能。</p>
+
+<p>配置VRRP协议时需要配置每个路由器的虚拟路由器ID(VRID)和优先权值，使用VRID将路由器进行分组，具有相同VRID值的路由器为同一个组，VRID是一个0～255的正整数；同一组中的路由器通过使用优先权值来选举MASTER，优先权大者为MASTER，优先权也是一个0～255的正整数。</p>
+
+<p>VRRP协议使用多播数据来传输VRRP数据，VRRP数据使用特殊的虚拟源MAC地址发送数据而不是自身网卡的MAC地址，VRRP运行时只有MASTER路由器定时发送VRRP通告信息，表示MASTER工作正常以及虚拟路由器IP(组)，BACKUP只接收VRRP数据，不发送数据，如果一定时间内没有接收到MASTER的通告信息，各BACKUP将宣告自己成为MASTER，发送通告信息，重新进行MASTER选举状态。</p>
+
+<p>2.2 MASTER选举</p>
+
+<p>如果对外的虚拟路由器IP就是路由器本身配置的IP地址的话，该路由器始终都是MASTER；<br />
+否则如果不具备虚拟IP的话，将进行MASTER选举，各路由器都宣告自己是MASTER，发送VRRP通告信息；<br />
+如果收到其他机器的发来的通告信息的优先级比自己高，将转回BACKUP状态；<br />
+如果优先级相等的话，将比较路由器的实际IP，IP值较大的优先权高；<br />
+不过如果对外的虚拟路由器IP就是路由器本身的IP的话，该路由器始终将是MASTER，这时的优先级值为255。
+<h5>2.3 协议状态机</h5>
+VRRP协议状态比较简单，就三种状态，初始化，主机，备份机。
+<a href="http://klwang.info/blog/wp-content/uploads/2013/05/协议状态.png"><img alt="协议状态" src="http://klwang.info/blog/wp-content/uploads/2013/05/协议状态-300x176.png" width="339" height="198" /></a>
+路由器启动时，如果路由器的优先级是255(最高优先级，路由器拥有路由器地址)，要发送VRRP通告信息，并发送广播ARP信息通告路由器IP地址对应的MAC地址为路由虚拟MAC，设置通告信息定时器准备定时发送VRRP通告信息，转为MASTER状态；<br />
+否则进入BACKUP状态，设置定时器检查定时检查是否收到MASTER的通告信息。</p>
+
+<p>主机：<br />
+主机状态下的路由器要完成如下功能：<br />
+设置定时通告定时器；<br />
+用VRRP虚拟MAC地址响应路由器IP地址的ARP请求；<br />
+转发目的MAC是VRRP虚拟MAC的数据包；<br />
+如果是虚拟路由器IP的拥有者，将接受目的地址是虚拟路由器IP的数据包，否则丢弃；<br />
+当收到shutdown的事件时删除定时通告定时器，发送优先权级为0的通告包，转初始化状态；<br />
+如果定时通告定时器超时时，发送VRRP通告信息；<br />
+收到VRRP通告信息时，如果优先权为0，发送VRRP通告信息；否则判断数据的优先级是否高于本机，或相等而且实际IP地址大于本地实际IP，设置定时通告定时器，复位主机超时定时器，转BACKUP状态；否则的话，丢弃该通告包；</p>
+
+<p>备机：<br />
+备机状态下的路由器要实现以下功能：<br />
+设置主机超时定时器；<br />
+不能响应针对虚拟路由器IP的ARP请求信息；<br />
+丢弃所有目的MAC地址是虚拟路由器MAC地址的数据包；<br />
+不接受目的是虚拟路由器IP的所有数据包；<br />
+当收到shutdown的事件时删除主机超时定时器，转初始化状态；<br />
+主机超时定时器超时的时候，发送VRRP通告信息，广播ARP地址信息，转MASTER状态；<br />
+收到VRRP通告信息时，如果优先权为0，表示进入MASTER选举；否则判断数据的优先级是否高于本机，如果高的话承认MASTER有效，复位主机超时定时器；否则的话，丢弃该通告包；
+<h5>2.4 ARP查询处理</h5>
+当内部主机通过ARP查询虚拟路由器IP地址对应的MAC地址时，MASTER路由器回复的MAC地址为虚拟的VRRP的MAC地址，而不是实际网卡的MAC地址，这样在路由器切换时让内网机器觉察不到；而在路由器重新启动时，不能主动发送本机网卡的实际MAC地址。如果虚拟路由器开启的ARP代理(proxy_arp)功能，代理的ARP回应也回应VRRP虚拟MAC地址；</p>
+
+<p>2.5 VRRP应用举例
+<a href="http://klwang.info/blog/wp-content/uploads/2013/05/应用举例.png"><img alt="应用举例" src="http://klwang.info/blog/wp-content/uploads/2013/05/应用举例-300x278.png" width="369" height="285" /></a>
+这是通常VRRP使用拓扑，两台路由器运行VRRP互为备份，路由器1作为VRID组1的MASTER，IP地址A，VRID组2的BACKUP，路由器2作为VRID组2的MASTER，IP地址B，VRID组1的BACKUP，内部网络中一部分机器的缺省网关地址是IP地址A，一部分是IP地址B，正常情况下以A为网关的数据将走路由器1，以B为网关的数据将走路由器2，如果一台路由器发生故障，所有数据将走另一台路由器。
+<h4>3. 协议定义</h4>
+<h5>3.1 以太头</h5>
+源MAC地址必须为虚拟MAC地址：00-00-5E-00-01-{VRID}，VRID为虚拟路由器ID值，16进制格式，所以同一网段中最多有255个VRRP路由器；目的MAC为多播类型的MAC。</p>
+
+<p>这里可以看出VRID非常重要
+<h5>3.2 IP头参数</h5>
+VRRP包的源地址是本机地址，目的地址必须为224.0.0.18，为一多播地址；IP协议号为112；IP包的TTL值必须为255。
+<h5>3.3 VRRP协议数据格式</h5>
+<a href="http://klwang.info/blog/wp-content/uploads/2013/05/P协议数据格式.png"><img alt="P协议数据格式" src="http://klwang.info/blog/wp-content/uploads/2013/05/P协议数据格式-300x255.png" width="376" height="271" /></a>
+其中：<br />
+version：版本，4位，在RFC3768中定义为2；<br />
+Type：类型，4位，目前只定义一种类类型：通告数据，取值为1；<br />
+Virtual Rtr ID：虚拟路由器ID，8位<br />
+Priority：优先级，8位，具备冗余IP地址的设备的优先级为255；<br />
+Count IP Addrs：VRRP包中的IP地址数量，8位；<br />
+Auth Type：认证类型，8位，RFC3768中认证功能已经取消，此字段值定义0(不认证)，为1，2只作为对老版本的兼容；<br />
+Adver Int：通告包的发送间隔时间，8位，单位是秒，缺省是1秒；<br />
+Checksum：校验和，16位，校验数据范围只是VRRP数据，即从VRRP的版本字段开始的数据，不包括IP头；<br />
+IP Address(es)：和虚拟路由器相关的IP地址，数量由Count IP Addrs决定<br />
+Authentication Data：RFC3768中定义该字段只是为了和老版本兼容，必须置0。
+<h5>3.4 接收数据时的必须检查</h5>
+收到VRRP数据包时要进行以下验证，不满足的数据包将被丢弃：<br />
+- TTL必须为255；<br />
+- VRRP版本号必须为2；<br />
+- 一个包中数据字段必须完整；<br />
+- 校验和必须正确；<br />
+- 必须验证在接收的网卡上配置了VRID值，而且本地路由器不是路由IP地址的拥有者<br />
+- 必须验证VVRP认证类型和配置的一致；
+<h4>4. 结论</h4>
+VRRP实现了对路由器IP地址的冗余功能，防止了单点故障造成的网络失效，VRRP本身是热备形式的，但可以通过互相热备实现路由器的均衡处理，新版的VRRP较老版简化了认证处理，实际不再进行数据的认证，这是因为在实际应用中经常出现认证成为造成多个MASTER同时使用的异常情况。</p>
+</div>
+  
+  
+
+
+    </article>
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/install-cloudstack-4-0/">【转】安装部署CloudStack 4.0企业私有云平台</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2013-05-06T00:00:00+08:00" pubdate data-updated="true">May 6<span>th</span>, 2013</time>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p><div /></p>
+
+<p><strong>参考资料</strong>
+<a href="http://incubator.apache.org/cloudstack/docs/en-US/Apache_CloudStack/4.0.0-incubating/html/Installation_Guide/installation.html" target="_blank">CloudStack Installation_Guide/installation.html</a>
+<a href="http://incubator.apache.org/cloudstack/docs/en-US/Apache_CloudStack/4.0.0-incubating/html/Admin_Guide/working-with-iso.html" target="_blank">CloudStack Admin_guide/working-with-iso.html</a>
+<a href="http://incubator.apache.org/cloudstack/docs/en-US/Apache_CloudStack/4.0.0-incubating/html/Admin_Guide/creating-vms.html" target="_blank">CloudStack Admin_guide/creating-vms.html</a>
+<a href="http://incubator.apache.org/cloudstack/docs/en-US/Apache_CloudStack/4.0.0-incubating/html/Admin_Guide/create-templates-overview.html" target="_blank">CloudStack Admin_guide/create-templates-overview.html</a></p>
+
+<p><strong>目录结构</strong>
+1. 什么是CloudStack<br />
+2. 宿主机的系统需求<br />
+3. 配置安装源<br />
+4. 安装Management Server<br />
+5. 安装配置KVM虚拟化Host主机<br />
+6. 用户界面<br />
+7. 配置Management Server<br />
+8. 创建Instance类型<br />
+9. 创建ISO安装源并创建Instance<br />
+10. 创建并定制Template<br />
+11. 通过定制的Template创建VM Instance<br />
+12. 其它优化设置</p>
+
+<p><strong>环境介绍</strong>
+OS: Ubuntu Server 12.04.1 64-bit<br />
+Server:<br />
+10.6.203.10 cloudstack-server-1<br />
+- CloudStack Management Server<br />
+- CloudStack Agent<br />
+- NFS Server<br />
+- MySQL Server<br />
+注：CloudStack支持很好的分布式架构，上面 - 代表的所有角色都可以部署在不同的机器上，但在测试环境中因为条件有限我全部都部署到了一台机器上。</p>
+
+<p><strong>1. 什么是CloudStack</strong>
+CloudStack是一个开源的具有高可用性及扩展性的云计算平台。<br />
+提到开源的云计算平台，相信大家首先想到的可能是OpenStack，目前国内的几家云计算平台如阿里云、盛大云以及新浪SAE貌似都基于OpenStack做了二次开发。<br />
+但使用过CloudStack之后，你会发现其实CloudStack更像是一个商业化过后的产品，有着非常好的用户界面，各个模块默认集成的很好，且安装与部署过程也相对容易一些。</p>
+
+<p>事实上，CloudStack的前身是Cloud.com，后来被思杰收购。2011年7月，Citrix收购Cloud.com，将CloudStack 100%开源并交给Apache软件基金会管理。<br />
+同时，CloudStack已经有了许多商用客户，包括GoDaddy、英国电信、日本电报电话公司、塔塔集团、韩国电信等。</p>
+
+<p>因此，CloudStack本身其实就是一个商业化过后的产品，然后在面对OpenStack等开源系统的巨大竞争压力的情况下选择了同样的开源。</p>
+
+<p>目前Cloudstack支持管理大部分主流的hypervisors，如KVM，XenServer，VMware，Oracle VM，Xen等。<br />
+CloudStack具有商业软件所拥有的完善的用户权限管理，可以让用户构建一个安全的多租户云计算环境。<br />
+同时兼容Amazon AWS API 接口，可用来管理AWS的资源。</p>
+
+<p>CloudStack的官方网址如下(目前还处于Apache基金会的孵化器中)：</p>
+
+<p>http://incubator.apache.org/cloudstack/</p>
+
+<p>以下是CloudStack的系统架构，基本上与其他云计算平台相同：
+<img title="Infrastructure" alt="" src="http://heylinux.com/wp-content/uploads/2012/11/Infrastructure.png" width="477" height="497" /></p>
+
+<p><strong>2. 宿主机的系统需求</strong>
+由于CloudStack 4.0 限定了libvirt版本 &gt; 0.9.4，并在社区宣称所支持的OS为 CentOS/RHEL 6.2 以上或 Ubuntu Server 12.04。<br />
+因此，这里我们选择 Ubuntu Server 12.04.1 作为我们的操作系统。<br />
+官方下载地址：http://releases.ubuntu.com/precise/ubuntu-12.04.1-server-amd64.iso</p>
+
+<p>另外，官方要求硬件至少满足以下条件：<br />
+1) 支持硬件虚拟化(Intel-VT 或 AMD-V)<br />
+2) 64位的x86 CPU<br />
+3) 4G内存<br />
+4) 36GB硬盘<br />
+5) 1张网卡</p>
+
+<p><strong>3. 配置安装源</strong>
+配置国内的网易镜像源<br />
+$ sudo sed -i s/us.archive.ubuntu.com/mirrors.163.com/g /etc/apt/sources.list<br />
+$ sudo sed -i s/security.ubuntu.com/mirrors.163.com/g /etc/apt/sources.list</p>
+
+<p>配置CloudStack官方源<br />
+$ sudo vim /etc/apt/sources.list.d/cloudstack.list<br />
+deb http://cloudstack.apt-get.eu/ubuntu precise 4.0</p>
+
+<p>配置CloudStack官方源证书<br />
+$ wget -O - http://cloudstack.apt-get.eu/release.asc| sudo apt-key add -</p>
+
+<p>更新系统的安装源<br />
+$ sudo apt-get update</p>
+
+<p><strong>4. 安装Management Server</strong>
+<strong>4.1 准备好操作系统环境</strong>
+查看主机名<br />
+$ hostname &#8211;fqdn<br />
+cloudstack-server-1</p>
+
+<p>$ sudo vim /etc/hosts<br />
+添加以下记录<br />
+10.6.203.10 cloudstack-server-1</p>
+
+<p>安装时间服务器<br />
+$ sudo apt-get install openntpd</p>
+
+<p><strong>4.2 下载安装 CloudStack Management Server 与 vhd-util</strong>
+安装CloudStack Management Server<br />
+$ sudo apt-get install cloud-client</p>
+
+<p>将用户cloud加入到sudo用户组 //CloudStack默认以cloud用户启动，但默认会通过sudo以root身份管理相关文件与目录<br />
+$ sudo adduser cloud sudo</p>
+
+<p>配置sudo用户组免密码切换 //同样是为了解决和上面相同的权限问题<br />
+$ sudo visudo<br />
+%sudo ALL=(ALL:ALL) NOPASSWD:ALL</p>
+
+<p>初始化root用户密码，如cloudstack //CloudStack默认需要root权限远程SSH连接到Agent<br />
+$ sudo -i<br />
+# passwd
+<div id="highlighter_194438">
+<div>
+<div>
+<table>
+<tbody>
+<tr>
+<td><code>1</code></td>
+<td><code>Enter new UNIX password:</code></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div>
+<table>
+<tbody>
+<tr>
+<td><code>2</code></td>
+<td><code>Retype new UNIX password:</code></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div>
+<table>
+<tbody>
+<tr>
+<td><code>3</code></td>
+<td><code>passwd</code><code>: password updated successfully</code></td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</div>
+# chmod 777 /root //为了解决一个bug，即CloudStack默认以cloud用户启动，但却读取的是启动服务的用户的home目录用来存放一些临时文件，从而导致权限问题<br />
+$ exit</p>
+
+<p>下载vhd-util<br />
+$ sudo wget http://download.cloud.com.s3.amazonaws.com/tools/vhd-util<br />
+$ sudo mv vhd-util /usr/lib/cloud/common/scripts/vm/hypervisor/xenserver/</p>
+
+<p><strong>4.3 安装配置MySQL数据库</strong>
+$ sudo apt-get install mysql-server<br />
+在弹出的界面中输入密码，如: cloudstack</p>
+
+<p>修改MySQL配置文件参数<br />
+$ sudo vim /etc/mysql/my.cnf<br />
+在[mysqld]模块中加入以下参数
+<div id="highlighter_519248">
+<div>
+<div>
+<table>
+<tbody>
+<tr>
+<td><code>1</code></td>
+<td><code>innodb_rollback_on_timeout=1</code></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div>
+<table>
+<tbody>
+<tr>
+<td><code>2</code></td>
+<td><code>innodb_lock_wait_timeout=600</code></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div>
+<table>
+<tbody>
+<tr>
+<td><code>3</code></td>
+<td><code>max_connections=350</code></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div>
+<table>
+<tbody>
+<tr>
+<td><code>4</code></td>
+<td><code>log-bin=mysql-bin</code></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div>
+<table>
+<tbody>
+<tr>
+<td><code>5</code></td>
+<td><code>binlog-</code><code>format</code> <code>= </code><code>'ROW'</code></td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</div>
+重启MySQL<br />
+$ sudo service mysql restart</p>
+
+<p>初始化数据库cloud<br />
+$ sudo cloud-setup-databases cloud:cloudstack@localhost &#8211;deploy-as=root:cloudstack -m cloudstack -k cloudstack
+<div id="highlighter_230432">
+<div>
+<div>
+<table>
+<tbody>
+<tr>
+<td><code>01</code></td>
+<td><code>Mysql user name:cloud                                           [ OK ]</code></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div>
+<table>
+<tbody>
+<tr>
+<td><code>02</code></td>
+<td><code>Mysql user password:cloudstack                                  [ OK ]</code></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div>
+<table>
+<tbody>
+<tr>
+<td><code>03</code></td>
+<td><code>Mysql server ip:localhost                                       [ OK ]</code></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div>
+<table>
+<tbody>
+<tr>
+<td><code>04</code></td>
+<td><code>Mysql server port:3306                                          [ OK ]</code></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div>
+<table>
+<tbody>
+<tr>
+<td><code>05</code></td>
+<td><code>Mysql root user name:root                                       [ OK ]</code></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div>
+<table>
+<tbody>
+<tr>
+<td><code>06</code></td>
+<td><code>Mysql root user password:cloudstack                             [ OK ]</code></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div>
+<table>
+<tbody>
+<tr>
+<td><code>07</code></td>
+<td><code>Checking Cloud database files ...                               [ OK ]</code></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div>
+<table>
+<tbody>
+<tr>
+<td><code>08</code></td>
+<td><code>Checking </code><code>local</code> <code>machine </code><code>hostname</code> <code>...                             [ OK ]</code></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div>
+<table>
+<tbody>
+<tr>
+<td><code>09</code></td>
+<td><code>Checking SELinux setup ...                                      [ OK ]</code></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div>
+<table>
+<tbody>
+<tr>
+<td><code>10</code></td>
+<td><code>Detected </code><code>local</code> <code>IP address as 10.6.203.10,</code></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div>
+<table>
+<tbody>
+<tr>
+<td><code>11</code></td>
+<td><code>will use as cluster management server node IP                   [ OK ]</code></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div>
+<table>
+<tbody>
+<tr>
+<td><code>12</code></td>
+<td><code>Preparing /etc/cloud/management/db.properties                   [ OK ]</code></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div>
+<table>
+<tbody>
+<tr>
+<td><code>13</code></td>
+<td><code>Applying /usr/share/cloud/setup/create-database.sql             [ OK ]</code></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div>
+<table>
+<tbody>
+<tr>
+<td><code>14</code></td>
+<td><code>Applying /usr/share/cloud/setup/create-schema.sql               [ OK ]</code></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div>
+<table>
+<tbody>
+<tr>
+<td><code>15</code></td>
+<td><code>Applying /usr/share/cloud/setup/create-database-premium.sql     [ OK ]</code></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div>
+<table>
+<tbody>
+<tr>
+<td><code>16</code></td>
+<td><code>Applying /usr/share/cloud/setup/create-schema-premium.sql       [ OK ]</code></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div>
+<table>
+<tbody>
+<tr>
+<td><code>17</code></td>
+<td><code>Applying /usr/share/cloud/setup/server-setup.sql                [ OK ]</code></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div>
+<table>
+<tbody>
+<tr>
+<td><code>18</code></td>
+<td><code>Applying /usr/share/cloud/setup/templates.sql                   [ OK ]</code></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div>
+<table>
+<tbody>
+<tr>
+<td><code>19</code></td>
+<td><code>Applying /usr/share/cloud/setup/create-index-fk.sql             [ OK ]</code></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div>
+<table>
+<tbody>
+<tr>
+<td><code>20</code></td>
+<td><code>Processing encryption ...                                       [ OK ]</code></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div>
+<table>
+<tbody>
+<tr>
+<td><code>21</code></td>
+<td><code>Finalizing setup ...                                            [ OK ]</code></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div>
+<table>
+<tbody>
+<tr>
+<td><code>22</code></td>
+<td></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div>
+<table>
+<tbody>
+<tr>
+<td><code>23</code></td>
+<td><code>CloudStack has successfully initialized database,</code></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div>
+<table>
+<tbody>
+<tr>
+<td><code>24</code></td>
+<td><code>you can check your database configuration </code><code>in</code> <code>/etc/cloud/management/db.properties</code></td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</div>
+<strong>4.4 配置NFS共享</strong>
+CloudStack 需要一个地方来存放Primar和Secondary Storage，官方推荐使用NFS共享。</p>
+
+<p>安装NFS<br />
+$ sudo apt-get install nfs-common nfs-kernel-server</p>
+
+<p>创建目录<br />
+$ sudo mkdir -p /export/primary<br />
+$ sudo mkdir -p /export/secondary</p>
+
+<p>编辑NFS配置文件<br />
+$ sudo vim /etc/exports
+<div id="highlighter_879631">
+<div>
+<div>
+<table>
+<tbody>
+<tr>
+<td><code>1</code></td>
+<td><code>/</code><code>export</code> <code>*(rw,async,no_root_squash,no_subtree_check)</code></td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</div>
+刷新配置<br />
+$ sudo exportfs -a</p>
+
+<p>挂载测试NFS共享<br />
+$ sudo mkdir /mnt/primary<br />
+$ sudo mount -t nfs 10.6.203.10:/export/primary /mnt/primary<br />
+$ sudo mkdir /mnt/secondary<br />
+$ sudo mount -t nfs 10.6.203.10:/export/secondary /mnt/secondary</p>
+
+<p>$ df -h
+<div id="highlighter_66106">
+<div>
+<div>
+<table>
+<tbody>
+<tr>
+<td><code>1</code></td>
+<td><code>Filesystem                    Size  Used Avail Use% Mounted on</code></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div>
+<table>
+<tbody>
+<tr>
+<td><code>2</code></td>
+<td><code>...</code></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div>
+<table>
+<tbody>
+<tr>
+<td><code>3</code></td>
+<td><code>10.6.203.10:/</code><code>export</code><code>/primary    434G  7.8G  404G   2% /mnt/primary</code></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div>
+<table>
+<tbody>
+<tr>
+<td><code>4</code></td>
+<td><code>10.6.203.10:/</code><code>export</code><code>/secondary  434G  7.8G  404G   2% /mnt/secondary</code></td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</div>
+$ sudo vim /etc/fstab<br />
+增加以下内容
+<div id="highlighter_939905">
+<div>
+<div>
+<table>
+<tbody>
+<tr>
+<td><code>1</code></td>
+<td><code>10.6.203.10:/</code><code>export</code><code>/primary /mnt/primary    nfs rw,tcp,intr 0 1</code></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div>
+<table>
+<tbody>
+<tr>
+<td><code>2</code></td>
+<td><code>10.6.203.10:/</code><code>export</code><code>/secondary /mnt/secondary    nfs rw,tcp,intr 0 1</code></td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</div>
+<strong>4.5 准备System VM Template</strong>
+我们选择KVM作为虚拟化引擎<br />
+$ sudo /usr/lib/cloud/common/scripts/storage/secondary/cloud-install-sys-tmplt -m /mnt/secondary \<br />
+-u http://download.cloud.com/templates/acton/acton-systemvm-02062012.qcow2.bz2 -h kvm -F<br />
+整个过程大概需要花费半个小时
+<div id="highlighter_899798">
+<div>
+<div>
+<table>
+<tbody>
+<tr>
+<td><code>01</code></td>
+<td><code>--2012-11-12 14:49:18--  <a href="http://download.cloud.com/templates/acton/acton-systemvm-02062012.qcow2.bz2">http://download.cloud.com/templates/acton/acton-systemvm-02062012.qcow2.bz2</a></code></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div>
+<table>
+<tbody>
+<tr>
+<td><code>02</code></td>
+<td><code>Resolving download.cloud.com (download.cloud.com)... 207.171.189.81</code></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div>
+<table>
+<tbody>
+<tr>
+<td><code>03</code></td>
+<td><code>Connecting to download.cloud.com (download.cloud.com)|207.171.189.81|:80... connected.</code></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div>
+<table>
+<tbody>
+<tr>
+<td><code>04</code></td>
+<td><code>HTTP request sent, awaiting response... 200 OK</code></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div>
+<table>
+<tbody>
+<tr>
+<td><code>05</code></td>
+<td><code>Length: 286036668 (273M) [binary/octet-stream]</code></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div>
+<table>
+<tbody>
+<tr>
+<td><code>06</code></td>
+<td><code>Saving to: `/usr/lib/cloud/common/scripts/storage/secondary/4aae2546-33e1-4784-9e69-09e1ef9d6fb4.qcow2'</code></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div>
+<table>
+<tbody>
+<tr>
+<td><code>07</code></td>
+<td></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div>
+<table>
+<tbody>
+<tr>
+<td><code>08</code></td>
+<td><code>100%[======================================================================&gt;] 286,036,668  188K/s   </code><code>in</code> <code>24m 53s </code></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div>
+<table>
+<tbody>
+<tr>
+<td><code>09</code></td>
+<td></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div>
+<table>
+<tbody>
+<tr>
+<td><code>10</code></td>
+<td><code>2012-11-12 15:14:13 (187 KB/s) - `/usr/lib/cloud/common/scripts/storage/secondary/4aae2546-33e1-4784-9e69-09e1ef9d6fb4.qcow2' saved [286036668/286036668]</code></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div>
+<table>
+<tbody>
+<tr>
+<td><code>11</code></td>
+<td></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div>
+<table>
+<tbody>
+<tr>
+<td><code>12</code></td>
+<td><code>Uncompressing to /usr/lib/cloud/common/scripts/storage/secondary/4aae2546-33e1-4784-9e69-09e1ef9d6fb4.qcow2.tmp (</code><code>type</code> <code>bz2)...could take a long </code><code>time</code></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div>
+<table>
+<tbody>
+<tr>
+<td><code>13</code></td>
+<td><code>Moving to /mnt/secondary/template/tmpl/1/3///4aae2546-33e1-4784-9e69-09e1ef9d6fb4.qcow2...could take a </code><code>while</code></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div>
+<table>
+<tbody>
+<tr>
+<td><code>14</code></td>
+<td><code>Successfully installed system VM template  to /mnt/secondary/template/tmpl/1/3/</code></td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</div>
+<strong>5. 安装配置KVM虚拟化Host主机</strong></p>
+
+<p><strong>5.1 安装配置Agent</strong>
+$ sudo apt-get install cloud-agent</p>
+
+<p><strong>5.2 安装配置libvirt</strong>
+$ sudo vim /etc/libvirt/libvirtd.conf<br />
+修改以下配置
+<div id="highlighter_30583">
+<div>
+<div>
+<table>
+<tbody>
+<tr>
+<td><code>1</code></td>
+<td><code>listen_tls = 0</code></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div>
+<table>
+<tbody>
+<tr>
+<td><code>2</code></td>
+<td><code>listen_tcp = 1</code></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div>
+<table>
+<tbody>
+<tr>
+<td><code>3</code></td>
+<td><code>tcp_port = </code><code>"16059"</code></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div>
+<table>
+<tbody>
+<tr>
+<td><code>4</code></td>
+<td><code>auth_tcp = </code><code>"none"</code></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div>
+<table>
+<tbody>
+<tr>
+<td><code>5</code></td>
+<td><code>mdns_adv = 0</code></td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</div>
+查看配置<br />
+$ cat /etc/libvirt/libvirtd.conf | grep -v &#8216;#&#8217; | grep -v &#8220;^$&#8221;
+<div id="highlighter_577714">
+<div>
+<div>
+<table>
+<tbody>
+<tr>
+<td><code>1</code></td>
+<td><code>listen_tls = 0</code></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div>
+<table>
+<tbody>
+<tr>
+<td><code>2</code></td>
+<td><code>listen_tcp = 1</code></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div>
+<table>
+<tbody>
+<tr>
+<td><code>3</code></td>
+<td><code>tcp_port = </code><code>"16509"</code></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div>
+<table>
+<tbody>
+<tr>
+<td><code>4</code></td>
+<td><code>mdns_adv = 0</code></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div>
+<table>
+<tbody>
+<tr>
+<td><code>5</code></td>
+<td><code>unix_sock_group = </code><code>"libvirtd"</code></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div>
+<table>
+<tbody>
+<tr>
+<td><code>6</code></td>
+<td><code>unix_sock_rw_perms = </code><code>"0770"</code></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div>
+<table>
+<tbody>
+<tr>
+<td><code>7</code></td>
+<td><code>auth_unix_ro = </code><code>"none"</code></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div>
+<table>
+<tbody>
+<tr>
+<td><code>8</code></td>
+<td><code>auth_unix_rw = </code><code>"none"</code></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div>
+<table>
+<tbody>
+<tr>
+<td><code>9</code></td>
+<td><code>auth_tcp = </code><code>"none"</code></td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</div>
+$ sudo vim /etc/init/libvirt-bin.conf<br />
+修改以下参数
+<div id="highlighter_840130">
+<div>
+<div>
+<table>
+<tbody>
+<tr>
+<td><code>1</code></td>
+<td><code>env</code> <code>libvirtd_opts=</code><code>"-d -l"</code></td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</div>
+# sudo vim /etc/libvirt/qemu.conf<br />
+修改以下参数
+<div id="highlighter_901087">
+<div>
+<div>
+<table>
+<tbody>
+<tr>
+<td><code>1</code></td>
+<td><code>vnc_listen = </code><code>"0.0.0.0"</code></td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</div>
+重启服务<br />
+$ sudo service libvirt-bin restart</p>
+
+<p><strong>5.3 配置安全策略</strong>
+$ sudo dpkg &#8211;list &#8220;apparmor&#8221;
+<div id="highlighter_224440">
+<div>
+<div>
+<table>
+<tbody>
+<tr>
+<td><code>1</code></td>
+<td><code>Desired=Unknown/Install/Remove/Purge/Hold</code></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div>
+<table>
+<tbody>
+<tr>
+<td><code>2</code></td>
+<td><code>| Status=Not/Inst/Conf-files/Unpacked/halF-conf/Half-inst/trig-aWait/Trig-pend</code></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div>
+<table>
+<tbody>
+<tr>
+<td><code>3</code></td>
+<td><code>|/ Err?=(none)/Reinst-required (Status,Err: uppercase=bad)</code></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div>
+<table>
+<tbody>
+<tr>
+<td><code>4</code></td>
+<td><code>||/ Name                                Version                             Description</code></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div>
+<table>
+<tbody>
+<tr>
+<td><code>5</code></td>
+<td><code>+++-===================================-===================================-======================================================================================</code></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div>
+<table>
+<tbody>
+<tr>
+<td><code>6</code></td>
+<td><code>ii  apparmor</code></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div>
+<table>
+<tbody>
+<tr>
+<td><code>7</code></td>
+<td><code>                           </code><code>2.7.102-0ubuntu3.1                  User-space parser utility </code><code>for</code> <code>AppArmor</code></td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</div>
+$ sudo ln -s /etc/apparmor.d/usr.sbin.libvirtd /etc/apparmor.d/disable/<br />
+$ sudo ln -s /etc/apparmor.d/usr.lib.libvirt.virt-aa-helper /etc/apparmor.d/disable/<br />
+$ sudo apparmor_parser -R /etc/apparmor.d/usr.sbin.libvirtd<br />
+$ sudo apparmor_parser -R /etc/apparmor.d/usr.lib.libvirt.virt-aa-helper</p>
+
+<p><strong>5.4 配置网桥</strong>
+需要注意的是，官方文档给出的配置参数会导致网络不可用。<br />
+正确的配置是将物理网卡设置为manual，然后在虚拟网卡上设置IP并桥接到物理网卡上。<br />
+$ sudo vim /etc/network/interfaces
+<div id="highlighter_111005">
+<div>
+<div>
+<table>
+<tbody>
+<tr>
+<td><code>01</code></td>
+<td><code># This file describes the network interfaces available on your system</code></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div>
+<table>
+<tbody>
+<tr>
+<td><code>02</code></td>
+<td><code># and how to activate them. For more information, see interfaces(5).</code></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div>
+<table>
+<tbody>
+<tr>
+<td><code>03</code></td>
+<td></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div>
+<table>
+<tbody>
+<tr>
+<td><code>04</code></td>
+<td><code># The loopback network interface</code></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div>
+<table>
+<tbody>
+<tr>
+<td><code>05</code></td>
+<td><code>auto lo</code></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div>
+<table>
+<tbody>
+<tr>
+<td><code>06</code></td>
+<td><code>iface lo inet loopback</code></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div>
+<table>
+<tbody>
+<tr>
+<td><code>07</code></td>
+<td></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div>
+<table>
+<tbody>
+<tr>
+<td><code>08</code></td>
+<td><code># The primary network interface</code></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div>
+<table>
+<tbody>
+<tr>
+<td><code>09</code></td>
+<td><code>auto eth0</code></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div>
+<table>
+<tbody>
+<tr>
+<td><code>10</code></td>
+<td><code>iface eth0 inet manual</code></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div>
+<table>
+<tbody>
+<tr>
+<td><code>11</code></td>
+<td></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div>
+<table>
+<tbody>
+<tr>
+<td><code>12</code></td>
+<td><code># Public network</code></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div>
+<table>
+<tbody>
+<tr>
+<td><code>13</code></td>
+<td><code>auto cloudbr0</code></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div>
+<table>
+<tbody>
+<tr>
+<td><code>14</code></td>
+<td><code>iface cloudbr0 inet static</code></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div>
+<table>
+<tbody>
+<tr>
+<td><code>15</code></td>
+<td><code>   </code><code>address 10.6.203.10</code></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div>
+<table>
+<tbody>
+<tr>
+<td><code>16</code></td>
+<td><code>   </code><code>netmask 255.255.0.0</code></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div>
+<table>
+<tbody>
+<tr>
+<td><code>17</code></td>
+<td><code>   </code><code>gateway 10.6.255.1</code></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div>
+<table>
+<tbody>
+<tr>
+<td><code>18</code></td>
+<td><code>   </code><code>bridge_ports eth0</code></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div>
+<table>
+<tbody>
+<tr>
+<td><code>19</code></td>
+<td><code>   </code><code>bridge_fd 5</code></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div>
+<table>
+<tbody>
+<tr>
+<td><code>20</code></td>
+<td><code>   </code><code>bridge_stp off</code></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div>
+<table>
+<tbody>
+<tr>
+<td><code>21</code></td>
+<td><code>   </code><code>bridge_maxwait 1</code></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div>
+<table>
+<tbody>
+<tr>
+<td><code>22</code></td>
+<td><code>   </code><code>dns-nameservers 10.6.255.253 61.139.2.69</code></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div>
+<table>
+<tbody>
+<tr>
+<td><code>23</code></td>
+<td></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div>
+<table>
+<tbody>
+<tr>
+<td><code>24</code></td>
+<td><code># Private network</code></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div>
+<table>
+<tbody>
+<tr>
+<td><code>25</code></td>
+<td><code>auto cloudbr1</code></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div>
+<table>
+<tbody>
+<tr>
+<td><code>26</code></td>
+<td><code>iface cloudbr1 inet manual</code></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div>
+<table>
+<tbody>
+<tr>
+<td><code>27</code></td>
+<td><code>   </code><code>bridge_ports eth0</code></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div>
+<table>
+<tbody>
+<tr>
+<td><code>28</code></td>
+<td><code>   </code><code>bridge_fd 5</code></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div>
+<table>
+<tbody>
+<tr>
+<td><code>29</code></td>
+<td><code>   </code><code>bridge_stp off</code></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div>
+<table>
+<tbody>
+<tr>
+<td><code>30</code></td>
+<td><code>   </code><code>bridge_maxwait 1</code></td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</div>
+$ sudo /etc/init.d/networking restart<br />
+$ sudo /etc/init.d/networking start</p>
+
+<p><strong>5.5 配置防火墙</strong>
+$ sudo ufw allow proto tcp from any to any port 22<br />
+$ sudo ufw allow proto tcp from any to any port 80<br />
+$ sudo ufw allow proto tcp from any to any port 1798<br />
+$ sudo ufw allow proto tcp from any to any port 16509<br />
+$ sudo ufw allow proto tcp from any to any port 5900:6100<br />
+$ sudo ufw allow proto tcp from any to any port 49152:49216</p>
+
+<p><strong>6. 用户界面</strong>
+禁用系统默认的tomcat服务<br />
+$ sudo /etc/init.d/tomcat6 stop
+<div id="highlighter_866858">
+<div>
+<div>
+<table>
+<tbody>
+<tr>
+<td><code>1</code></td>
+<td><code>* Stopping Tomcat servlet engine tomcat6 [ OK ]</code></td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</div>
+$ sudo update-rc.d -f tomcat6 remove
+<div id="highlighter_175625">
+<div>
+<div>
+<table>
+<tbody>
+<tr>
+<td><code>1</code></td>
+<td><code>Removing any system startup links </code><code>for</code> <code>/etc/init.d/tomcat6 ...</code></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div>
+<table>
+<tbody>
+<tr>
+<td><code>2</code></td>
+<td><code>  </code><code>/etc/rc0.d/K08tomcat6</code></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div>
+<table>
+<tbody>
+<tr>
+<td><code>3</code></td>
+<td><code>  </code><code>/etc/rc1.d/K08tomcat6</code></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div>
+<table>
+<tbody>
+<tr>
+<td><code>4</code></td>
+<td><code>  </code><code>/etc/rc2.d/S92tomcat6</code></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div>
+<table>
+<tbody>
+<tr>
+<td><code>5</code></td>
+<td><code>  </code><code>/etc/rc3.d/S92tomcat6</code></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div>
+<table>
+<tbody>
+<tr>
+<td><code>6</code></td>
+<td><code>  </code><code>/etc/rc4.d/S92tomcat6</code></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div>
+<table>
+<tbody>
+<tr>
+<td><code>7</code></td>
+<td><code>  </code><code>/etc/rc5.d/S92tomcat6</code></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div>
+<table>
+<tbody>
+<tr>
+<td><code>8</code></td>
+<td><code>  </code><code>/etc/rc6.d/K08tomcat6</code></td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</div>
+启动cloud-management<br />
+$ cd ~<br />
+$ sudo /etc/init.d/cloud-management restart
+<div id="highlighter_126514">
+<div>
+<div>
+<table>
+<tbody>
+<tr>
+<td><code>1</code></td>
+<td><code>* Starting CloudStack-specific Tomcat servlet engine cloud-management [ OK ]</code></td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</div>
+登陆用户界面</p>
+
+<p>http://10.6.203.10:8080/client/</p>
+
+<p>默认账号密码<br />
+admin/password</p>
+
+<p><img title="login" alt="" src="http://heylinux.com/wp-content/uploads/2012/11/login.png" width="600" height="346" /></p>
+
+<p>可以看到如下图所示向导界面
+<img title="init-1" alt="" src="http://heylinux.com/wp-content/uploads/2012/11/init-1.png" width="586" height="600" /></p>
+
+<p>选择左边的按钮&#8221;I have used CloudStack before, skip this guide&#8221;。<br />
+即进入如下图所示用户界面
+<img title="init-2" alt="" src="http://heylinux.com/wp-content/uploads/2012/11/init-2.png" width="600" height="438" /></p>
+
+<p><strong>7. 配置Management Server</strong>
+整个Management Server的架构如下
+<img title="map" alt="" src="http://heylinux.com/wp-content/uploads/2012/11/map.png" width="521" height="301" /></p>
+
+<p><img title="map2" alt="" src="http://heylinux.com/wp-content/uploads/2012/11/map2.png" width="600" height="558" /></p>
+
+<p><strong>7.1 修改Web管理员默认密码</strong>
+登陆 http://10.6.203.10:8080/client<br />
+进入 Accounts - admin - View Users - admin 页面，点击 Change Password
+<img title="init-3" alt="" src="http://heylinux.com/wp-content/uploads/2012/11/init-3.png" width="600" height="390" /></p>
+
+<p>接着我们进入到 Infrastructure 界面，可以看到目前没有任何设置，所有数目都是0。
+<img title="init-4" alt="" src="http://heylinux.com/wp-content/uploads/2012/11/init-4.png" width="600" height="448" /></p>
+
+<p><strong>7.2 创建相关配置</strong>
+在用户界面中通过向导，依次创建<br />
+&#8220;Zone&#8221; - &#8220;Add Zone&#8221; - &#8220;Physical Network&#8221; - &#8220;Pod&#8221; - &#8220;Guest Traffic&#8221; - &#8220;Storage Traffic&#8221; -<br />
+&#8220;Cluster&#8221; - &#8220;Host&#8221; - &#8220;Primary Storage&#8221; - &#8220;Secondary Storage&#8221;</p>
+
+<p>如下列图片所示：<br />
+选择Basic安装向导
+<img title="init-5" alt="" src="http://heylinux.com/wp-content/uploads/2012/11/init-5.png" width="600" height="554" /></p>
+
+<p>配置Zone
+<img title="init-6" alt="" src="http://heylinux.com/wp-content/uploads/2012/11/init-6.png" width="600" height="506" /></p>
+
+<p>配置Physical Network
+<img title="init-7" alt="" src="http://heylinux.com/wp-content/uploads/2012/11/init-7.png" width="600" height="504" /></p>
+
+<p>配置Pod，此处的网络设置主要用于CloudStack内部的管理通信
+<img title="init-8" alt="" src="http://heylinux.com/wp-content/uploads/2012/11/init-8.png" width="600" height="520" /></p>
+
+<p>配置Guest Traffic，此处的网络设置用于给Instance分配IP
+<img title="init-9" alt="" src="http://heylinux.com/wp-content/uploads/2012/11/init-9.png" width="600" height="504" /></p>
+
+<p>配置Storage Traffic，此处的网络设置用于存储系统
+<img title="init-10" alt="" src="http://heylinux.com/wp-content/uploads/2012/11/init-10.png" width="600" height="522" /></p>
+
+<p>配置Cluster
+<img title="init-11" alt="" src="http://heylinux.com/wp-content/uploads/2012/11/init-11.png" width="600" height="504" /></p>
+
+<p>配置Host，即Agent主机，虚拟机的宿主机，用户名密码与SSH相同
+<img title="init-12" alt="" src="http://heylinux.com/wp-content/uploads/2012/11/init-12.png" width="600" height="506" /></p>
+
+<p>配置主存储空间，我选择了本地mount点，即mount过后的本地路径，分布式部署时可以选择NFS模式
+<img title="init-13" alt="" src="http://heylinux.com/wp-content/uploads/2012/11/init-13.png" width="600" height="498" /></p>
+
+<p>配置附属存储空间，仅支持NFS模式
+<img title="init-14" alt="" src="http://heylinux.com/wp-content/uploads/2012/11/init-14.png" width="600" height="510" /></p>
+
+<p>配置完成，点击&#8221;Launch zone&#8221;
+<img title="init-15" alt="" src="http://heylinux.com/wp-content/uploads/2012/11/init-15.png" width="600" height="498" /></p>
+
+<p>可以看到整个创建过程，最后创建完成之后提示是否启用Zone，选择Yes
+<img title="init-16" alt="" src="http://heylinux.com/wp-content/uploads/2012/11/init-16.png" width="600" height="510" /></p>
+
+<p><strong>8. 创建Instance类型</strong>
+默认有Small Instance和Medium Instance<br />
+我们再分别创建两个类型：Large 和 xLarge，如下图所示：</p>
+
+<p>创建Large Instance Type
+<img title="init2-1" alt="" src="http://heylinux.com/wp-content/uploads/2012/11/init2-1.png" width="600" height="554" /></p>
+
+<p>创建xLarge Instance Type
+<img title="init2-2" alt="" src="http://heylinux.com/wp-content/uploads/2012/11/init2-2.png" width="600" height="582" /></p>
+
+<p>查看xLarge Instance Type属性
+<img title="init2-3" alt="" src="http://heylinux.com/wp-content/uploads/2012/11/init2-3.png" width="600" height="508" /></p>
+
+<p><strong>9. 创建ISO安装源并创建Instance</strong>
+在用户界面中配置<br />
+Template - Select view: ISO - Redister ISO
+<div id="highlighter_503099">
+<div>
+<div>
+<table>
+<tbody>
+<tr>
+<td><code>1</code></td>
+<td><code>Name: Ubuntu-10.10</code></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div>
+<table>
+<tbody>
+<tr>
+<td><code>2</code></td>
+<td><code>Description: Ubuntu Server 10.10 64-bit x86</code></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div>
+<table>
+<tbody>
+<tr>
+<td><code>3</code></td>
+<td><code>URL: <a href="http://old-releases.ubuntu.com/releases/maverick/ubuntu-10.10-server-amd64.iso">http://old-releases.ubuntu.com/releases/maverick/ubuntu-10.10-server-amd64.iso</a></code></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div>
+<table>
+<tbody>
+<tr>
+<td><code>4</code></td>
+<td><code>Zone: All Zones</code></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div>
+<table>
+<tbody>
+<tr>
+<td><code>5</code></td>
+<td><code>Bootable: Yes</code></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div>
+<table>
+<tbody>
+<tr>
+<td><code>6</code></td>
+<td><code>OS Type: Ubuntu 10.10 (64-bit)</code></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div>
+<table>
+<tbody>
+<tr>
+<td><code>7</code></td>
+<td><code>Extractable: Yes</code></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div>
+<table>
+<tbody>
+<tr>
+<td><code>8</code></td>
+<td><code>Public: Yes</code></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div>
+<table>
+<tbody>
+<tr>
+<td><code>9</code></td>
+<td><code>Featured: Yes</code></td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</div>
+如下图所示：
+<img title="init2-4" alt="" src="http://heylinux.com/wp-content/uploads/2012/11/init2-4.png" width="600" height="484" /></p>
+
+<p>然后，等待ISO的Ready状态为Yes的时候，如下图所示
+<img title="init2-8" alt="" src="http://heylinux.com/wp-content/uploads/2012/11/init2-8.png" width="600" height="532" /></p>
+
+<p>接着，就可以开始使用ISO创建Instance，并在后面跟将其制作成为Template了。</p>
+
+<p>如果想下载的速度快一些，可以通过在主机上搭建一个HTTP Server<br />
+但需要登录到Secondary Storage VM内部对防火墙规则进行一些修改，否则无法访问主机的80端口<br />
+具体步骤如下<br />
+$ sudo apt-get install apache2</p>
+
+<p>$ sudo netstat -lntp | grep -w 80
+<div id="highlighter_763062">
+<div>
+<div>
+<table>
+<tbody>
+<tr>
+<td><code>1</code></td>
+<td><code>tcp        0      0 0.0.0.0:80              0.0.0.0:*               LISTEN      6157/apache2</code></td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</div>
+上传Ubuntu安装ISO到服务器的/var/www/iso，例如ubuntu-10.10-server-amd64.iso</p>
+
+<p>$ sudo mkdir /var/www/iso<br />
+$ sudo chown www-data:www-data /var/www/iso<br />
+$ sudo chown www-data:www-data /var/www/iso/ubuntu-10.10-server-amd64.iso</p>
+
+<p>获取Secondary Storage VM的IP(169.254.x.x)，如下图所示
+<img title="init2-7" alt="" src="http://heylinux.com/wp-content/uploads/2012/11/init2-7.png" width="600" height="600" /></p>
+
+<p>登录Secondary Storage VM修改防火墙规则<br />
+$ sudo -i<br />
+# ssh -i .ssh/id_rsa.cloud -p 3922 169.254.1.99<br />
+root@s-30-VM:~#iptables -D OUTPUT -o eth1 -p tcp -m state &#8211;state NEW -m tcp &#8211;dport 80 -j REJECT &#8211;reject-with icmp-port-unreachable</p>
+
+<p>将URL设置为 http://10.6.203.10/iso/ubuntu-10.10-server-amd64.iso 即可</p>
+
+<p><strong>10. 创建并定制Template</strong>
+<strong>10.1 创建初始Instance</strong>
+通过刚刚安装的ISO文件来创建一个Instance<br />
+具体步骤如下</p>
+
+<p>选择ISO
+<img title="init3-1" alt="" src="http://heylinux.com/wp-content/uploads/2012/11/init3-1.png" width="600" height="482" /></p>
+
+<p>选择刚刚创建好的ISO
+<img title="init3-2" alt="" src="http://heylinux.com/wp-content/uploads/2012/11/init3-2.png" width="600" height="436" /></p>
+
+<p>选择xLarge Instance，这里跟根据需要自己决定
+<img title="init3-3" alt="" src="http://heylinux.com/wp-content/uploads/2012/11/init3-3.png" width="600" height="428" /></p>
+
+<p>选择硬盘
+<img title="init3-4" alt="" src="http://heylinux.com/wp-content/uploads/2012/11/init3-4.png" width="600" height="440" /></p>
+
+<p>默认没有安全组，直接下一步
+<img title="init3-5" alt="" src="http://heylinux.com/wp-content/uploads/2012/11/init3-5.png" width="600" height="440" /></p>
+
+<p>最后给Template命名，并点击&#8221;Launch VM&#8221;创建
+<img title="init3-6" alt="" src="http://heylinux.com/wp-content/uploads/2012/11/init3-6.png" width="600" height="432" /></p>
+
+<p>创建过程大概1分钟左右
+<img title="init3-7" alt="" src="http://heylinux.com/wp-content/uploads/2012/11/init3-7.png" width="600" height="174" /></p>
+
+<p>创建成功以后Instance状态为Running
+<img title="init3-8" alt="" src="http://heylinux.com/wp-content/uploads/2012/11/init3-8.png" width="600" height="148" /></p>
+
+<p>通过NICs页面可以查看到所绑定的IP地址
+<img title="init3-9" alt="" src="http://heylinux.com/wp-content/uploads/2012/11/init3-9.png" width="600" height="470" /></p>
+
+<p>点击Details页面的&#8221;View console&#8221;，打开本地终端界面
+<img title="init3-10" alt="" src="http://heylinux.com/wp-content/uploads/2012/11/init3-10.png" width="600" height="248" /></p>
+
+<p>可以看到操作系统的安装界面，接下来就是常见的系统安装过程了
+<img title="init3-11" alt="" src="http://heylinux.com/wp-content/uploads/2012/11/init3-11.png" width="600" height="530" /></p>
+
+<p><strong>10.2 通过View console执行操作系统的安装过程</strong>
+通过在创建好的Instance的属性页面上点击 View console，即通过Web界面操作本地图形终端<br />
+执行操作系统的安装过程，安装好操作系统。</p>
+
+<p><strong>10.3 定制Template</strong>
+操作系统安装完成以后，由于计划以该操作系统来制作Template，所以需要进行如下修改
+<strong>10.3.1 安装openssh client和server (通过View console)</strong>
+ubuntu@Template-Instance:~$ sudo apt-get install ssh</p>
+
+<p>后面的步骤就可以通过SSH来完成了。</p>
+
+<p><strong>10.3.2 配置国内的网易镜像源</strong>
+ubuntu@Template-Instance:~$ sudo sed -i s/us.archive.ubuntu.com/mirrors.163.com/g /etc/apt/sources.list<br />
+ubuntu@Template-Instance:~$ sudo sed -i s/security.ubuntu.com/mirrors.163.com/g /etc/apt/sources.list<br />
+ubuntu@Template-Instance:~$ sudo apt-get update</p>
+
+<p><strong>10.3.3 配置sudo用户组免密码切换</strong>
+ubuntu@Template-Instance:~$ sudo visudo<br />
+%sudo ALL=(ALL:ALL) NOPASSWD:ALL<br />
+%admin ALL=(ALL) NOPASSWD:ALL</p>
+
+<p><strong>10.3.4 安装常用工具</strong>
+ubuntu@Template-Instance:~$ sudo apt-get install vim lrzsz</p>
+
+<p><strong>10.3.5 去除主机名相关配置</strong>
+这样做是为了后面利用该Template创建的Instance能够自动生成特有的主机名<br />
+ubuntu@Template-Instance:~$ sudo vim /etc/hosts<br />
+注释或删除以下内容<br />
+#127.0.1.1 Template-Instance.cs1cloud.internal Template-Instance</p>
+
+<p>将/etc/hostname文件更名或删除<br />
+ubuntu@Template-Instance:~$ sudo mv /etc/hostname /etc/hostname.template</p>
+
+<p><strong>10.3.6 关闭Instance</strong>
+ubuntu@Template-Instance:~$ sudo sync<br />
+ubuntu@Template-Instance:~$ sudo poweroff</p>
+
+<p><strong>10.4 创建Template</strong>
+确认Instance已经关闭，如下图所示
+<img title="init3-12" alt="" src="http://heylinux.com/wp-content/uploads/2012/11/init3-12.png" width="600" height="194" /></p>
+
+<p>然后卸下Instance上之前所挂载的ISO
+<img title="init3-17" alt="" src="http://heylinux.com/wp-content/uploads/2012/11/init3-17.png" width="564" height="173" /></p>
+
+<p>然后选择Instance对应的Volumes，点击Create Template
+<img title="init3-14" alt="" src="http://heylinux.com/wp-content/uploads/2012/11/init3-14.png" width="600" height="280" /></p>
+
+<p>Name: Ubuntu-10.10<br />
+Description: Ubuntu Server 10.10 64-bit x86 with SSH<br />
+OS Type: Ubuntu 10.10 (64-bit)<br />
+Public: Yes<br />
+Password Enabled: No<br />
+Featured: No</p>
+
+<p>init3-15.png</p>
+
+<p>创建完成以后，即可以再Templates页面中查看到
+<img title="init3-16" alt="" src="http://heylinux.com/wp-content/uploads/2012/11/init3-16.png" width="600" height="502" /></p>
+
+<p><strong>11. 通过定制的Template创建VM Instance</strong>
+通过刚刚创建好的Template，我们可以快速创建新的Instance</p>
+
+<p>选择Template
+<img title="init4-1" alt="" src="http://heylinux.com/wp-content/uploads/2012/11/init4-1.png" width="600" height="486" /></p>
+
+<p>选择刚刚创建好的Template
+<img title="init4-2" alt="" src="http://heylinux.com/wp-content/uploads/2012/11/init4-2.png" width="600" height="480" /></p>
+
+<p>选择xLarge Instance，可以根据需要自己选择
+<img title="init4-3" alt="" src="http://heylinux.com/wp-content/uploads/2012/11/init4-3.png" width="600" height="466" /></p>
+
+<p>选择硬盘，由于之间创建的Template已经带有20G硬盘<br />
+因此此处可以跳过，当然也可以选择硬盘，但会作为从盘附在上面
+<img title="init4-4" alt="" src="http://heylinux.com/wp-content/uploads/2012/11/init4-4.png" width="600" height="476" /></p>
+
+<p>默认没有安全组，直接下一步
+<img title="init4-5" alt="" src="http://heylinux.com/wp-content/uploads/2012/11/init4-5.png" width="600" height="430" /></p>
+
+<p>给Instance命名，并点击&#8221;Launch VM&#8221;创建
+<img title="init4-6" alt="" src="http://heylinux.com/wp-content/uploads/2012/11/init4-6.png" width="600" height="480" /></p>
+
+<p>创建成功以后Instance状态为Running
+<img title="init4-7" alt="" src="http://heylinux.com/wp-content/uploads/2012/11/init4-7.png" width="600" height="172" /></p>
+
+<p>通过NICs页面可以查看到所绑定的IP地址
+<img title="init4-8" alt="" src="http://heylinux.com/wp-content/uploads/2012/11/init4-8.png" width="600" height="384" /></p>
+
+<p>即可通过属性页面上查看到IP地址，直接登录SSH
+<img title="init4-9" alt="" src="http://heylinux.com/wp-content/uploads/2012/11/init4-9.png" width="600" height="200" /></p>
+
+<p><strong>12. 其它优化设置</strong>
+CloudStack对已经删除的Instance设置了一个保护时间<br />
+时间比较长，等于86400秒即24小时，我们可以将其设置的短一些<br />
+如300秒，即五分钟<br />
+在Global Settings中搜索expunge并设置，如下图所示
+<img title="init5-1" alt="" src="http://heylinux.com/wp-content/uploads/2012/11/init5-1.png" width="600" height="260" /></p>
+
+<p>然后重启Management Server使配置生效<br />
+$ sudo /etc/init.d/cloud-management restart</p>
+
+<p>修改Security Group安全组策略，允许所有数据通过
+<img title="init2-5" alt="" src="http://heylinux.com/wp-content/uploads/2012/11/init2-5.png" width="600" height="396" /></p>
+
+<p><img title="init2-6" alt="" src="http://heylinux.com/wp-content/uploads/2012/11/init2-6.png" width="600" height="390" /></p>
+
+<p><strong>13. 结束语</strong>
+目前，整个CloudStack的安装部署就已经完成了。<br />
+但，这仅仅是一个开始，CloudStack的更多功能，比如<br />
+1) 多节点分布式部署，将管理节点，Host节点，数据库，NFS存储区域都分开部署；<br />
+2) 集成 Amazon EC2；<br />
+3) VPC+VPN 网络实现；<br />
+4) 多用户权限设计与资源分配等</p>
+
+<p>都有待我们进一步的研究和学习。<br />
+相信实际操作该文档之后，对CloudStack的架构与各个模块之间的联系都有了更深的理解，完成以上内容都不是什么难事了。</p>
+
+<p></p>
+</div>
+  
+  
+
+
+    </article>
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/basic-skill-of-svn/">Svn 基础</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2013-04-25T00:00:00+08:00" pubdate data-updated="true">Apr 25<span>th</span>, 2013</time>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p>基础知识
+<pre>    svn 的每一个子目录可以视为一个子项目
+    每个目录中的.svn子目录：记录文件的修改日期和原始内容</pre>
+取出/导入版本
+<pre>    svn checkout url [myname]
+        检出一个项目的拷贝, 可以使用任意url取出任意深度的文件
+        -r ver 取出版本为ver的版本</pre></p>
+
+<p>    svn import locale_dir/local_par url -m &#8220;注释&#8221;<br />
+        导入大量的文件进去</p>
+
+<p>    svn export url<br />
+        打包url的文件，没有.svn目录
+做出修改
+<pre>    svn add
+        将文件、目录、符号链接添加到版本库
+    svn delete
+        将文件、目录、符号链接从版本库中删除
+    svn copy old new
+        建立一个新的项目new，来自old
+    svn move old new
+        移动项目
+    svn mkdir abc
+        等同 mkdir abc; svn add abc</pre>
+检验修改
+<pre>    svn status
+        浏览所做的修改，可以脱机工作
+        M 修改
+        A 新加
+        L 锁住了
+        U 冲突
+        G 被更新了
+        -v (verbose) 显示详细信息,最后一次的版本号和修改人
+        -u 带信号的文件是已经更新过的，可能冲突（使用update更新）
+    svn diff
+        检查修改的详细信息，可以脱机工作
+        &gt; 重定向，用来生成补丁程序
+        -r version file 比较版本version和本地文件的区别
+        -r ver1:ver2 file 比较ver1和ver2的区别</pre></p>
+
+<p>    svn revert<br />
+        将文件恢复到未修改的状态，未commit前都可以恢复
+解决冲突
+<pre>    svn update
+        自动更新本地文件，svn自动判断需要更改哪些文件
+        如果本地比服务器更新，不做任何操作
+        更新本地文件，当出现冲突时，会使用C标记，并且生成三个临时文件
+            file.mine   本地文件
+            file.rOLDDEV    本地文件的base版本
+            file.rNEWDEV    服务器上的最新版本
+        -r ver 更新到版本为ver的时期，即可以朝后走</pre></p>
+
+<p>    svn resolved file<br />
+        手工修改冲突文件后，使用resolved告诉服务器问题解决<br />
+        一旦删除了临时文件，svn则认为你已经解决冲突，即使还出现问题</p>
+
+<p>    svn cleanup<br />
+        检查工作区所有一流的日志文件，删除进程中工作拷贝的锁
+提交修改
+<pre>    svn commit
+        提交修改, 每当svn接受一个提交，版本库进入一个新的状态（修订revision），分配一个唯一的号码，初始0
+        提交修改
+        -m 添加message信息
+        -F 将文件的内容作为message信息</pre>
+检验历史
+<pre>    svn log
+        找出一个文件或者目录的历史信息
+        -r(revision)    逆序
+        -v(verbose) 详细信息
+        -q 静默方式，不显示添加的message</pre></p>
+
+<p>    svn cat<br />
+        查看文件的内容<br />
+        -r ver 查看版本号为ver的内容</p>
+
+<p>    svn list url<br />
+        可以不下载的情况下查看目录的内容<br />
+        -v 详细信息</p>
+</div>
+  
+  
+
+
+    </article>
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/sfex-resource-agent/">Sfex (Resource Agent)</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2013-04-22T00:00:00+08:00" pubdate data-updated="true">Apr 22<span>nd</span>, 2013</time>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p><h3>Basic Consept</h3>
+<ul>
+	<li>SFEX is resource which control ownership of shared disk.</li>
+	<li>SFEX uses an special partition on the shared disk and maintains the following data.
+<ul>
+	<li>&#8220;status&#8221; shows whether a disk is owned by somebody.</li>
+	<li>&#8220;node&#8221; shows the node name to own the disk.</li>
+	<li>&#8220;count&#8221; is used for judgment that owner node is up or down.</li>
+</ul>
+</li>
+	<li>Typically, resources which use data partition on the shared disk(like PostgreSQL) make resource group with SFEX.</li>
+	<li>Resource of node which is holding ownership can access data partition
+<img alt="Sfex_sfex0" src="http://blog.klwang.info/blog/wp-content/uploads/2013/04/Sfex_sfex0.png" width="90%" /></li>
+	<li>When node can get ownership?
+<ul>
+	<li>case1: Nobody has ownership.</li>
+	<li>case2: Node can judge another node is down.</li>
+</ul>
+</li>
+</ul>
+<h3>Sequence Diagram</h3>
+<h4>Start Up Process</h4>
+SFEX can start on the node which has the highest score in cib.xml because more than one nodes do not access shared disk at the same time. Node A
+<ol>
+	<li>SFEX reads data from shared disk, and get &#8220;status&#8221;. Usually &#8220;status&#8221; is &#8220;NO_OWNED&#8221; because nobody has owned shared disk.</li>
+	<li>Writes data that include node=Node A and status=OWNED.</li>
+	<li>Reads data again, and get &#8220;node=Node A&#8221;.</li>
+	<li>Compareses it with my node name. If node name has not been changed, Node A get ownership!!</li>
+	<li>SFEX increments &#8220;count&#8221; on the shared disk by monitor processing of heartbeat. This processing means the update of ownership.
+<img alt="Sfex_seq1_start" src="http://blog.klwang.info/blog/wp-content/uploads/2013/04/Sfex_seq1_start.png" width="90%&quot;" /></li>
+</ol>
+<h3>Heartbeat Communication Failure</h3>
+Node A
+<ol>
+	<li>SFEX updates ownership by HB monitor processing.</li>
+</ol>
+Node B
+<ol>
+	<li>When heartbeat communication fail, standby node (Node B) starts resources.</li>
+	<li>SFEX reads data on the sheard disk.</li>
+	<li>Waits a while. Wait time should be longer than sfex monitor interval. By this wait time, it waits for periodical update from Node A and confirms that Node A maintains ownership.</li>
+	<li>Reads data again.</li>
+	<li>Checks value of new &#8220;count&#8221;. When the values of two &#8220;count&#8221; are different, it is able to think that Node A is up.</li>
+	<li>SFEX starts up process is stopped.
+<img alt="Sfex_seq2_HBdown" src="http://blog.klwang.info/blog/wp-content/uploads/2013/04/Sfex_seq2_HBdown.png" width="90%" /></li>
+</ol>
+<h3>Active Node Failure</h3>
+Node A
+<ol>
+	<li>Node A is downed by failure.</li>
+</ol>
+Node B This Node B start up in the same way as HB communication failure.
+<ol>
+	<li>Waits for a while. It waits for periodical update from Node A but confirms that Node A does not it.</li>
+	<li>SFEX reads data again.</li>
+	<li>Checks value of new &#8220;count&#8221;. The values of two &#8220;count&#8221; are SAME, it is able to think that Node A is DOWN.</li>
+	<li>Writes data that include node=Node B and status=OWNED.</li>
+	<li>Reads data again.</li>
+	<li>Compareses it with my node name. If node name has not been changed, Node B get ownership!!</li>
+	<li>Afterwards, other resources start.
+<img alt="Sfex_seq3_NodeDown" src="http://blog.klwang.info/blog/wp-content/uploads/2013/04/Sfex_seq3_NodeDown.png" width="90%" /></li>
+</ol>
+This is hardly generated. However for example, this case occurs when multiple nodes start up at the same time without heartbeat communication.</p>
+
+<p>Node A / Node B Writing to shared disk is serialized finally because writable area is &#8220;one&#8221;. As a result, the node name written at the last time remains. In this example, Node B remains.
+<ol>
+	<li>Read data again</li>
+	<li>Node A: value of &#8220;owner&#8221; is changed. this node does not get ownership. Node B: value of &#8220;owner&#8221; is name of Node B. Node B get ownnership!
+<img alt="Sfex_seq4_ST_access" src="http://blog.klwang.info/blog/wp-content/uploads/2013/04/Sfex_seq4_ST_access.png" width="90%" /></li>
+</ol>
+<h3>How To Initialize a SFEX Device</h3>
+Create a empty partition. SFEX needs about 1Kb per node.
+<pre>fdisk /dev/sdX</pre>
+The parameter “-n “ allows to put multiple shared locks on one disk.
+<pre>sfex_init -n 1 /dev/sdX1
+sfex_stat /dev/sdX1</pre>
+The following is an example configuration for a sfex resource using the &#8220;crm configure&#8221; shell. With index=1 the first slot will be used.
+<pre>primitive sfex_1 ocf:heartbeat:sfex \
+params device="/dev/sdX1" index="1" collision_timeout="1" \
+lock_timeout="70" monitor_interval="10" \
+op monitor interval="10" timeout="30" on_fail="fence" \
+op start interval="0" timeout="120" \
+op stop interval="0" timeout="30"</pre></p>
+
+<p>来自<a href="http://www.linux-ha.org/wiki/Sfex_(resource_agent)" target="_blank">LinuxHA</a>,摘录下来，作为备忘</p>
+</div>
+  
+  
+
+
+    </article>
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/oralce-ofa-expain-of-myself/">Oralce 默认安装后目录及文件简单说明</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2013-04-22T00:00:00+08:00" pubdate data-updated="true">Apr 22<span>nd</span>, 2013</time>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p>权限：
+<pre>  chmod 775 dirs
+  chown oracle:oinstall dirs</pre>
+目录说明：
+<pre>  /u01/app/oralce			--oracle用户的基目录$HOME 和 $ORACLE_BASE	
+					--数据库软件安装的目录]</pre></p>
+
+<p>  $ORACLE_BASE/product/v/type[n]	&#8211;oracle主目录 $ORACLE_HOME，<br />
+					&#8211;可以安装不同版本的数据库软件 <br />
+					&#8211;可执行文件都在$ORACLE_HOME/bin<br />
+  $ORACLE_BASE/ora_inventory		&#8211;清单目录，保存所有的oracle软件信息<br />
+  $ORACLE_BASE/admin/db_name/		&#8211;管理文件目录【核心转储，日志，告警，调试】<br />
+  $ORACLE_BASE/flash_recovery/db_name/	&#8211;管理文件目录【核心转储，日志，告警，调试】
+<pre>
+  /u01/oradata/db_name			--数据文件</pre>
+<pre>
+  /etc/sysctl.conf			--核心修改
+  /etc/security/limit.conf		--系统限制相关修改
+  /etc/oraInst.loc			--记录oracle安装组和文件清单目录
+  /etc/oratab				--oracle个版本的安装路径ORACLE_HOME
+					--SID:主目录:是否受服务脚本管理</pre>
+<pre>
+  $ORACLE_HOME/network/admin/tnsnames.ora	--oracle net配置文件的位置
+  /user/local/oraenv				--多个实例的系统上，该文件帮助做出选择</pre>
+其他：
+<pre>
+  TMPDIR				--如果安装时没有/tmp的写权限，
+					--或者/tmp不够大，安装时设置此值将改变过程中的/tmp目录</pre></p>
+</div>
+  
+  
+
+
+    </article>
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/oracle-data-directory-explain/">Oracle 常用数据字典</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2013-04-16T00:00:00+08:00" pubdate data-updated="true">Apr 16<span>th</span>, 2013</time>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p><pre>dba_catalog</pre>
+表、视图、序列、同义词、索引基本信息
+<pre>dba_objects</pre>
+数据库对象创建以及最后更新时间
+<pre>dba_tablespaces</pre>
+表空间及区段管理、空间分配、段管理类型等信息
+<pre>dba_tables</pre>
+表属主，表空间，行长，数据量等
+<pre>dba_indexes</pre>
+索引信息
+<pre>dba_part_tables</pre>
+分区表信息
+<pre>dba_synonyms</pre>
+同义词信息
+<pre>dba_triggers</pre>
+触发器信息，包括定义
+<pre>dba_sequences</pre>
+序列信息
+<pre>dba_constraints</pre>
+约束信息
+<pre>dba_cons_columns</pre>
+约束的表列
+<pre>dba_tab_columns</pre>
+表的列</p>
+</div>
+  
+  
+
+
+    </article>
+  
+  <div class="pagination">
+    
+      <a class="prev" href="/blog/page/4/">&larr; Older</a>
+    
+    <a href="/blog/archives">Blog Archives</a>
+    
+    <a class="next" href="/blog/page/2/">Newer &rarr;</a>
+    
+  </div>
+</div>
+<aside class="sidebar">
+  
+    <section>
+  <h1>Recent Posts</h1>
+  <ul id="recent_posts">
+    
+      <li class="post">
+        <a href="/blog/about-strace/">About Strace</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/about-ubuntu-no-pubkey-error/">Ubuntu NO_PUBKEY 故障解决方式</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/bash-you-don-not-konw-special-character/">你不知道的bash (特殊字符)</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/about-lvm-skills/">Lvm 实践笔记</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/change-your-resouce-angent-to-multistate/">将 Resouce Angent 改造成 Multi State 类型</a>
+      </li>
+    
+  </ul>
+</section>
+
+
+
+
+
+  
+</aside>
+
+    </div>
+  </div>
+  <footer role="contentinfo"><p>
+  Copyright &copy; 2013 - wklxd -
+  <span class="credit">Powered by <a href="http://octopress.org">Octopress</a></span>
+</p>
+
+</footer>
+  
+
+
+
+
+
+
+
+  <script type="text/javascript">
+    (function(){
+      var twitterWidgets = document.createElement('script');
+      twitterWidgets.type = 'text/javascript';
+      twitterWidgets.async = true;
+      twitterWidgets.src = 'http://platform.twitter.com/widgets.js';
+      document.getElementsByTagName('head')[0].appendChild(twitterWidgets);
+    })();
+  </script>
+
+
+
+
+
+</body>
+</html>

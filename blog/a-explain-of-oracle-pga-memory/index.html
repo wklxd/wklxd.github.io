@@ -1,0 +1,340 @@
+
+<!DOCTYPE html>
+<!--[if IEMobile 7 ]><html class="no-js iem7"><![endif]-->
+<!--[if lt IE 9]><html class="no-js lte-ie8"><![endif]-->
+<!--[if (gt IE 8)|(gt IEMobile 7)|!(IEMobile)|!(IE)]><!--><html class="no-js" lang="en"><!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  <title>Oracle内存结构-PGA - My Octopress Blog</title>
+  <meta name="author" content="wklxd">
+
+  
+  <meta name="description" content="一、概述
+SGA，PGA，UGA都是Oracle管理的内存区。 SGA（System Global Area），即系统全局区，Oracle中最重要的内存区。
+PGA（Process Global Area），即程序全局区，一个进程的专用的内存区。
+UGA（User Global Area）， &hellip;">
+  
+
+  <!-- http://t.co/dKP3o1e -->
+  <meta name="HandheldFriendly" content="True">
+  <meta name="MobileOptimized" content="320">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  
+  <link rel="canonical" href="http://github.klwang.info/blog/a-explain-of-oracle-pga-memory">
+  <link href="/favicon.png" rel="icon">
+  <link href="/stylesheets/screen.css" media="screen, projection" rel="stylesheet" type="text/css">
+  <link href="/atom.xml" rel="alternate" title="My Octopress Blog" type="application/atom+xml">
+  <script src="/javascripts/modernizr-2.0.js"></script>
+  <script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+  <script>!window.jQuery && document.write(unescape('%3Cscript src="./javascripts/lib/jquery.min.js"%3E%3C/script%3E'))</script>
+  <script src="/javascripts/octopress.js" type="text/javascript"></script>
+  <!--Fonts from Google"s Web font directory at http://google.com/webfonts -->
+<link href="http://fonts.googleapis.com/css?family=PT+Serif:regular,italic,bold,bolditalic" rel="stylesheet" type="text/css">
+<link href="http://fonts.googleapis.com/css?family=PT+Sans:regular,italic,bold,bolditalic" rel="stylesheet" type="text/css">
+
+  
+
+</head>
+
+<body   >
+  <header role="banner"><hgroup>
+  <h1><a href="/">My Octopress Blog</a></h1>
+  
+    <h2>A blogging framework for hackers.</h2>
+  
+</hgroup>
+
+</header>
+  <nav role="navigation"><ul class="subscription" data-subscription="rss">
+  <li><a href="/atom.xml" rel="subscribe-rss" title="subscribe via RSS">RSS</a></li>
+  
+</ul>
+  
+<form action="http://google.com/search" method="get">
+  <fieldset role="search">
+    <input type="hidden" name="q" value="site:github.klwang.info" />
+    <input class="search" type="text" name="q" results="0" placeholder="Search"/>
+  </fieldset>
+</form>
+  
+<ul class="main-navigation">
+  <li><a href="/">Blog</a></li>
+  <li><a href="/blog/archives">Archives</a></li>
+</ul>
+
+</nav>
+  <div id="main">
+    <div id="content">
+      <div>
+<article class="hentry" role="article">
+  
+  <header>
+    
+      <h1 class="entry-title">Oracle内存结构-PGA</h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2013-04-11T00:00:00+08:00" pubdate data-updated="true">Apr 11<span>th</span>, 2013</time>
+        
+      </p>
+    
+  </header>
+
+
+<div class="entry-content"><p><span style="color: #000000;">一、概述<br />
+SGA，PGA，UGA都是Oracle管理的内存区。</span></p>
+
+<p>SGA（System Global Area），即系统全局区，Oracle中最重要的内存区。<br />
+PGA（Process Global Area），即程序全局区，一个进程的专用的内存区。<br />
+UGA（User Global Area），即用户全局区，与特定的会话相关联。<br />
+专用服务器连接模式，UGA在PGA中分配。<br />
+共享服务器连接模式，UGA在SGA中的Large Pool中分配。</p>
+
+<p>如果采用专用服务器连接模式，PGA中包含UGA，其他区域用来排序，散列和位图合并。<br />
+简单来讲，PGA=UGA+排序区+散列区+位图合并区。</p>
+
+<p>二、PGA的管理模式。
+<p style="padding-left: 30px;"><span style="color: #000000;">PGA分两种管理模式：<br />
+1)        手动PGA内存管理，用户指定排序区和散列区所使用的内存，每个连接使用相同的内存。<br />
+2)        自动PGA内存管理，告诉Oracle可以使用的PGA的总量，由Oraclce根据系统负载决定具体分配。</span></p>
+<p style="padding-left: 60px;">  9iR1时默认为手动PGA内存管理，9iR2以后默认为自动PGA内存管理。<br />
+PGA内存可以动态扩大和回收。</p>
+<p style="padding-left: 30px;">PGA内存管理模式由WORKAREA_SIZE_POLICY控制。<br />
+1)        设为MANUAL，启用手动内存管理。<br />
+2)        设为AUTO，并且PGA_AGGREGATE_TARGET不为0时，启用自动内存管理。</p>
+<span style="color: #000000;">三、手动PGA内存管理<br />
+有三个参数对PGA影响最大。<br />
+SORT_AREA_SIZE：对信息排序所用的内存总量<br />
+SORT_AREA_RETAINED_SIZE：排序后在内存中保存排序信息的内存总量。<br />
+HASH_AREA_SIZE：存储散列列表所用的内存量。</span></p>
+
+<p>下面对这三个参数进行说明：
+<p style="padding-left: 30px;"><span style="color: #000000;">1)        SORT_AREA_SIZE：<br />
+如果SORT_AREA_SIZE设为512KB，SORT_AREA_RETAINED_SIZE也为512KB，则Oracle使用512KB的内存进行排序，排序后所有数据都留在内存中。</span></p>
+<p style="padding-left: 30px;">2)        SORT_AREA_RETAINED_SIZE：<br />
+如果SORT_AREA_SIZE设为512KB，SORT_AREA_RETAINED_SIZE设为384KB，则Oracle使用512KB的内存进行排序，然后保留384KB的已排序数据，另外512KB-384KB=128KB的已排序数据会写到临时表空间中。<br />
+        如果SORT_AREA_RETAINED_SIZE没有设置，则它的值为0，但是实际保留的排序数据和SORT_AREA_SIZE相同。</p>
+<p style="padding-left: 30px;">3)        HASH_AREA_SIZE：<br />
+一个大集合和另个集合进行连接时，会用到HASH_AREA_SIZE参数。较小的 表会放到这部分内存中作为驱动表，然后大表进行探索（PROBE）操作进行连接。如果HASH_AREA_SIZE过小会影响两个集合（表）连接时的性能。</p>
+<p style="padding-left: 30px;">注意点：<br />
+1)        如果需要排序的数据量大于SORT_AREA_SIZE，Oracle会分批进行排序。把当前已排序的数据保存到临时表空间中，然后对剩余的数据进行排 序。最后，还会对这些保存在临时表空间中的已排序数据再进行排序，因为每次保存到临时表空间中的已排序数据只是部分数据的排序，对整体需排序的数据来说只 是部分局部有序。<br />
+2)        *_AREA_SIZE只是对某个操作的限制，一个查询可能有多个操作，每个操作都有自己的内存区。如果SORT_AREA_SIZE设为5MB，一个查询可能会有10个排序操作，这样一个查询会占用50MB的排序内存。<br />
+3)        3，*_AREA_SIZE内存的分配是按需分配。如果一个查询需要5MB内存进行排序，就算分配1G的SORT_AREA_SIZE也不会全部使用，只会使用需要的5MB的内存量。</p>
+<span style="color: #000000;">四、自动PGA内存管理</span>
+<p style="padding-left: 30px;"><span style="color: #000000;">要启用自动PGA内存管理，设置下列参数：<br />
+1，WORKAREA_SIZE_POLICY=AUTO<br />
+2，PGA_AGGREGATE_TARGET=非零</span></p>
+<p style="padding-left: 30px;">有关PGA_AGGREGATE_TARGET：<br />
+1)        PGA_AGGREGATE_TARGET是一个目标值。连接数少的时候实际分配PGA内存会比它要小。连接数多的时候实际分配的PGA内存会比它要大，但是Oracle会努力保持总PGA保持在PGA_AGGREGATE_TARGET值内。</p>
+<p style="padding-left: 30px;">例 如，PGA_AGGREGATE_TARGET 设为300MB。5个用户连接时，每个用户可能分配10MB的PGA内存，共分配50MB的PGA内存。300个用户连接时每个用户可能分配1.3MB的 PGA内存，共分配390MB的PGA内存。当用户连接多时，Oracle会降低每个用户的PGA内存使用量。<br />
+2)        一个串行查询（非并行查询）可能包括多个排序/散列操作，每个排序/散列操作最多使用5%的PGA内存。<br />
+3)        一个并行查询最多可用到30%的PGA内存，无论有多少并行进程。</p>
+&nbsp;</p>
+
+<p><span style="color: #000000;">五、手动PGA内存管理与自动PGA内存管理</span>
+<p style="padding-left: 30px;"><span style="color: #000000;">自动PGA内存管理相对于手动PGA内存管理有很多优点<br />
+1，        当用户连接少时<br />
+a)        手动PGA内存管理不管有多少可用内存都按照预设值进行分配。比如当前空闲内存为300MB，连接需要10MB的内存进行排序，而我们设定的排序区大小为5MB，导致虽然有足够的空闲内存却无法分配给当前连接，造成执行效率低下。<br />
+b)        自动PGA内存管理会根据当前空闲内存来进行分配。当空闲内存为300MB，当前用户需要10MB内存进行排序，Oracle就会分配10MB内存给当前用户。<br />
+2，        当用户连接多时<br />
+a)        手动PGA内存管理会完全按照预设值分配内存。如果物理内存总量为1G，排序区设为5MB，当有300个用户连接时，Oracle会分配1.5G的内存，这已经超过了我们的实际物理内存！<br />
+b)        自动PGA内存管理会根据当前连接情况进行分配。如果物理内存总量为1G，PGA_AGGREGATE_TARGET为300MB，当用户数从10升到 300时，每个用户连接的内存会从满足需要的10MB慢慢减少到1.3MB，虽然最后总量也会超过PGA_AGGREGATE_TARGET，但比起手动 PGA内存管理要好很多了。</span></p>
+<p style="padding-left: 30px;">什么时候使用自动PGA内存管理？什么时候使用手动PGA内存管理？<br />
+白天系统正常运行时适合使用自动PGA内存管理，让Oracle根据当前负载自动管理、分配PGA内存。<br />
+夜里用户数少、进行维护的时候可以设定当前会话使用手动PGA内存管理，让当前的维护操作获得尽可能多的内存，加快执行速度。</p>
+<p style="padding-left: 30px;">如： 服务器平时运行在自动PGA内存管理模式下，夜里有个任务要大表进行排序连接后更新，就可以在该操作session中临时更改为手动PGA内存管理，然后 分配大的SORT_AREA_SIZE和HASH_AREA_SIZE（50%甚至80%内存，要确保无其他用户使用），这样能大大加快系统运行速度，又 不影响白天高峰期对系统造成的影响。</p>
+<span style="color: #000000;">六、操作命令</span>
+<p style="padding-left: 30px;"><span style="color: #000000;">系统级更改：<br />
+ALTER SYSTEM SET WORKAREA_SIZE_POLICY = {AUTO | MANAUL}；<br />
+ALTER SYSTEM SET PGA_AGGREGATE_TARGET=100000000;<br />
+ALTER SYSTEM SET SORT_AREA_SIZE = 65536 SCOPE = SPFILE；<br />
+ALTER SYSTEM SET HASH_AREA_SIZE = 65536 SCOPE = SPFILE；</span></p>
+<p style="padding-left: 30px;">会话级更改<br />
+ALTER SESSION SET WORKAREA_SIZE_POLICY = {AUTO | MANAUL}；<br />
+ALTER SESSION SET SORT_AREA_SIZE = 65536；<br />
+ALTER SESSION SET HASH_AREA_SIZE = 65536；</p>
+&nbsp;</p>
+
+<p><span style="color: #000000;">七、学以致用</span>
+<p style="padding-left: 30px;"><span style="color: #000000;">1，排序区：<br />
+pga_aggregate_target为100MB，单个查询能用到5%也就是5MB时排序所需时间</span></p>
+<p style="padding-left: 30px;">SQL&gt; create table sorttable as select * from all_objects;</p>
+<p style="padding-left: 30px;">表已创建。</p>
+<p style="padding-left: 30px;">SQL&gt; insert into sorttable (select * from sorttable);</p>
+<p style="padding-left: 30px;">已创建49735行。</p>
+<p style="padding-left: 30px;">SQL&gt; insert into sorttable (select * from sorttable);</p>
+<p style="padding-left: 30px;">已创建99470行。</p>
+<p style="padding-left: 30px;">SQL&gt; set timing on;<br />
+SQL&gt; set autotrace traceonly;<br />
+SQL&gt; select * from sorttable order by object_id;</p>
+<p style="padding-left: 30px;">已选择198940行。</p>
+<p style="padding-left: 30px;">已用时间:  00: 00: 50.49</p>
+<p style="padding-left: 30px;">Session级修改排序区为30mb所需时间<br />
+SQL&gt; ALTER SESSION SET WORKAREA_SIZE_POLICY = MANUAL;</p>
+<p style="padding-left: 30px;">会话已更改。</p>
+<p style="padding-left: 30px;">已用时间:  00: 00: 00.02<br />
+SQL&gt; ALTER SESSION SET SORT_AREA_SIZE = 30000000;</p>
+<p style="padding-left: 30px;">会话已更改。</p>
+<p style="padding-left: 30px;">已用时间:  00: 00: 00.01<br />
+SQL&gt; select * from sorttable order by object_id;</p>
+<p style="padding-left: 30px;">已选择198940行。</p>
+<p style="padding-left: 30px;">已用时间:  00: 00: 10.76</p>
+<p style="padding-left: 30px;">可以看到所需时间从50.49秒减少到10.31秒，速度提升很明显。</p>
+<p style="padding-left: 30px;">2，散列区：<br />
+pga_aggregate_target为100MB，单个查询能用到5%也就是5MB时表连接所需时间</p>
+<p style="padding-left: 30px;">SQL&gt; select /*+ use_hash(tb1 tb2)*/ * from sorttable tb1,sorttable tb2 where tb1.object_id=tb2.object_id;</p>
+<p style="padding-left: 30px;">已选择49735行。</p>
+<p style="padding-left: 30px;">已用时间:  00: 00: 40.50</p>
+<p style="padding-left: 30px;">Session级修改散列区为30mb所需时间<br />
+SQL&gt; ALTER SESSION SET WORKAREA_SIZE_POLICY = MANUAL;</p>
+<p style="padding-left: 30px;">会话已更改。</p>
+<p style="padding-left: 30px;">已用时间:  00: 00: 00.01<br />
+SQL&gt; ALTER SESSION SET HASH_AREA_SIZE = 30000000;</p>
+<p style="padding-left: 30px;">会话已更改。</p>
+<p style="padding-left: 30px;">已用时间:  00: 00: 00.01<br />
+SQL&gt; select /*+ use_hash(tb1 tb2)*/ * from sorttable tb1,sorttable tb2 where tb1.object_id=tb2.object_id;</p>
+<p style="padding-left: 30px;">已选择49735行。</p>
+<p style="padding-left: 30px;">已用时间:  00: 00: 04.47</p>
+<p style="padding-left: 30px;">所需时间由40.50秒提升到4.47秒，效果同样很明显。</p>
+<p style="padding-left: 30px;">备注：以上实验皆执行全表扫描保证相关表读入缓冲区中，避免因数据没读入缓存造成误差。</p>
+&nbsp;</p>
+
+<p><span style="color: #000000;">结论：在9iR2版以后，PGA不再像以前那样困扰DBA了，Oracle会帮我们做好PGA的分配。但这并不意味着DBA不需要深入了解PGA了，掌握PGA并根据适当应用会让工作如虎添翼。 </span></p>
+</div>
+
+
+  <footer>
+    <p class="meta">
+      
+  
+
+<span class="byline author vcard">Posted by <span class="fn">wklxd</span></span>
+
+      
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2013-04-11T00:00:00+08:00" pubdate data-updated="true">Apr 11<span>th</span>, 2013</time>
+      
+
+<span class="categories">
+  
+    <a class='category' href='/blog/categories/oracle/'>oracle</a>, <a class='category' href='/blog/categories/postgresql/'>postgresql</a>
+  
+</span>
+
+
+    </p>
+    
+      <div class="sharing">
+  
+  <a href="http://twitter.com/share" class="twitter-share-button" data-url="http://github.klwang.info/blog/a-explain-of-oracle-pga-memory/" data-via="" data-counturl="http://github.klwang.info/blog/a-explain-of-oracle-pga-memory/" >Tweet</a>
+  
+  
+  
+</div>
+
+    
+    <p class="meta">
+      
+        <a class="basic-alignment left" href="/blog/postgresql-partition-table-explain/" title="Previous Post: postgresql的分区表实现方式">&laquo; postgresql的分区表实现方式</a>
+      
+      
+        <a class="basic-alignment right" href="/blog/a-explain-of-oracle-sga-memory/" title="Next Post: Oracle内存结构-SGA">Oracle内存结构-SGA &raquo;</a>
+      
+    </p>
+  </footer>
+</article>
+
+</div>
+
+<aside class="sidebar">
+  
+    <section>
+  <h1>Recent Posts</h1>
+  <ul id="recent_posts">
+    
+      <li class="post">
+        <a href="/blog/about-strace/">About Strace</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/about-ubuntu-no-pubkey-error/">Ubuntu NO_PUBKEY 故障解决方式</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/bash-you-don-not-konw-special-character/">你不知道的bash (特殊字符)</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/about-lvm-skills/">Lvm 实践笔记</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/change-your-resouce-angent-to-multistate/">将 Resouce Angent 改造成 Multi State 类型</a>
+      </li>
+    
+  </ul>
+</section>
+
+
+
+
+
+  
+</aside>
+
+
+    </div>
+  </div>
+  <footer role="contentinfo"><p>
+  Copyright &copy; 2013 - wklxd -
+  <span class="credit">Powered by <a href="http://octopress.org">Octopress</a></span>
+</p>
+
+</footer>
+  
+
+
+
+
+
+
+
+  <script type="text/javascript">
+    (function(){
+      var twitterWidgets = document.createElement('script');
+      twitterWidgets.type = 'text/javascript';
+      twitterWidgets.async = true;
+      twitterWidgets.src = 'http://platform.twitter.com/widgets.js';
+      document.getElementsByTagName('head')[0].appendChild(twitterWidgets);
+    })();
+  </script>
+
+
+
+
+
+</body>
+</html>

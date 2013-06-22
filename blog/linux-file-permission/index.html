@@ -1,0 +1,315 @@
+
+<!DOCTYPE html>
+<!--[if IEMobile 7 ]><html class="no-js iem7"><![endif]-->
+<!--[if lt IE 9]><html class="no-js lte-ie8"><![endif]-->
+<!--[if (gt IE 8)|(gt IEMobile 7)|!(IEMobile)|!(IE)]><!--><html class="no-js" lang="en"><!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  <title>Linux 文件权限 - My Octopress Blog</title>
+  <meta name="author" content="wklxd">
+
+  
+  <meta name="description" content="之前遇到一个文件权限是 rws&#8211;x&#8211;x 的问题，对这个 -s 属性很是不太明白，就仔细的找了些资料；
+赶紧记录下来，以免后面又忘了 1. 基本权限 权限位一共是10位，下面这个图表比较清楚的解释了每一位的作用
+1	2	3	4	5	6	7	8	9	10
+File	User &hellip;">
+  
+
+  <!-- http://t.co/dKP3o1e -->
+  <meta name="HandheldFriendly" content="True">
+  <meta name="MobileOptimized" content="320">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  
+  <link rel="canonical" href="http://github.klwang.info/blog/linux-file-permission">
+  <link href="/favicon.png" rel="icon">
+  <link href="/stylesheets/screen.css" media="screen, projection" rel="stylesheet" type="text/css">
+  <link href="/atom.xml" rel="alternate" title="My Octopress Blog" type="application/atom+xml">
+  <script src="/javascripts/modernizr-2.0.js"></script>
+  <script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+  <script>!window.jQuery && document.write(unescape('%3Cscript src="./javascripts/lib/jquery.min.js"%3E%3C/script%3E'))</script>
+  <script src="/javascripts/octopress.js" type="text/javascript"></script>
+  <!--Fonts from Google"s Web font directory at http://google.com/webfonts -->
+<link href="http://fonts.googleapis.com/css?family=PT+Serif:regular,italic,bold,bolditalic" rel="stylesheet" type="text/css">
+<link href="http://fonts.googleapis.com/css?family=PT+Sans:regular,italic,bold,bolditalic" rel="stylesheet" type="text/css">
+
+  
+
+</head>
+
+<body   >
+  <header role="banner"><hgroup>
+  <h1><a href="/">My Octopress Blog</a></h1>
+  
+    <h2>A blogging framework for hackers.</h2>
+  
+</hgroup>
+
+</header>
+  <nav role="navigation"><ul class="subscription" data-subscription="rss">
+  <li><a href="/atom.xml" rel="subscribe-rss" title="subscribe via RSS">RSS</a></li>
+  
+</ul>
+  
+<form action="http://google.com/search" method="get">
+  <fieldset role="search">
+    <input type="hidden" name="q" value="site:github.klwang.info" />
+    <input class="search" type="text" name="q" results="0" placeholder="Search"/>
+  </fieldset>
+</form>
+  
+<ul class="main-navigation">
+  <li><a href="/">Blog</a></li>
+  <li><a href="/blog/archives">Archives</a></li>
+</ul>
+
+</nav>
+  <div id="main">
+    <div id="content">
+      <div>
+<article class="hentry" role="article">
+  
+  <header>
+    
+      <h1 class="entry-title">Linux 文件权限</h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2013-06-02T00:00:00+08:00" pubdate data-updated="true">Jun 2<span>nd</span>, 2013</time>
+        
+      </p>
+    
+  </header>
+
+
+<div class="entry-content"><p>之前遇到一个文件权限是 rws&#8211;x&#8211;x 的问题，对这个 -s 属性很是不太明白，就仔细的找了些资料；<br />
+赶紧记录下来，以免后面又忘了</p>
+
+<p>1. 基本权限</p>
+
+<p>权限位一共是10位，下面这个图表比较清楚的解释了每一位的作用
+<pre>1	2	3	4	5	6	7	8	9	10
+File	User Permissions	Group Permissions	Other Permissions
+Type	Read	Write	Execute	Read	Write	Execute	Read	Write	Execute
+d	r	w	e	r	w	e	r	w	e</pre>
+<ul>
+	<li>1位是type: - 常规文件, d 目录, l 链接.</li>
+</ul>
+<ul>
+	<li>2-4位表示文件拥有者的权限:分别是读、写、和执行</li>
+</ul>
+<ul>
+	<li>5-7位表示同组用户的权限：分别是读、写、和执行</li>
+</ul>
+<ul>
+	<li>8-10位表示其他用户的权限：同样，分别是读、写、和执行</li>
+</ul>
+文件的权限一个共有5种，分别是
+<ul>
+	<li>r = 读 - r权限只在read位置出现</li>
+</ul>
+<ul>
+	<li>w = 写 - w权限只在write位置出现</li>
+</ul>
+<ul>
+	<li>x = 执行 - w权限只在execute位置出现</li>
+</ul>
+<ul>
+	<li>s = setuid - s权限只在execute位置出现</li>
+</ul>
+<ul>
+	<li>- 表示没有权限</li>
+</ul>
+type位一共有这么几种
+<ul>
+	<li>d = 目录</li>
+</ul>
+<ul>
+	<li>l = 符号链接</li>
+</ul>
+<ul>
+	<li>s = socket</li>
+</ul>
+<ul>
+	<li>p = 命名管道</li>
+</ul>
+<ul>
+	<li>- = 普通文件</li>
+</ul>
+<ul>
+	<li>c= character (没有缓冲的) 设备，如键盘，鼠标</li>
+</ul>
+<ul>
+	<li>b= block (有缓冲的) 设备，如IDE硬盘</li>
+</ul>
+文件的 Set ID 位
+<ul>
+	<li>当owner的execute被设置为s时，表示任何程序在执行这个文件时就好像文件的owner一样（可以接触到相关的系统资源和权限等）</li>
+</ul>
+<ul>
+	<li>同理，当group的execute被设置为s时，表示任何程序在执行这个文件时就好像文件的group中成员一样可以接触到相关的系统资源和权限</li>
+</ul>
+<ul>
+	<li>最后，other肯定是没有s位的，不然就太恐怖啦（你能使用other的权限，那还得了？）</li>
+</ul>
+<ul>
+	<li><em>import：设置s时，首先要保证在该位上有x权限（常识啦，没有x就没有意义么）</em></li>
+</ul>
+<em> </em>
+目录有两个特殊的权限位，分别是
+<ul>
+	<li>t 表示在这个目录中，用户只能删除或者修改属于自己的或者自己有写权限的文件，比如/tmp就有这个权限</li>
+</ul>
+<ul>
+	<li>s 设置group id，一般来说，一个用户建立一个文件时，文件的组一般为自己所属的组。。当目录设置了该位时，该目录下建立的文件组和目录所属的组相同，而不是建立文件的用户所属组</li>
+</ul>
+umask设置
+<p style="padding-left: 30px;">
+文件默认的权限为<br />
+777 可执行文件<br />
+666 普通文件</p>
+文件默认的权限会让所有用户对可执行文件有所有权限，对所有普通文件有读写权限，设置umask可以改变这个系统行为</p>
+
+<p>如，umask为022时，普通文件的权限就变成了 666 - 022 = 644， 可执行文件权限变成了 777 - 022 = 755</p>
+
+<p>over</p>
+
+<p>参考文档
+<a title="Linux Files and File Permission" href="http://www.comptechdoc.org/os/linux/usersguide/linux_ugfilesp.html" target="_blank">Linux Files and File Permission</a></p>
+</div>
+
+
+  <footer>
+    <p class="meta">
+      
+  
+
+<span class="byline author vcard">Posted by <span class="fn">wklxd</span></span>
+
+      
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2013-06-02T00:00:00+08:00" pubdate data-updated="true">Jun 2<span>nd</span>, 2013</time>
+      
+
+<span class="categories">
+  
+    <a class='category' href='/blog/categories/linux/'>Linux</a>
+  
+</span>
+
+
+    </p>
+    
+      <div class="sharing">
+  
+  <a href="http://twitter.com/share" class="twitter-share-button" data-url="http://github.klwang.info/blog/linux-file-permission/" data-via="" data-counturl="http://github.klwang.info/blog/linux-file-permission/" >Tweet</a>
+  
+  
+  
+</div>
+
+    
+    <p class="meta">
+      
+        <a class="basic-alignment left" href="/blog/config-your-net-card-name/" title="Previous Post: 设置网卡名">&laquo; 设置网卡名</a>
+      
+      
+        <a class="basic-alignment right" href="/blog/kvm-guest-fence/" title="Next Post: kvm 虚拟机 fence 设置">kvm 虚拟机 fence 设置 &raquo;</a>
+      
+    </p>
+  </footer>
+</article>
+
+</div>
+
+<aside class="sidebar">
+  
+    <section>
+  <h1>Recent Posts</h1>
+  <ul id="recent_posts">
+    
+      <li class="post">
+        <a href="/blog/about-strace/">About Strace</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/about-ubuntu-no-pubkey-error/">Ubuntu NO_PUBKEY 故障解决方式</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/bash-you-don-not-konw-special-character/">你不知道的bash (特殊字符)</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/about-lvm-skills/">Lvm 实践笔记</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/change-your-resouce-angent-to-multistate/">将 Resouce Angent 改造成 Multi State 类型</a>
+      </li>
+    
+  </ul>
+</section>
+
+
+
+
+
+  
+</aside>
+
+
+    </div>
+  </div>
+  <footer role="contentinfo"><p>
+  Copyright &copy; 2013 - wklxd -
+  <span class="credit">Powered by <a href="http://octopress.org">Octopress</a></span>
+</p>
+
+</footer>
+  
+
+
+
+
+
+
+
+  <script type="text/javascript">
+    (function(){
+      var twitterWidgets = document.createElement('script');
+      twitterWidgets.type = 'text/javascript';
+      twitterWidgets.async = true;
+      twitterWidgets.src = 'http://platform.twitter.com/widgets.js';
+      document.getElementsByTagName('head')[0].appendChild(twitterWidgets);
+    })();
+  </script>
+
+
+
+
+
+</body>
+</html>

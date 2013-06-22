@@ -1,0 +1,1343 @@
+
+<!DOCTYPE html>
+<!--[if IEMobile 7 ]><html class="no-js iem7"><![endif]-->
+<!--[if lt IE 9]><html class="no-js lte-ie8"><![endif]-->
+<!--[if (gt IE 8)|(gt IEMobile 7)|!(IEMobile)|!(IE)]><!--><html class="no-js" lang="en"><!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  <title>My Octopress Blog</title>
+  <meta name="author" content="wklxd">
+
+  
+  <meta name="description" content="1. 创建表空间
+create [temporary] tablespace spc_name
+datafile 'path/name'
+size sizeM
+[ -- 默认值
+extend management local
+autoallocate | uniform xM -- 自动/ &hellip;">
+  
+
+  <!-- http://t.co/dKP3o1e -->
+  <meta name="HandheldFriendly" content="True">
+  <meta name="MobileOptimized" content="320">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  
+  <link rel="canonical" href="http://github.klwang.info/blog/page/4">
+  <link href="/favicon.png" rel="icon">
+  <link href="/stylesheets/screen.css" media="screen, projection" rel="stylesheet" type="text/css">
+  <link href="/atom.xml" rel="alternate" title="My Octopress Blog" type="application/atom+xml">
+  <script src="/javascripts/modernizr-2.0.js"></script>
+  <script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+  <script>!window.jQuery && document.write(unescape('%3Cscript src="./javascripts/lib/jquery.min.js"%3E%3C/script%3E'))</script>
+  <script src="/javascripts/octopress.js" type="text/javascript"></script>
+  <!--Fonts from Google"s Web font directory at http://google.com/webfonts -->
+<link href="http://fonts.googleapis.com/css?family=PT+Serif:regular,italic,bold,bolditalic" rel="stylesheet" type="text/css">
+<link href="http://fonts.googleapis.com/css?family=PT+Sans:regular,italic,bold,bolditalic" rel="stylesheet" type="text/css">
+
+  
+
+</head>
+
+<body   >
+  <header role="banner"><hgroup>
+  <h1><a href="/">My Octopress Blog</a></h1>
+  
+    <h2>A blogging framework for hackers.</h2>
+  
+</hgroup>
+
+</header>
+  <nav role="navigation"><ul class="subscription" data-subscription="rss">
+  <li><a href="/atom.xml" rel="subscribe-rss" title="subscribe via RSS">RSS</a></li>
+  
+</ul>
+  
+<form action="http://google.com/search" method="get">
+  <fieldset role="search">
+    <input type="hidden" name="q" value="site:github.klwang.info" />
+    <input class="search" type="text" name="q" results="0" placeholder="Search"/>
+  </fieldset>
+</form>
+  
+<ul class="main-navigation">
+  <li><a href="/">Blog</a></li>
+  <li><a href="/blog/archives">Archives</a></li>
+</ul>
+
+</nav>
+  <div id="main">
+    <div id="content">
+      <div class="blog-index">
+  
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/manage-of-oracle-tablespace/">Oracle 表空间管理</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2013-04-16T00:00:00+08:00" pubdate data-updated="true">Apr 16<span>th</span>, 2013</time>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p>1. 创建表空间
+<pre>create [temporary] tablespace spc_name
+datafile 'path/name'
+size sizeM
+[ -- 默认值
+extend management local
+autoallocate | uniform xM -- 自动/手动区段分配尺寸
+segment space management auto
+block_size xxK
+]</pre>
+2. 删除表空间
+<pre>drop tablespace spc_name
+[
+including contents -- 绕过回收站，直接擦除 （表/索引等）
+and datafiles    -- 删除表空间
+cascade constraints    --去除其他表的约束依赖
+]</pre>
+3. 修改表空间尺寸：
+<pre>alter tablespace spc_name
+add datafile 'path/file'
+size sizeM
+[
+autoextend on
+next 10M
+maxsize 100000M/unlimited
+]</pre></p>
+
+<p>alter database datafile &#8216;path/name&#8217;<br />
+resize  sizeM
+4. 表空间改名：
+<pre>alter tablespace spc_name1 rename to spc_name2;</pre>
+5. 数据文件改名：
+<pre>alter tablespace spc_name offline normal;    --脱机
+mv datafile1 datafile2
+alter tablespace spc_name1 rename datafile 'datafile1' to 'datafile2';
+alter tablespace spc_name online;            --在线</pre>
+6.  表空间只读
+<pre>alter tablespace spc_name read only
+[
+read write
+]</pre>
+7. 默认【临时】表空间
+<pre>alter database default [temporary] tablespace
+spc_name
+[
+spc_grp_name   --表空间【组】作为默认,临时表空间专用
+]</pre>
+8. 临时表空间
+<pre>create [temporary] tablespace spc_name
+datafile 'path/name'
+size sizeM
+[
+tablespace group grp1; --此时自动创建 grp1 组
+]</pre></p>
+
+<p>alter tablespace scp_name<br />
+tablespace group grp1; &#8211; 此时自动创建/修改 grp1 组
+9. 建立用户
+<pre>create user user_name
+identified by pass
+default tablespace spc_name
+temporary tablespace spc_name</pre></p>
+
+<p>alter user user_name<br />
+temporary tablespace spc_name
+10. 大文件表空间：
+<pre>create bigfile tablespace spc_name
+datafile 'path/name'
+size sizeM</pre></p>
+
+<p>alter database set default bigfile tablespace spc_name;    &#8211; 设置默认表空间为bigfile<br />
+alter tablspeace spcname resize sizeG / autoextend on next sizeG; &#8211;调整尺寸
+11. 修改表的默认表空间：
+<pre>alter table tb_name move tablespace new_ts;
+alter index inx rebu‎ild tablespace new_ts;</pre>
+12. 将字典管理的表空间转换乘本地管理：
+<pre>execute dbms_space_admin.tablespace_migrage_to_local('SPACE_USER');
+execute dbms_space_admin.tablespace_migrage_to_local('SYSTEM');</pre></p>
+</div>
+  
+  
+
+
+    </article>
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/manage-of-oracle-tables/">Oracle表管理</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2013-04-16T00:00:00+08:00" pubdate data-updated="true">Apr 16<span>th</span>, 2013</time>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p>1. dual
+<p style="padding-left: 30px;">神奇的dual表，属于sys模式</p>
+2. 表尺寸估算/回收
+<p style="padding-left: 30px;">2.1 使用 database control 估算<br />
+2.2 使用 dbms_space.create_table_cost 估算<br />
+2.3 alter table tb_name deallocate unused;</p>
+3. 权限说明
+<p style="padding-left: 30px;">自己模式： create table 系统权限<br />
+其他模式： create any table 系统权限</p>
+4. 建表
+<pre>	create table
+	collist
+	constraints
+	tablespace spc_name
+	[--索引表
+		orgnization index tablespace spc_name
+		pctthreshold num				--溢出百分比
+		overflow tablespace spc_name2	--溢出表空间
+	]</pre>
+5. 加列
+<pre>	alter table tb_name add(colname type)</pre>
+6. 减列
+<pre>	alter table tb_name drop(colname)	--删除
+	alter table tb_name set unused (col1, col2)	--快速删除、标记
+	alter table tb_name drop unused columns	--删除所有标记无用的列
+	[
+		checkpoint no --没删除no行执行一个checkpoint
+	]</pre>
+7. 重命名列
+<pre>	alter table tb_name rename column col1 to col2</pre>
+8. 重命名表
+<pre>	alter table tb_name rename to tb_name_new</pre>
+9. 清空表
+<pre>	truncate table tb_name;</pre>
+10 cats创建表
+<pre>	create table tb1 as
+	select * from tb2
+	[
+		parallel degree 4	--多个进程并行加载数据
+		nologging			--关闭重做日志
+	]</pre>
+11 修改表所属空间
+<pre>	alter table tb_name move new_tbspace</pre>
+12 删除表
+<pre>	drop table tb_name
+	[
+		purge	--不进入回收站，直接删除
+	]</pre>
+13 临时表
+<pre>	create global temporary table tb_name
+	(col_list)
+	on commit reserve rows	--会话临时表，事务结束时，记录保留
+	on commit delelte rows	--事务临时表，只对使用该表的事务有效</pre>
+14 分区表
+<p style="padding-left: 30px;">范围分区</p></p>
+
+<p><pre>	create table tb_name
+	(col_list)
+	partition by range(col1, col2, col3)
+	(
+		partition p1 values less than (c1, c2, c3) tablespace sp1,
+		partition p2 values less than (c1, c2, c3) tablespace sp2
+	)</pre>
+<p style="padding-left: 30px;">散列分区</p></p>
+
+<p><pre>	create table tb_name
+	(col_list)
+	partition by hash (col_list)
+	partitions num				--分区数目
+	store in (ts1, ts2, ..)		--储存的表空间</pre>
+<p style="padding-left: 30px;">列表分区</p></p>
+
+<p><pre>	create table tb_name
+	(col_list)
+	partition by list (col1)
+	(
+		partition p1 values (c1, c2, c3) tablespace sp1,
+		partition p2 values (c1, c2, c3) tablespace sp2
+	)</pre>
+<p style="padding-left: 30px;">组合范围-散列分区</p></p>
+
+<p><pre>	create table tb_name
+	(col_list)
+	partition by range(col1) subpartition by hash (col2)
+	subpartitions num
+	store in (ts1, ts ..)
+	(
+		partition p1 values less than (xx),
+		partition p1 values less than (xx)
+	)</pre>
+<p style="padding-left: 30px;">组合范围-列表分区</p></p>
+
+<p><pre>	create table tb_name
+	(col_list)
+	partition by range(col1) subpartition by list (col2)
+	(
+		partition p1 values less than (xx) tablespace sp1
+		(
+			subpartition p1p1 values(vales_list),
+			subpartition p1p2 values(vales_list)
+		),
+		partition p1 values less than (xx) tablespace sp2
+		(
+			subpartition p2p1 values(vales_list),
+			subpartition p2p2 values(vales_list)
+		)
+	)</pre>
+<p style="padding-left: 30px;">添加分区</p></p>
+
+<p><pre>alter table tb_name add partition p1 values less than (value_list) tablespace sp1;</pre>
+<p style="padding-left: 30px;">分割分区</p></p>
+
+<p><pre>		alter table tb_name split partition p1 at (value) into (partition p1a, p2b)</pre>
+<p style="padding-left: 30px;">合并分区</p></p>
+
+<p><pre>		alter table tb_name merge partitions p1a, p1b into partition p1</pre>
+<p style="padding-left: 30px;">重命名分区</p></p>
+
+<p><pre>		alter table tb_name rename partition p1 to p2;</pre>
+<p style="padding-left: 30px;">转换分区</p></p>
+
+<p><pre>		alter table tb_name exchange partition p_name with tb_other_name</pre>
+<p style="padding-left: 30px;">删除分区</p></p>
+
+<p><pre>		alter table tb_name drop partition p1
+		[ update  global indexes ] --重建全局索引</pre>
+15 相关数据字典
+<pre>	dba_tables		表信息
+	dba_tab_partitions	分区信息
+	dba_tab_columns		字段信息</pre>
+16 获取创建表的ddl语句
+<pre>	dbms_metadata.get_ddl('TABLE', 'TB_NAME);
+	-- 需要设置 long 变量，不然可能无法完全显示 set long 2000</pre></p>
+</div>
+  
+  
+
+
+    </article>
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/manage-of-oracle-inde/">Oracle索引管理</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2013-04-16T00:00:00+08:00" pubdate data-updated="true">Apr 16<span>th</span>, 2013</time>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p>1. 索引有效准则
+<p style="padding-left: 30px;">1.1 访问的数据少于 15%<br />
+1.2 小表<br />
+1.3 为所有表创建主键，主键上自动生成索引<br />
+1.4 为多表链接中的列创建索引<br />
+1.5 WHERE中频繁使用的列创建索引<br />
+1.6 对ORDER BY、GROUP BY涉及的列建立索引<br />
+1.7 常字符串的列通常不要建立索引<br />
+1.8 频繁更新的列，涉及开销，通常不要建立索引<br />
+1.9 保持索引数目尽量少</p>
+2. 估算索引的尺寸
+<pre>	dbms_space.create_index_cost 方法</pre>
+3. 建立索引
+<pre>	create 
+	[
+		bitmap		--位图索引
+	]
+	index indx1 on table(col_list)
+	[
+		reverse		--反向键索引
+	]
+	tablespace sp1</pre>
+4. 函数索引
+<pre>	create index ind2 on tb1(func(col1))</pre>
+5. 全局索引
+<p style="padding-left: 30px;">不分区：</p></p>
+
+<p><pre>	create index ind3 on tb2(col1)
+	global partition by range(col1)
+	(
+		partition p1_ind values less than (val1),
+		partition p2_ind values less than (val2)
+	)</pre>
+<p style="padding-left: 30px;">散列分区</p></p>
+
+<p><pre>	create index ind4 on tb3(col1)
+	global partition by hash (v1, v2)
+	(
+		partition p1_ind tablespace ts1,
+		partition p2_ind tablespace ts2
+	)</pre>
+6. 本地索引
+<pre>	create index index_l1 on tb(col) LOCAL
+	tablespace localsp1</pre>
+7. 索引使用情况监控
+<pre>	alter index ind1 monitoring usage;
+	some query;
+	alter index ind1 nomonitoring usage;
+	select * from v$object_usage where index_name = 'ind1';</pre>
+8. 重建索引
+<pre>	alter index ind1 REBUILD
+	[
+		online				--此时可以进行DML操作
+	]</pre></p>
+</div>
+  
+  
+
+
+    </article>
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/manage-of-oracle-constraints/">Oracle约束管理</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2013-04-16T00:00:00+08:00" pubdate data-updated="true">Apr 16<span>th</span>, 2013</time>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p>1. 主键约束
+<pre>	create table tb1
+	(col1 type1 primary key)</pre></p>
+
+<p>	alter table tb1<br />
+	add primary key (col1)</p>
+
+<p>	alter table tb1<br />
+	add constraint cs_name<br />
+	primary key (col1)
+2. 非空约束
+<pre>	create table tb1
+	(col1 type1 not null)</pre></p>
+
+<p>	alter table tb1<br />
+	modify col1 not null
+3. 检查约束
+<pre>
+	create table tb1
+	(col1 type check (col1 &gt; 1))</pre>
+4. 唯一约束
+<pre>	create table tb1
+	(col_list, constraint ukey unique(col_list))</pre></p>
+
+<p>	alter table tb1<br />
+	add constraint ukey<br />
+	unique(col_list)
+5. 外键约束
+<pre>	create table tb1
+	(col1 type constraint fk1 references tb2(col2))</pre></p>
+
+<p>	alter table t2<br />
+	add constraint fk2 <br />
+	foreign key (col1) references t1(col2);
+6. 改变约束的校验方式
+<pre>	alter table t2 modify constraint fk2 initially deferred;	--延迟，事务结束后
+	alter table t2 modify constraint fk2 initially immediate;</pre></p>
+
+<p>	alter table t2 modify constraint fk2<br />
+	[<br />
+		disable validate			&#8211;对已经存在的数据进行检查，不允许后续DML<br />
+		disable novalidate			&#8211;现有和后续DML，都不检查<br />
+		enable	validate			&#8211;现有和后续DML，都检查<br />
+		enable	novalidate			&#8211;现有不检查，后续检查<br />
+	]
+7. 相关视图
+<pre>
+	dba_constraints				--约束
+	dba_cons_columns			--约束列</pre></p>
+</div>
+  
+  
+
+
+    </article>
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/oracle-tools-explain/">Oracle实用小工具</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2013-04-11T00:00:00+08:00" pubdate data-updated="true">Apr 11<span>th</span>, 2013</time>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p>ipcs:
+<p style="padding-left: 30px;">查看共享内存</p>
+lsnrctl:
+<p style="padding-left: 30px;">监听进程控制： lsnrctl strat/status/stop</p>
+isqlplusctl:
+<p style="padding-left: 30px;">iSQL*PLus工具控制 isqlplusctl start/stop</p>
+emctl:
+<p style="padding-left: 30px;">企业管理器控制：emctl start/status/stop dbconsole</p>
+dbca:
+<p style="padding-left: 30px;">数据库初始化工具</p>
+netca:
+<p style="padding-left: 30px;">网路/监听进程配置工具</p>
+tips:
+<p style="padding-left: 30px;">stty earse ^h :可以去除sqlplus在删除时出现^H符号</p></p>
+</div>
+  
+  
+
+
+    </article>
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/a-explain-of-oracle-sga-memory/">Oracle内存结构-SGA</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2013-04-11T00:00:00+08:00" pubdate data-updated="true">Apr 11<span>th</span>, 2013</time>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p>转载：<a href="http://www.duote.com/tech/5/12080.html">源地址</a></p>
+
+<p>一、概述<br />
+在《Oracle内存结构研究-PGA篇》一文中提到，PGA是一个服务器进程的专用的私有内存区，而SGA则是共享内存区。</p>
+
+<p>SGA由多个部分组成：
+<pre>1， 固定SGA（Fixed SGA）
+2， 块缓冲区（Db cache）
+3， 重做日志缓冲区（Redo log buffer）
+4， Java池（Java pool）
+5， 大池（Large pool）
+6， 共享池（Shared pool）
+7， 流池（Stream pool）</pre>
+有如下参数控制共享池相关组件大小：<br />
+1， JAVA_POOL_SIZE：控制Java池大小。<br />
+2， SHARED_POOL_SIZE：9i中控制共享池中占用最大的部分，10g以上控制共享池大小。<br />
+3， LARGE_POOL_SIZE：控制大池大小。<br />
+4， DB_*K_CACHE_SIZE：控制不同块大小的缓冲区大小。<br />
+5， LOG_BUFFER：控制重做日志缓冲区大小。<br />
+6， SGA_TARGET：10g以上控制自动SGA内存管理的总内存大小。<br />
+7， SGA_MAX_SIZE：控制SGA可以达到的最大大小，改变需重启数据库。<br />
+下面将详细介绍各个部分的作用和推荐设置。</p>
+
+<p>二、SGA各组件作用<br />
+1， 固定SGA(Fixed SGA)：
+<p style="padding-left: 30px;">顾名思义，是一段不变的内存区，指向SGA中其他部分，Oracle通过它找到SGA中的其他区，可以简单理解为用于管理的一段内存区。</p>
+2， 块缓冲区(DB cache)：
+<p style="padding-left: 30px;">查询时，Oracle会先把从磁盘读取的数据放入内存，以后再查询相关数据时不用再次读取磁盘。插入和更新时，Oracle会现在该区中缓存数据，之后批量写到硬盘中。通过块缓冲区，Oracle可以通过内存缓存提高磁盘的I/O性能。<br />
+块缓冲区中有三个区域：<br />
+ 默认池（Default pool）：所有数据默认都在这里缓存。<br />
+ 保持池（Keep pool）：用来缓存需要多次重用的数据。<br />
+ 回收池（Recycle pool）：用来缓存很少重用的数据。<br />
+原来只有一个默认池，所有数据都在这里缓存。这样会产生一个问题：大量很少重用的数据会把需重用的数据“挤出”缓冲区，造成磁盘I/O增加，运行速度下降。后来分出了保持池和回收池根据是否经常重用来分别缓存数据。<br />
+这三部分内存区需要手动确定大小，并且之间没有共享。例如：保持池中已经满了，而回收池中还有大量空闲内存，这时回收池的内存不会分配给保持池。<br />
+9i开始，还可以设置db_nk_cache。9i之前数据库只能使用相同的块大小。9i开始同一个数据库可以使用多种块大小（2KB,4KB,8KB,16KB,32KB），这些块需要在各自的db_nk_cache中缓存。如果为不同的表空间指定了不同的块大小，需要为其设置各自的缓冲区。</p>
+3， 重做日志缓冲区（Redo log buffer）：
+<p style="padding-left: 30px;">数据写到重做日志文件之前在这里缓存，在以下情况中触发：<br />
+ 每隔3秒<br />
+ 缓存达到1MB或1/3满时<br />
+ 用户提交时<br />
+ 缓冲区的数据写入磁盘前</p>
+4， Java池（Java pool）：
+<p style="padding-left: 30px;">在数据库中运行Java代码时用到这部分内存。例如：编写Java存储过程在服务器内运行。需要注意的是，该内存与常见的Java编写的B/S系统并没关系。用JAVA语言代替PL/SQL语言在数据库中写存储过程才会用到这部分内存。</p>
+5， 大池（Large pool）：
+<p style="padding-left: 30px;">下面三种情况使用到大池：<br />
+ 并行执行：存放进程间的消息缓冲区<br />
+ RMAN：某些情况下用于磁盘I/O缓冲区<br />
+ 共享服务器模式：共享服务器模式下UGA在大池中分配（如果设置了大池）</p>
+6， 共享池（Shared pool）
+<p style="padding-left: 30px;">共享池是SGA中最重要的内存段之一。共享池太大和太小都会严重影响服务器性能。<br />
+SQL和PL/SQL的解释计划、代码，数据字典数据等等都在这里缓存。<br />
+SQL和PL/SQL代码在执行前会进行“硬解析”来获得执行计划及权限验证等相关辅助操作。“硬解析”很费时间。对于响应时间很短的查询，“硬解析”可以占到全部时间的2/3。对于响应时间较长的统计等操作，“硬解析”所占用的时间比例会下降很多。执行计划及所需的数据字典数据都缓存在共享池中，让后续相同的查询可以减少很多时间。<br />
+不使用“绑定变量”导致：<br />
+ 系统需要花费大量的资源去解析查询。<br />
+ 共享池中的代码从不重用，系统花费很大代价管理这部分内存。<br />
+关于共享变量的优缺点讨论已经超过了这篇文章的范畴，简单来讲，响应时间短的查询要使用共享变量，响应时间长的统计不使用共享变量。<br />
+需要注意的是，SHARED_POOL_SIZE参数在9i中控制共享池中占用最大的部分，10g以上控制共享池总大小。</p>
+7， 流池（Stream pool）
+<p style="padding-left: 30px;">9iR2以上增加了“流”技术，10g以上在SGA中增加了流池。流是用来共享和复制数据的工具。</p>
+三、SGA设置<br />
+没有通用的设置，所有设置都要根据系统的负载、业务需求和硬件环境来进行调整。这里只是总结出大体的设定，避免因SGA设置不当引起的问题。</p>
+
+<p>1，自动SGA内存管理
+<p style="padding-left: 30px;">在Oracle 10g中引入了自动SGA内存管理特性，DBA可以设定SGA_TARGET告诉Oracle可用的SGA内存为多大，由Oracle根据系统负载来动态调整各组件大小，相应的数定会保存在控制文件中，使数据库重启后也记得各组件大小。<br />
+需要注意一下几点：<br />
+ 要使用自动SGA内存管理，STATISTICS_LEVEL参数必须设为TYPICAL或ALL，系统自动收集相应的信息用来动态调整SGA设定。<br />
+ 可以设定某个组件的值，Oracle使用此值为该组件的最小大小</p>
+<p style="padding-left: 30px;">可动态调整的参数：<br />
+DB_CACHE_SIZE，SHARED_POOL_SIZE，LARGE_POOL_SIZE，JAVA_POOL_SIZE。<br />
+需手动设置的参数：<br />
+LOG_BUFFER,STREAMS_POOL,DB_NK_CACHE_SIZE,DB_KEEP_CACHE_SIZE，DB_RECYCLE_CACHE_SIZE。</p>
+2，手动SGA内存管理
+<p style="padding-left: 30px;">1) 32bit和64bit限制<br />
+在32位的操作系统中，Oracle最大可用内存为1.75g，也就是说SGA+PGA&lt;=1.75g，超过这一限制的内存将不会被Oracle用到。 32位的Oracle可以装到64位的操作系统上，64位的Oracle不可以装到32位的操作系统上。</p>
+<p style="padding-left: 30px;">2) 查看Oracle版本： SQL&gt; select * from v$version;<br />
+BANNER<br />
+&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;-<br />
+Oracle Database 10g Enterprise Edition Release 10.2.0.1.0 - Prod<br />
+PL/SQL Release 10.2.0.1.0 - Production<br />
+CORE 10.2.0.1.0 Production<br />
+TNS for 32-bit Windows: Version 10.2.0.1.0 - Production<br />
+NLSRTL Version 10.2.0.1.0 – Production</p>
+<p style="padding-left: 30px;">3) 各组件设置：<br />
+JAVA_POOL_SIZE：如果没用到数据库端java的系统，30MB足够。</p>
+<p style="padding-left: 30px;">LOG_BUFFER：默认为MAX(512KB,128KB*CPU个数)。一般系统1MB足够，运行大型事务的系统可以设为2MB，让1/3满写入日志文件时可以继续写入缓冲，再大也没有意义。</p>
+<p style="padding-left: 30px;">SHARED_POOL_SIZE：过大过小都会严重影响系统性能，1GB内存可以设为100MB，2GB内存可设为150MB，4GB内存可设为300MB。共享池命中过低首先要调整的是应用程序而不是扩大共享池。使用绑定变量可以减少共享池需求、提高命中率，减少共享池管理负担和LATCH竞争。</p>
+<p style="padding-left: 30px;">LARGE_POOL_SIZE：使用专用服务模式可设为30MB，除非必要，不然不建议使用共享服务器模式。</p>
+<p style="padding-left: 30px;">DB_CACHE_SIZE：除去上述内存外其他可用内存都分配给该区域。</p>
+总结
+<p style="padding-left: 30px;">32位Oracle：<br />
+1G内存：SHARED_POOL_SIZE=100MB，DB_CACHE_SIZE=0.5GB；<br />
+2G内存：SHARED_POOL_SIZE=150MB，DB_CACHE_SIZE=1.25GB；</p>
+<p style="padding-left: 30px;">64位Oracle<br />
+4G内存：SHARED_POOL_SIZE=200MB，DB_CACHE_SIZE=2.5GB；<br />
+8G内存：SHARED_POOL_SIZE=400MB，DB_CACHE_SIZE=5GB；<br />
+12G内存：SHARED_POOL_SIZE=500MB，DB_CACHE_SIZE=8GB</p>
+再次强调，以上只是避免因SGA设置不当引起问题的大体设置，需要根据具体的系统负载和业务逻辑结合Stackpack等工具细调。</p>
+
+<p>其他：
+<p style="padding-left: 30px;">1. 可以使用show sga在数据库中来查询关于sga的信息</p>
+<p style="padding-left: 30px;">2. sga的取值单位为 granules，规则为 4M(SGA &lt; 128M)， 16M(sga&gt;128M)；具体值可以使用下列语句查询</p></p>
+
+<p><pre>select compenet_granule_size from v$sga_dynamic_components;</pre></p>
+</div>
+  
+  
+
+
+    </article>
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/a-explain-of-oracle-pga-memory/">Oracle内存结构-PGA</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2013-04-11T00:00:00+08:00" pubdate data-updated="true">Apr 11<span>th</span>, 2013</time>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p><span style="color: #000000;">一、概述<br />
+SGA，PGA，UGA都是Oracle管理的内存区。</span></p>
+
+<p>SGA（System Global Area），即系统全局区，Oracle中最重要的内存区。<br />
+PGA（Process Global Area），即程序全局区，一个进程的专用的内存区。<br />
+UGA（User Global Area），即用户全局区，与特定的会话相关联。<br />
+专用服务器连接模式，UGA在PGA中分配。<br />
+共享服务器连接模式，UGA在SGA中的Large Pool中分配。</p>
+
+<p>如果采用专用服务器连接模式，PGA中包含UGA，其他区域用来排序，散列和位图合并。<br />
+简单来讲，PGA=UGA+排序区+散列区+位图合并区。</p>
+
+<p>二、PGA的管理模式。
+<p style="padding-left: 30px;"><span style="color: #000000;">PGA分两种管理模式：<br />
+1)        手动PGA内存管理，用户指定排序区和散列区所使用的内存，每个连接使用相同的内存。<br />
+2)        自动PGA内存管理，告诉Oracle可以使用的PGA的总量，由Oraclce根据系统负载决定具体分配。</span></p>
+<p style="padding-left: 60px;">  9iR1时默认为手动PGA内存管理，9iR2以后默认为自动PGA内存管理。<br />
+PGA内存可以动态扩大和回收。</p>
+<p style="padding-left: 30px;">PGA内存管理模式由WORKAREA_SIZE_POLICY控制。<br />
+1)        设为MANUAL，启用手动内存管理。<br />
+2)        设为AUTO，并且PGA_AGGREGATE_TARGET不为0时，启用自动内存管理。</p>
+<span style="color: #000000;">三、手动PGA内存管理<br />
+有三个参数对PGA影响最大。<br />
+SORT_AREA_SIZE：对信息排序所用的内存总量<br />
+SORT_AREA_RETAINED_SIZE：排序后在内存中保存排序信息的内存总量。<br />
+HASH_AREA_SIZE：存储散列列表所用的内存量。</span></p>
+
+<p>下面对这三个参数进行说明：
+<p style="padding-left: 30px;"><span style="color: #000000;">1)        SORT_AREA_SIZE：<br />
+如果SORT_AREA_SIZE设为512KB，SORT_AREA_RETAINED_SIZE也为512KB，则Oracle使用512KB的内存进行排序，排序后所有数据都留在内存中。</span></p>
+<p style="padding-left: 30px;">2)        SORT_AREA_RETAINED_SIZE：<br />
+如果SORT_AREA_SIZE设为512KB，SORT_AREA_RETAINED_SIZE设为384KB，则Oracle使用512KB的内存进行排序，然后保留384KB的已排序数据，另外512KB-384KB=128KB的已排序数据会写到临时表空间中。<br />
+        如果SORT_AREA_RETAINED_SIZE没有设置，则它的值为0，但是实际保留的排序数据和SORT_AREA_SIZE相同。</p>
+<p style="padding-left: 30px;">3)        HASH_AREA_SIZE：<br />
+一个大集合和另个集合进行连接时，会用到HASH_AREA_SIZE参数。较小的 表会放到这部分内存中作为驱动表，然后大表进行探索（PROBE）操作进行连接。如果HASH_AREA_SIZE过小会影响两个集合（表）连接时的性能。</p>
+<p style="padding-left: 30px;">注意点：<br />
+1)        如果需要排序的数据量大于SORT_AREA_SIZE，Oracle会分批进行排序。把当前已排序的数据保存到临时表空间中，然后对剩余的数据进行排 序。最后，还会对这些保存在临时表空间中的已排序数据再进行排序，因为每次保存到临时表空间中的已排序数据只是部分数据的排序，对整体需排序的数据来说只 是部分局部有序。<br />
+2)        *_AREA_SIZE只是对某个操作的限制，一个查询可能有多个操作，每个操作都有自己的内存区。如果SORT_AREA_SIZE设为5MB，一个查询可能会有10个排序操作，这样一个查询会占用50MB的排序内存。<br />
+3)        3，*_AREA_SIZE内存的分配是按需分配。如果一个查询需要5MB内存进行排序，就算分配1G的SORT_AREA_SIZE也不会全部使用，只会使用需要的5MB的内存量。</p>
+<span style="color: #000000;">四、自动PGA内存管理</span>
+<p style="padding-left: 30px;"><span style="color: #000000;">要启用自动PGA内存管理，设置下列参数：<br />
+1，WORKAREA_SIZE_POLICY=AUTO<br />
+2，PGA_AGGREGATE_TARGET=非零</span></p>
+<p style="padding-left: 30px;">有关PGA_AGGREGATE_TARGET：<br />
+1)        PGA_AGGREGATE_TARGET是一个目标值。连接数少的时候实际分配PGA内存会比它要小。连接数多的时候实际分配的PGA内存会比它要大，但是Oracle会努力保持总PGA保持在PGA_AGGREGATE_TARGET值内。</p>
+<p style="padding-left: 30px;">例 如，PGA_AGGREGATE_TARGET 设为300MB。5个用户连接时，每个用户可能分配10MB的PGA内存，共分配50MB的PGA内存。300个用户连接时每个用户可能分配1.3MB的 PGA内存，共分配390MB的PGA内存。当用户连接多时，Oracle会降低每个用户的PGA内存使用量。<br />
+2)        一个串行查询（非并行查询）可能包括多个排序/散列操作，每个排序/散列操作最多使用5%的PGA内存。<br />
+3)        一个并行查询最多可用到30%的PGA内存，无论有多少并行进程。</p>
+&nbsp;</p>
+
+<p><span style="color: #000000;">五、手动PGA内存管理与自动PGA内存管理</span>
+<p style="padding-left: 30px;"><span style="color: #000000;">自动PGA内存管理相对于手动PGA内存管理有很多优点<br />
+1，        当用户连接少时<br />
+a)        手动PGA内存管理不管有多少可用内存都按照预设值进行分配。比如当前空闲内存为300MB，连接需要10MB的内存进行排序，而我们设定的排序区大小为5MB，导致虽然有足够的空闲内存却无法分配给当前连接，造成执行效率低下。<br />
+b)        自动PGA内存管理会根据当前空闲内存来进行分配。当空闲内存为300MB，当前用户需要10MB内存进行排序，Oracle就会分配10MB内存给当前用户。<br />
+2，        当用户连接多时<br />
+a)        手动PGA内存管理会完全按照预设值分配内存。如果物理内存总量为1G，排序区设为5MB，当有300个用户连接时，Oracle会分配1.5G的内存，这已经超过了我们的实际物理内存！<br />
+b)        自动PGA内存管理会根据当前连接情况进行分配。如果物理内存总量为1G，PGA_AGGREGATE_TARGET为300MB，当用户数从10升到 300时，每个用户连接的内存会从满足需要的10MB慢慢减少到1.3MB，虽然最后总量也会超过PGA_AGGREGATE_TARGET，但比起手动 PGA内存管理要好很多了。</span></p>
+<p style="padding-left: 30px;">什么时候使用自动PGA内存管理？什么时候使用手动PGA内存管理？<br />
+白天系统正常运行时适合使用自动PGA内存管理，让Oracle根据当前负载自动管理、分配PGA内存。<br />
+夜里用户数少、进行维护的时候可以设定当前会话使用手动PGA内存管理，让当前的维护操作获得尽可能多的内存，加快执行速度。</p>
+<p style="padding-left: 30px;">如： 服务器平时运行在自动PGA内存管理模式下，夜里有个任务要大表进行排序连接后更新，就可以在该操作session中临时更改为手动PGA内存管理，然后 分配大的SORT_AREA_SIZE和HASH_AREA_SIZE（50%甚至80%内存，要确保无其他用户使用），这样能大大加快系统运行速度，又 不影响白天高峰期对系统造成的影响。</p>
+<span style="color: #000000;">六、操作命令</span>
+<p style="padding-left: 30px;"><span style="color: #000000;">系统级更改：<br />
+ALTER SYSTEM SET WORKAREA_SIZE_POLICY = {AUTO | MANAUL}；<br />
+ALTER SYSTEM SET PGA_AGGREGATE_TARGET=100000000;<br />
+ALTER SYSTEM SET SORT_AREA_SIZE = 65536 SCOPE = SPFILE；<br />
+ALTER SYSTEM SET HASH_AREA_SIZE = 65536 SCOPE = SPFILE；</span></p>
+<p style="padding-left: 30px;">会话级更改<br />
+ALTER SESSION SET WORKAREA_SIZE_POLICY = {AUTO | MANAUL}；<br />
+ALTER SESSION SET SORT_AREA_SIZE = 65536；<br />
+ALTER SESSION SET HASH_AREA_SIZE = 65536；</p>
+&nbsp;</p>
+
+<p><span style="color: #000000;">七、学以致用</span>
+<p style="padding-left: 30px;"><span style="color: #000000;">1，排序区：<br />
+pga_aggregate_target为100MB，单个查询能用到5%也就是5MB时排序所需时间</span></p>
+<p style="padding-left: 30px;">SQL&gt; create table sorttable as select * from all_objects;</p>
+<p style="padding-left: 30px;">表已创建。</p>
+<p style="padding-left: 30px;">SQL&gt; insert into sorttable (select * from sorttable);</p>
+<p style="padding-left: 30px;">已创建49735行。</p>
+<p style="padding-left: 30px;">SQL&gt; insert into sorttable (select * from sorttable);</p>
+<p style="padding-left: 30px;">已创建99470行。</p>
+<p style="padding-left: 30px;">SQL&gt; set timing on;<br />
+SQL&gt; set autotrace traceonly;<br />
+SQL&gt; select * from sorttable order by object_id;</p>
+<p style="padding-left: 30px;">已选择198940行。</p>
+<p style="padding-left: 30px;">已用时间:  00: 00: 50.49</p>
+<p style="padding-left: 30px;">Session级修改排序区为30mb所需时间<br />
+SQL&gt; ALTER SESSION SET WORKAREA_SIZE_POLICY = MANUAL;</p>
+<p style="padding-left: 30px;">会话已更改。</p>
+<p style="padding-left: 30px;">已用时间:  00: 00: 00.02<br />
+SQL&gt; ALTER SESSION SET SORT_AREA_SIZE = 30000000;</p>
+<p style="padding-left: 30px;">会话已更改。</p>
+<p style="padding-left: 30px;">已用时间:  00: 00: 00.01<br />
+SQL&gt; select * from sorttable order by object_id;</p>
+<p style="padding-left: 30px;">已选择198940行。</p>
+<p style="padding-left: 30px;">已用时间:  00: 00: 10.76</p>
+<p style="padding-left: 30px;">可以看到所需时间从50.49秒减少到10.31秒，速度提升很明显。</p>
+<p style="padding-left: 30px;">2，散列区：<br />
+pga_aggregate_target为100MB，单个查询能用到5%也就是5MB时表连接所需时间</p>
+<p style="padding-left: 30px;">SQL&gt; select /*+ use_hash(tb1 tb2)*/ * from sorttable tb1,sorttable tb2 where tb1.object_id=tb2.object_id;</p>
+<p style="padding-left: 30px;">已选择49735行。</p>
+<p style="padding-left: 30px;">已用时间:  00: 00: 40.50</p>
+<p style="padding-left: 30px;">Session级修改散列区为30mb所需时间<br />
+SQL&gt; ALTER SESSION SET WORKAREA_SIZE_POLICY = MANUAL;</p>
+<p style="padding-left: 30px;">会话已更改。</p>
+<p style="padding-left: 30px;">已用时间:  00: 00: 00.01<br />
+SQL&gt; ALTER SESSION SET HASH_AREA_SIZE = 30000000;</p>
+<p style="padding-left: 30px;">会话已更改。</p>
+<p style="padding-left: 30px;">已用时间:  00: 00: 00.01<br />
+SQL&gt; select /*+ use_hash(tb1 tb2)*/ * from sorttable tb1,sorttable tb2 where tb1.object_id=tb2.object_id;</p>
+<p style="padding-left: 30px;">已选择49735行。</p>
+<p style="padding-left: 30px;">已用时间:  00: 00: 04.47</p>
+<p style="padding-left: 30px;">所需时间由40.50秒提升到4.47秒，效果同样很明显。</p>
+<p style="padding-left: 30px;">备注：以上实验皆执行全表扫描保证相关表读入缓冲区中，避免因数据没读入缓存造成误差。</p>
+&nbsp;</p>
+
+<p><span style="color: #000000;">结论：在9iR2版以后，PGA不再像以前那样困扰DBA了，Oracle会帮我们做好PGA的分配。但这并不意味着DBA不需要深入了解PGA了，掌握PGA并根据适当应用会让工作如虎添翼。 </span></p>
+</div>
+  
+  
+
+
+    </article>
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/postgresql-partition-table-explain/">Postgresql的分区表实现方式</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2013-03-21T00:00:00+08:00" pubdate data-updated="true">Mar 21<span>st</span>, 2013</time>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p><h3>如下：可以在postgresql中建立分区表</h3>
+<div>
+<ol type="1" compact="compact">
+	<li>建立主表，其他的将会继承该主表。</li>
+	<li>主表中不会包含任何的数据，所以，不要在该表上定义任何check，除非，需要在后续的任何子表上包含该check。</li>
+	<li>建立继承自主表的子表（全部字段来自主表，不需要额外的其他字段）。后面，会将所有的子表作为partition来处理。</li>
+	<li>在每个partition（子表）上添加约束：like this:
+<pre>CHECK ( x = 1 )
+CHECK ( county IN ( 'Oxfordshire', 'Buckinghamshire', 'Warwickshire' ))
+CHECK ( outletID &gt;= 100 AND outletID &lt; 200 )</pre>
+一定要保证在不同分区之间的key值中不要出现交叠,常见的边界错误如下：
+<pre>CHECK ( outletID BETWEEN 100 AND 200 )
+CHECK ( outletID BETWEEN 200 AND 300 )</pre>
+这玩意将会导致系统无法判断200将会处于哪一个分区.</li>
+	<li>为每一个分区建立独立的索引（同时，还可以建立其他索引哦）</li>
+	<li>建立triiger或者rule来将数据进行重定向，使其进入分区子表</li>
+	<li>保证  <a href="http://www.postgresql.org/docs/9.2/static/runtime-config-query.html#GUC-CONSTRAINT-EXCLUSION">constraint_exclusion</a> 参数要开启哦，不然查询解析的结果可能不是希望的</li>
+</ol>
+我们建立一个表（冰欺凌工厂）
+<pre>CREATE TABLE measurement (
+    city_id         int not null,
+    logdate         date not null,
+    peaktemp        int,
+    unitsales       int
+);</pre>
+我们只保存最近三年的数据，每月开始，我们会移出最远month的数据;此时，我们可以使用分区表来实现这个需求:
+<ol type="1" compact="compact">
+	<li>主表，上面已经建立好了</li>
+	<li>接着，每个月建立一个分区表:
+<pre>CREATE TABLE measurement_y2006m02 ( ) INHERITS (measurement);
+CREATE TABLE measurement_y2006m03 ( ) INHERITS (measurement);
+...
+CREATE TABLE measurement_y2007m11 ( ) INHERITS (measurement);
+CREATE TABLE measurement_y2007m12 ( ) INHERITS (measurement);
+CREATE TABLE measurement_y2008m01 ( ) INHERITS (measurement);</pre>
+第一个问题：删除最远月份的数据：我们需要使用drop table语句来删除最远月份的分区表，并且，使用create table建立最新月份的分区表</li>
+	<li>不像一开始建表那样，我们还需要使用check来保证数据的正确性（没有交叠）:
+<pre>CREATE TABLE measurement_y2006m02 (
+    CHECK ( logdate &gt;= DATE '2006-02-01' AND logdate &lt; DATE '2006-03-01' )
+) INHERITS (measurement);
+CREATE TABLE measurement_y2006m03 (
+    CHECK ( logdate &gt;= DATE '2006-03-01' AND logdate &lt; DATE '2006-04-01' )
+) INHERITS (measurement);
+...
+CREATE TABLE measurement_y2007m11 (
+    CHECK ( logdate &gt;= DATE '2007-11-01' AND logdate &lt; DATE '2007-12-01' )
+) INHERITS (measurement);
+CREATE TABLE measurement_y2007m12 (
+    CHECK ( logdate &gt;= DATE '2007-12-01' AND logdate &lt; DATE '2008-01-01' )
+) INHERITS (measurement);
+CREATE TABLE measurement_y2008m01 (
+    CHECK ( logdate &gt;= DATE '2008-01-01' AND logdate &lt; DATE '2008-02-01' )
+) INHERITS (measurement);</pre>
+</li>
+	<li>我们还需要在分区主列上建立index:
+<pre>CREATE INDEX measurement_y2006m02_logdate ON measurement_y2006m02 (logdate);
+CREATE INDEX measurement_y2006m03_logdate ON measurement_y2006m03 (logdate);
+...
+CREATE INDEX measurement_y2007m11_logdate ON measurement_y2007m11 (logdate);
+CREATE INDEX measurement_y2007m12_logdate ON measurement_y2007m12 (logdate);
+CREATE INDEX measurement_y2008m01_logdate ON measurement_y2008m01 (logdate);</pre>
+</li>
+	<li>让我们的程序可以插入数据，我们需要这样&#8230;数据重定向到合适的分区表，我们使用trigger实现。比如:将数据单纯的插入最后一个分区的函数可以如下：
+<pre>CREATE OR REPLACE FUNCTION measurement_insert_trigger()
+RETURNS TRIGGER AS $$
+BEGIN
+    INSERT INTO measurement_y2008m01 VALUES (NEW.*);
+    RETURN NULL;
+END;
+$$
+LANGUAGE plpgsql;</pre>
+建立好函数后，可以使用trigger来调用:
+<pre>CREATE TRIGGER insert_measurement_trigger
+    BEFORE INSERT ON measurement
+    FOR EACH ROW EXECUTE PROCEDURE measurement_insert_trigger();</pre>
+每个月，我们都需要重新定义这个函数（改变具体插入数据的分区表），使数据进入正确的分区,当然，触发器是不需要改变的</li></ol></div></p>
+
+<p>使用稍微复杂一些的逻辑，我们可以让服务器自己来判断数据该进入那个分区：
+<pre>CREATE OR REPLACE FUNCTION measurement_insert_trigger()
+RETURNS TRIGGER AS $$
+BEGIN
+    IF ( NEW.logdate &gt;= DATE '2006-02-01' AND
+         NEW.logdate &lt; DATE '2006-03-01' ) THEN
+        INSERT INTO measurement_y2006m02 VALUES (NEW.*);
+    ELSIF ( NEW.logdate &gt;= DATE '2006-03-01' AND
+            NEW.logdate &lt; DATE '2006-04-01' ) THEN
+        INSERT INTO measurement_y2006m03 VALUES (NEW.*);
+    ...
+    ELSIF ( NEW.logdate &gt;= DATE '2008-01-01' AND
+            NEW.logdate &lt; DATE '2008-02-01' ) THEN
+        INSERT INTO measurement_y2008m01 VALUES (NEW.*);
+    ELSE
+        RAISE EXCEPTION 'Date out of range.  Fix the measurement_insert_trigger() function!';
+    END IF;
+    RETURN NULL;
+END;
+$$
+LANGUAGE plpgsql;</pre>
+函数基本定义和之前的差不多，只是对数据进行了判断,从而决定进入的分区</p>
+
+<p>这个函数显然比单月份的复杂一些，所以，我们就不需要经常性地修改函数定义了。只要根据需要添加if分支即可
+<div>
+<blockquote><b>Note:</b> 写函数的时候，先check最新的月份，可以提高数据插入的性能</blockquote>
+</div>
+
+
+<div>
+<h3><a id="DDL-PARTITIONING-MANAGING-PARTITIONS" name="DDL-PARTITIONING-MANAGING-PARTITIONS"></a>管理分区</h3>
+删除旧分区数据的简单方式就是删除具体的分区表:
+<pre>DROP TABLE measurement_y2006m02;</pre>
+这种操作可以在短时间内删除百万级别的数据（根据pg的设计原理，它不会真的去擦除每条记录）</div></p>
+
+<p>还有可能的方式是：不真的删除表，而是将子表从基表中脱离:
+<pre>ALTER TABLE measurement_y2006m02 NO INHERIT measurement;</pre>
+这样，在删除旧数据前，我们还可以进行其他的操作。比如，我们可以使用copy，pg_dump来备份历史数据。这些数据可以用来制作报表</p>
+
+<p>同样，我们可以建立新的分区表来存储新的数据，就像之前建立其他分区表的方式一样:
+<pre>CREATE TABLE measurement_y2008m02 (
+    CHECK ( logdate &gt;= DATE '2008-02-01' AND logdate &lt; DATE '2008-03-01' )
+) INHERITS (measurement);</pre>
+作为选择，我们可以在分区表之外建立一个表，将这个表适当调整后，加入该分区表（比如将之前删除的分区表子分区又还原回来）:
+<pre>CREATE TABLE measurement_y2008m02
+  (LIKE measurement INCLUDING DEFAULTS INCLUDING CONSTRAINTS);
+ALTER TABLE measurement_y2008m02 ADD CONSTRAINT y2008m02
+   CHECK ( logdate &gt;= DATE '2008-02-01' AND logdate &lt; DATE '2008-03-01' );
+\copy measurement_y2008m02 from 'measurement_y2008m02'
+-- possibly some other data preparation work
+ALTER TABLE measurement_y2008m02 INHERIT measurement;</pre>
+
+<div>
+<h3><a id="DDL-PARTITIONING-CONSTRAINT-EXCLUSION" name="DDL-PARTITIONING-CONSTRAINT-EXCLUSION"></a>分区和查询剪支</h3>
+<i>分区剪支Constraint exclusion</i> 可以对上面建立的分区表进行查询优化.如:
+<pre>SET constraint_exclusion = on;
+SELECT count(*) FROM measurement WHERE logdate &gt;= DATE '2008-01-01';</pre>
+不进行剪支，上面的查询会扫描每一个子分区来获取需要的数据。进行剪支后，查询优化器可以根据where语句来判断哪些子分区需要检索。</div></p>
+
+<p>使用explain来查看是用和不使用剪支时的查询计划:
+<pre>SET constraint_exclusion = off;
+EXPLAIN SELECT count(*) FROM measurement WHERE logdate &gt;= DATE '2008-01-01';</pre></p>
+
+<p>                                          QUERY PLAN<br />
+&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8211;<br />
+ Aggregate  (cost=158.66..158.68 rows=1 width=0)<br />
+   -&gt;  Append  (cost=0.00..151.88 rows=2715 width=0)<br />
+         -&gt;  Seq Scan on measurement  (cost=0.00..30.38 rows=543 width=0)<br />
+               Filter: (logdate &gt;= &#8216;2008-01-01&#8217;::date)<br />
+         -&gt;  Seq Scan on measurement_y2006m02 measurement  (cost=0.00..30.38 rows=543 width=0)<br />
+               Filter: (logdate &gt;= &#8216;2008-01-01&#8217;::date)<br />
+         -&gt;  Seq Scan on measurement_y2006m03 measurement  (cost=0.00..30.38 rows=543 width=0)<br />
+               Filter: (logdate &gt;= &#8216;2008-01-01&#8217;::date)<br />
+&#8230;<br />
+         -&gt;  Seq Scan on measurement_y2007m12 measurement  (cost=0.00..30.38 rows=543 width=0)<br />
+               Filter: (logdate &gt;= &#8216;2008-01-01&#8217;::date)<br />
+         -&gt;  Seq Scan on measurement_y2008m01 measurement  (cost=0.00..30.38 rows=543 width=0)<br />
+               Filter: (logdate &gt;= &#8216;2008-01-01&#8217;::date)
+也许，所有的分区可以使用index scan来排除不需要的记录，加速检索。但是，我们此时关注的是能否排除那些不相关的分区：
+<pre>SET constraint_exclusion = on;
+EXPLAIN SELECT count(*) FROM measurement WHERE logdate &gt;= DATE '2008-01-01';
+                                          QUERY PLAN
+-----------------------------------------------------------------------------------------------
+ Aggregate  (cost=63.47..63.48 rows=1 width=0)
+   -&gt;  Append  (cost=0.00..60.75 rows=1086 width=0)
+         -&gt;  Seq Scan on measurement  (cost=0.00..30.38 rows=543 width=0)
+               Filter: (logdate &gt;= '2008-01-01'::date)
+         -&gt;  Seq Scan on measurement_y2008m01 measurement  (cost=0.00..30.38 rows=543 width=0)
+               Filter: (logdate &gt;= '2008-01-01'::date)</pre>
+如上，剪支使用check约束来排除分区，而不是index。 即，我们不需要定义索引来达到剪支的效果。是否在分区上建立所以的原则是分区数据量的大小。如果是大的数据，索引是有益的，但是小的分区，索引可能不会起到什么效果（比如，分区小到直接可以放在内存中）</p>
+
+<p>
+<div>
+<h3><a id="DDL-PARTITIONING-ALTERNATIVES" name="DDL-PARTITIONING-ALTERNATIVES"></a>其他分区方式</h3>
+肯能的分区方式，还有rule：
+<pre>CREATE RULE measurement_insert_y2006m02 AS
+ON INSERT TO measurement WHERE
+    ( logdate &gt;= DATE '2006-02-01' AND logdate &lt; DATE '2006-03-01' )
+DO INSTEAD
+    INSERT INTO measurement_y2006m02 VALUES (NEW.*);
+...
+CREATE RULE measurement_insert_y2008m01 AS
+ON INSERT TO measurement WHERE
+    ( logdate &gt;= DATE '2008-01-01' AND logdate &lt; DATE '2008-02-01' )
+DO INSTEAD
+    INSERT INTO measurement_y2008m01 VALUES (NEW.*);</pre>
+rule的方式会更底层一些，但是，trigger的方式可能性能更好一些.</div></p>
+
+<p>小心COPY这个玩意, 执行copy的时候会忽略任何约束,所以，不能直接copy进入主表，而是要copy进入正确的分区表</p>
+
+<p>rule的另外一个缺点是：无法使用简单的方式处理没有想到的数据，它们会偷偷的进入主表:</p>
+
+<p>分区表也可以使用union all来合并多个子表实现：
+<pre>CREATE VIEW measurement AS
+          SELECT * FROM measurement_y2006m02
+UNION ALL SELECT * FROM measurement_y2006m03
+...
+UNION ALL SELECT * FROM measurement_y2007m11
+UNION ALL SELECT * FROM measurement_y2007m12
+UNION ALL SELECT * FROM measurement_y2008m01;</pre>
+可惜的是：当我们删除或者添加新的分区时，需要不断的重建view。</p>
+
+<p></p>
+</div>
+  
+  
+
+
+    </article>
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/postgresql-columns-that-your-dont-know/">Postgresql的一些隐含列</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2013-03-21T00:00:00+08:00" pubdate data-updated="true">Mar 21<span>st</span>, 2013</time>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p>postgresql中的每张表都含有一些系统特定列，如下：
+<div><dl><dt><tt>oid</tt></dt><dd>只有在建表时使用（WITH OIDS）选项时，才会含有该列，为表中的每个原组分配oid</dd><dt><tt>tableoid</tt></dt><dd>表的oid，用来记录某个具体的原组到底来自哪张表</dd><dt><tt>xmin</tt></dt><dd>该原组被insert时的transaction id， 每一次更新会产生该原组的一个新版本(MVCC)</dd></dl></div></p>
+
+<p><dt><tt>cmin</tt></dt><dd>原组插入时的command id（每次从零开始）</dd><dt><tt>xmax</tt></dt><dd>该原组删除时的transaction id, 默认为0.</dd><dt><tt>cmax</tt></dt><dd>原组删除时的command id，默认0</dd><dt><tt>ctid</tt></dt><dd>记录原组物理上在文件中的位置，会在 vacuum full时发生变化</dd></p>
+</div>
+  
+  
+
+
+    </article>
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/introduction-to-postgresql-rules-making-entries-which-cant-be-altered/">PostgreSQL Rules 的简单介绍 - Making Entries Which Can&#8217;t Be Altered</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2013-03-14T00:00:00+08:00" pubdate data-updated="true">Mar 14<span>th</span>, 2013</time>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p>原文请猛点 <a title="这里" href="https://wiki.postgresql.org/wiki/Introduction_to_PostgreSQL_Rules_-_Making_entries_which_can%27t_be_altered">这里</a>，下面是经过本人翻译整理的版本<br />
+by Justin Clift</p>
+
+<p><a id="Introduction" name="Introduction"></a>
+<h2>简介</h2>
+玩过Postgresql的Rule规则吗？如果没有的话，看看下面的介绍，也许你会喜欢这种操作方式</p>
+
+<p>postgresql的 rule 规则被用来在查询执行前改变查询的本来目的。比如：如果你有一张所有人都可以操作的表，但是：你又想让其中特定的三条记录不会被任何人误操作更改或者删除，你可以这样做：
+<h4>1. 建立示例表：</h4>
+<pre>foo=>CREATE TABLE gift_certificates (idnum serial, person varchar(20), amount float4);
+NOTICE: CREATE TABLE will create implicit sequence 'gift_certificates_idnum_seq' for SERIAL column 'gift_certificates.idnum'
+NOTICE: CREATE TABLE/UNIQUE will create implicit index 'gift_certificates_idnum_key' for table 'gift_certificates'
+CREATE</pre>
+<h5>2. 整点数据先：</h5>
+<pre>foo=>insert into gift_certificates (person, amount) values ('Justin', 200);
+INSERT 51564057 1
+foo=>insert into gift_certificates (person, amount) values ('Tom', 200);
+INSERT 51564059 1
+foo=>insert into gift_certificates (person, amount) values ('Richard', 200);
+INSERT 51564062 1
+foo=>insert into gift_certificates (person, amount) values ('Peter', 200);
+INSERT 51564065 1
+foo=>insert into gift_certificates (person, amount) values ('Bruce', 200);
+INSERT 51564066 1
+foo=>insert into gift_certificates (person, amount) values ('Marc', 200);
+INSERT 51564067 1
+foo=>insert into gift_certificates (person, amount) values ('Vince', 200);</pre></p>
+
+<p>foo=>select * from gift_certificates;<br />
+ idnum |  person | amount<br />
+&#8212;&#8212;-+&#8212;&#8212;&#8212;+&#8212;&#8212;&#8211;<br />
+     1 | Justin  | 200<br />
+     2 | Tom     | 200<br />
+     3 | Richard | 200<br />
+     4 | Peter   | 200<br />
+     5 | Bruce   | 200<br />
+     6 | Marc    | 200<br />
+     7 | Vince   | 200<br />
+(7 rows)
+<h5>3. 接下来，建立如下两个规则：</h5>
+<pre>foo=>CREATE RULE prot_gc_upd AS ON UPDATE TO gift_certificates WHERE old.idnum &lt; 4 DO INSTEAD nothing;
+CREATE
+foo=>CREATE RULE prot_gc_del AS ON DELETE TO gift_certificates WHERE old.idnum &lt; 4 DO INSTEAD nothing;
+CREATE</pre>
+Noting是一个神奇的pstgresql规则，可以将任何对于您想要保护的三条记录的UPDATE / DELETE操作无害化（DO NOTING INSTEAD）；</p>
+
+<p>放心：除了对于这三条记录的update/delete操作，其他任何对于该表的操作不受影响
+<h5>4. OK， 接下来测试一把</h5>
+<pre>foo=>update gift_certificates set person = 'Justin2' where idnum = 1;
+UPDATE 0
+foo=>update gift_certificates set person = 'Justin2' where idnum = 2;
+UPDATE 0
+foo=>update gift_certificates set person = 'Justin2' where idnum = 3;
+UPDATE 0
+foo=>update gift_certificates set person = 'Justin2' where idnum = 4;
+UPDATE 1</pre>
+瞅瞅，看有木有生效：
+<pre>foo=>select * from gift_certificates;
+ idnum |  person | amount
+-------+---------+--------
+     1 | Justin  | 200
+     2 | Tom     | 200
+     3 | Richard | 200
+     5 | Bruce   | 200
+     6 | Marc    | 200
+     7 | Vince   | 200
+     4 | Justin2 | 200
+(7 rows)</pre></p>
+
+<p>foo=>
+怎么样？再试试delete操作：
+<pre>foo=>delete from gift_certificates;
+DELETE 4
+foo=>select * from gift_certificates;
+ idnum |  person | amount
+-------+---------+--------
+     1 | Justin  | 200
+     2 | Tom     | 200
+     3 | Richard | 200
+(3 rows)</pre></p>
+
+<p>foo=>
+神奇吧？</p>
+
+<p>希望这个功能可以对你有用</p>
+
+<p>更多资料,参考《PostgreSQL Programmer&#8217;s Guide, <a title="http://www.postgresql.org/docs/current/static/rules.html" href="http://www.postgresql.org/docs/current/static/rules.html" rel="nofollow">&#8220;The Postgres Rule System&#8221;</a>》</p>
+</div>
+  
+  
+
+
+    </article>
+  
+  <div class="pagination">
+    
+      <a class="prev" href="/blog/page/5/">&larr; Older</a>
+    
+    <a href="/blog/archives">Blog Archives</a>
+    
+    <a class="next" href="/blog/page/3/">Newer &rarr;</a>
+    
+  </div>
+</div>
+<aside class="sidebar">
+  
+    <section>
+  <h1>Recent Posts</h1>
+  <ul id="recent_posts">
+    
+      <li class="post">
+        <a href="/blog/about-strace/">About Strace</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/about-ubuntu-no-pubkey-error/">Ubuntu NO_PUBKEY 故障解决方式</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/bash-you-don-not-konw-special-character/">你不知道的bash (特殊字符)</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/about-lvm-skills/">Lvm 实践笔记</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/change-your-resouce-angent-to-multistate/">将 Resouce Angent 改造成 Multi State 类型</a>
+      </li>
+    
+  </ul>
+</section>
+
+
+
+
+
+  
+</aside>
+
+    </div>
+  </div>
+  <footer role="contentinfo"><p>
+  Copyright &copy; 2013 - wklxd -
+  <span class="credit">Powered by <a href="http://octopress.org">Octopress</a></span>
+</p>
+
+</footer>
+  
+
+
+
+
+
+
+
+  <script type="text/javascript">
+    (function(){
+      var twitterWidgets = document.createElement('script');
+      twitterWidgets.type = 'text/javascript';
+      twitterWidgets.async = true;
+      twitterWidgets.src = 'http://platform.twitter.com/widgets.js';
+      document.getElementsByTagName('head')[0].appendChild(twitterWidgets);
+    })();
+  </script>
+
+
+
+
+
+</body>
+</html>

@@ -1,0 +1,643 @@
+<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+
+  <title><![CDATA[Category: postgresql | My Octopress Blog]]></title>
+  <link href="http://github.klwang.info/blog/categories/postgresql/atom.xml" rel="self"/>
+  <link href="http://github.klwang.info/"/>
+  <updated>2013-06-22T23:37:24+08:00</updated>
+  <id>http://github.klwang.info/</id>
+  <author>
+    <name><![CDATA[wklxd]]></name>
+    
+  </author>
+  <generator uri="http://octopress.org/">Octopress</generator>
+
+  
+  <entry>
+    <title type="html"><![CDATA[Sfex (resource agent)]]></title>
+    <link href="http://github.klwang.info/blog/sfex-resource-agent/"/>
+    <updated>2013-04-22T00:00:00+08:00</updated>
+    <id>http://github.klwang.info/blog/sfex-resource-agent</id>
+    <content type="html"><![CDATA[<p><h3>Basic Consept</h3>
+<ul>
+    <li>SFEX is resource which control ownership of shared disk.</li>
+    <li>SFEX uses an special partition on the shared disk and maintains the following data.
+<ul>
+    <li>"status" shows whether a disk is owned by somebody.</li>
+    <li>"node" shows the node name to own the disk.</li>
+    <li>"count" is used for judgment that owner node is up or down.</li>
+</ul>
+</li>
+    <li>Typically, resources which use data partition on the shared disk(like PostgreSQL) make resource group with SFEX.</li>
+    <li>Resource of node which is holding ownership can access data partition
+<img alt="Sfex_sfex0" src="http://blog.klwang.info/blog/wp-content/uploads/2013/04/Sfex_sfex0.png" width="90%" /></li>
+    <li>When node can get ownership?
+<ul>
+    <li>case1: Nobody has ownership.</li>
+    <li>case2: Node can judge another node is down.</li>
+</ul>
+</li>
+</ul>
+<h3>Sequence Diagram</h3>
+<h4>Start Up Process</h4>
+SFEX can start on the node which has the highest score in cib.xml because more than one nodes do not access shared disk at the same time. Node A
+<ol>
+    <li>SFEX reads data from shared disk, and get "status". Usually "status" is "NO_OWNED" because nobody has owned shared disk.</li>
+    <li>Writes data that include node=Node A and status=OWNED.</li>
+    <li>Reads data again, and get "node=Node A".</li>
+    <li>Compareses it with my node name. If node name has not been changed, Node A get ownership!!</li>
+    <li>SFEX increments "count" on the shared disk by monitor processing of heartbeat. This processing means the update of ownership.
+<img alt="Sfex_seq1_start" src="http://blog.klwang.info/blog/wp-content/uploads/2013/04/Sfex_seq1_start.png" width="90%&quot;" /></li>
+</ol>
+<h3>Heartbeat Communication Failure</h3>
+Node A
+<ol>
+    <li>SFEX updates ownership by HB monitor processing.</li>
+</ol>
+Node B
+<ol>
+    <li>When heartbeat communication fail, standby node (Node B) starts resources.</li>
+    <li>SFEX reads data on the sheard disk.</li>
+    <li>Waits a while. Wait time should be longer than sfex monitor interval. By this wait time, it waits for periodical update from Node A and confirms that Node A maintains ownership.</li>
+    <li>Reads data again.</li>
+    <li>Checks value of new "count". When the values of two "count" are different, it is able to think that Node A is up.</li>
+    <li>SFEX starts up process is stopped.
+<img alt="Sfex_seq2_HBdown" src="http://blog.klwang.info/blog/wp-content/uploads/2013/04/Sfex_seq2_HBdown.png" width="90%" /></li>
+</ol>
+<h3>Active Node Failure</h3>
+Node A
+<ol>
+    <li>Node A is downed by failure.</li>
+</ol>
+Node B This Node B start up in the same way as HB communication failure.
+<ol>
+    <li>Waits for a while. It waits for periodical update from Node A but confirms that Node A does not it.</li>
+    <li>SFEX reads data again.</li>
+    <li>Checks value of new "count". The values of two "count" are SAME, it is able to think that Node A is DOWN.</li>
+    <li>Writes data that include node=Node B and status=OWNED.</li>
+    <li>Reads data again.</li>
+    <li>Compareses it with my node name. If node name has not been changed, Node B get ownership!!</li>
+    <li>Afterwards, other resources start.
+<img alt="Sfex_seq3_NodeDown" src="http://blog.klwang.info/blog/wp-content/uploads/2013/04/Sfex_seq3_NodeDown.png" width="90%" /></li>
+</ol>
+This is hardly generated. However for example, this case occurs when multiple nodes start up at the same time without heartbeat communication.</p>
+
+
+
+
+<p>Node A / Node B Writing to shared disk is serialized finally because writable area is "one". As a result, the node name written at the last time remains. In this example, Node B remains.
+<ol>
+    <li>Read data again</li>
+    <li>Node A: value of "owner" is changed. this node does not get ownership. Node B: value of "owner" is name of Node B. Node B get ownnership!
+<img alt="Sfex_seq4_ST_access" src="http://blog.klwang.info/blog/wp-content/uploads/2013/04/Sfex_seq4_ST_access.png" width="90%" /></li>
+</ol>
+<h3>How To Initialize a SFEX Device</h3>
+Create a empty partition. SFEX needs about 1Kb per node.
+<pre>fdisk /dev/sdX</pre>
+The parameter “-n “ allows to put multiple shared locks on one disk.
+<pre>sfex_init -n 1 /dev/sdX1
+sfex_stat /dev/sdX1</pre>
+The following is an example configuration for a sfex resource using the "crm configure" shell. With index=1 the first slot will be used.
+<pre>primitive sfex_1 ocf:heartbeat:sfex \
+params device="/dev/sdX1" index="1" collision_timeout="1" \
+lock_timeout="70" monitor_interval="10" \
+op monitor interval="10" timeout="30" on_fail="fence" \
+op start interval="0" timeout="120" \
+op stop interval="0" timeout="30"</pre></p>
+
+
+
+
+<p>来自<a href="http://www.linux-ha.org/wiki/Sfex_(resource_agent)" target="_blank">LinuxHA</a>,摘录下来，作为备忘</p>
+
+]]></content>
+  </entry>
+  
+  <entry>
+    <title type="html"><![CDATA[Oracle内存结构-PGA]]></title>
+    <link href="http://github.klwang.info/blog/a-explain-of-oracle-pga-memory/"/>
+    <updated>2013-04-11T00:00:00+08:00</updated>
+    <id>http://github.klwang.info/blog/a-explain-of-oracle-pga-memory</id>
+    <content type="html"><![CDATA[<p><span style="color: #000000;">一、概述<br />
+SGA，PGA，UGA都是Oracle管理的内存区。</span></p>
+
+
+
+
+<p>SGA（System Global Area），即系统全局区，Oracle中最重要的内存区。<br />
+PGA（Process Global Area），即程序全局区，一个进程的专用的内存区。<br />
+UGA（User Global Area），即用户全局区，与特定的会话相关联。<br />
+专用服务器连接模式，UGA在PGA中分配。<br />
+共享服务器连接模式，UGA在SGA中的Large Pool中分配。</p>
+
+
+
+
+<p>如果采用专用服务器连接模式，PGA中包含UGA，其他区域用来排序，散列和位图合并。<br />
+简单来讲，PGA=UGA+排序区+散列区+位图合并区。</p>
+
+
+
+
+<p>二、PGA的管理模式。
+<p style="padding-left: 30px;"><span style="color: #000000;">PGA分两种管理模式：<br />
+1)        手动PGA内存管理，用户指定排序区和散列区所使用的内存，每个连接使用相同的内存。<br />
+2)        自动PGA内存管理，告诉Oracle可以使用的PGA的总量，由Oraclce根据系统负载决定具体分配。</span></p>
+<p style="padding-left: 60px;">  9iR1时默认为手动PGA内存管理，9iR2以后默认为自动PGA内存管理。<br />
+PGA内存可以动态扩大和回收。</p>
+<p style="padding-left: 30px;">PGA内存管理模式由WORKAREA_SIZE_POLICY控制。<br />
+1)        设为MANUAL，启用手动内存管理。<br />
+2)        设为AUTO，并且PGA_AGGREGATE_TARGET不为0时，启用自动内存管理。</p>
+<span style="color: #000000;">三、手动PGA内存管理<br />
+有三个参数对PGA影响最大。<br />
+SORT_AREA_SIZE：对信息排序所用的内存总量<br />
+SORT_AREA_RETAINED_SIZE：排序后在内存中保存排序信息的内存总量。<br />
+HASH_AREA_SIZE：存储散列列表所用的内存量。</span></p>
+
+
+
+
+<p>下面对这三个参数进行说明：
+<p style="padding-left: 30px;"><span style="color: #000000;">1)        SORT_AREA_SIZE：<br />
+如果SORT_AREA_SIZE设为512KB，SORT_AREA_RETAINED_SIZE也为512KB，则Oracle使用512KB的内存进行排序，排序后所有数据都留在内存中。</span></p>
+<p style="padding-left: 30px;">2)        SORT_AREA_RETAINED_SIZE：<br />
+如果SORT_AREA_SIZE设为512KB，SORT_AREA_RETAINED_SIZE设为384KB，则Oracle使用512KB的内存进行排序，然后保留384KB的已排序数据，另外512KB-384KB=128KB的已排序数据会写到临时表空间中。<br />
+        如果SORT_AREA_RETAINED_SIZE没有设置，则它的值为0，但是实际保留的排序数据和SORT_AREA_SIZE相同。</p>
+<p style="padding-left: 30px;">3)        HASH_AREA_SIZE：<br />
+一个大集合和另个集合进行连接时，会用到HASH_AREA_SIZE参数。较小的 表会放到这部分内存中作为驱动表，然后大表进行探索（PROBE）操作进行连接。如果HASH_AREA_SIZE过小会影响两个集合（表）连接时的性能。</p>
+<p style="padding-left: 30px;">注意点：<br />
+1)        如果需要排序的数据量大于SORT_AREA_SIZE，Oracle会分批进行排序。把当前已排序的数据保存到临时表空间中，然后对剩余的数据进行排 序。最后，还会对这些保存在临时表空间中的已排序数据再进行排序，因为每次保存到临时表空间中的已排序数据只是部分数据的排序，对整体需排序的数据来说只 是部分局部有序。<br />
+2)        *_AREA_SIZE只是对某个操作的限制，一个查询可能有多个操作，每个操作都有自己的内存区。如果SORT_AREA_SIZE设为5MB，一个查询可能会有10个排序操作，这样一个查询会占用50MB的排序内存。<br />
+3)        3，*_AREA_SIZE内存的分配是按需分配。如果一个查询需要5MB内存进行排序，就算分配1G的SORT_AREA_SIZE也不会全部使用，只会使用需要的5MB的内存量。</p>
+<span style="color: #000000;">四、自动PGA内存管理</span>
+<p style="padding-left: 30px;"><span style="color: #000000;">要启用自动PGA内存管理，设置下列参数：<br />
+1，WORKAREA_SIZE_POLICY=AUTO<br />
+2，PGA_AGGREGATE_TARGET=非零</span></p>
+<p style="padding-left: 30px;">有关PGA_AGGREGATE_TARGET：<br />
+1)        PGA_AGGREGATE_TARGET是一个目标值。连接数少的时候实际分配PGA内存会比它要小。连接数多的时候实际分配的PGA内存会比它要大，但是Oracle会努力保持总PGA保持在PGA_AGGREGATE_TARGET值内。</p>
+<p style="padding-left: 30px;">例 如，PGA_AGGREGATE_TARGET 设为300MB。5个用户连接时，每个用户可能分配10MB的PGA内存，共分配50MB的PGA内存。300个用户连接时每个用户可能分配1.3MB的 PGA内存，共分配390MB的PGA内存。当用户连接多时，Oracle会降低每个用户的PGA内存使用量。<br />
+2)        一个串行查询（非并行查询）可能包括多个排序/散列操作，每个排序/散列操作最多使用5%的PGA内存。<br />
+3)        一个并行查询最多可用到30%的PGA内存，无论有多少并行进程。</p>
+&nbsp;</p>
+
+
+
+
+<p><span style="color: #000000;">五、手动PGA内存管理与自动PGA内存管理</span>
+<p style="padding-left: 30px;"><span style="color: #000000;">自动PGA内存管理相对于手动PGA内存管理有很多优点<br />
+1，        当用户连接少时<br />
+a)        手动PGA内存管理不管有多少可用内存都按照预设值进行分配。比如当前空闲内存为300MB，连接需要10MB的内存进行排序，而我们设定的排序区大小为5MB，导致虽然有足够的空闲内存却无法分配给当前连接，造成执行效率低下。<br />
+b)        自动PGA内存管理会根据当前空闲内存来进行分配。当空闲内存为300MB，当前用户需要10MB内存进行排序，Oracle就会分配10MB内存给当前用户。<br />
+2，        当用户连接多时<br />
+a)        手动PGA内存管理会完全按照预设值分配内存。如果物理内存总量为1G，排序区设为5MB，当有300个用户连接时，Oracle会分配1.5G的内存，这已经超过了我们的实际物理内存！<br />
+b)        自动PGA内存管理会根据当前连接情况进行分配。如果物理内存总量为1G，PGA_AGGREGATE_TARGET为300MB，当用户数从10升到 300时，每个用户连接的内存会从满足需要的10MB慢慢减少到1.3MB，虽然最后总量也会超过PGA_AGGREGATE_TARGET，但比起手动 PGA内存管理要好很多了。</span></p>
+<p style="padding-left: 30px;">什么时候使用自动PGA内存管理？什么时候使用手动PGA内存管理？<br />
+白天系统正常运行时适合使用自动PGA内存管理，让Oracle根据当前负载自动管理、分配PGA内存。<br />
+夜里用户数少、进行维护的时候可以设定当前会话使用手动PGA内存管理，让当前的维护操作获得尽可能多的内存，加快执行速度。</p>
+<p style="padding-left: 30px;">如： 服务器平时运行在自动PGA内存管理模式下，夜里有个任务要大表进行排序连接后更新，就可以在该操作session中临时更改为手动PGA内存管理，然后 分配大的SORT_AREA_SIZE和HASH_AREA_SIZE（50%甚至80%内存，要确保无其他用户使用），这样能大大加快系统运行速度，又 不影响白天高峰期对系统造成的影响。</p>
+<span style="color: #000000;">六、操作命令</span>
+<p style="padding-left: 30px;"><span style="color: #000000;">系统级更改：<br />
+ALTER SYSTEM SET WORKAREA_SIZE_POLICY = {AUTO | MANAUL}；<br />
+ALTER SYSTEM SET PGA_AGGREGATE_TARGET=100000000;<br />
+ALTER SYSTEM SET SORT_AREA_SIZE = 65536 SCOPE = SPFILE；<br />
+ALTER SYSTEM SET HASH_AREA_SIZE = 65536 SCOPE = SPFILE；</span></p>
+<p style="padding-left: 30px;">会话级更改<br />
+ALTER SESSION SET WORKAREA_SIZE_POLICY = {AUTO | MANAUL}；<br />
+ALTER SESSION SET SORT_AREA_SIZE = 65536；<br />
+ALTER SESSION SET HASH_AREA_SIZE = 65536；</p>
+&nbsp;</p>
+
+
+
+
+<p><span style="color: #000000;">七、学以致用</span>
+<p style="padding-left: 30px;"><span style="color: #000000;">1，排序区：<br />
+pga_aggregate_target为100MB，单个查询能用到5%也就是5MB时排序所需时间</span></p>
+<p style="padding-left: 30px;">SQL&gt; create table sorttable as select * from all_objects;</p>
+<p style="padding-left: 30px;">表已创建。</p>
+<p style="padding-left: 30px;">SQL&gt; insert into sorttable (select * from sorttable);</p>
+<p style="padding-left: 30px;">已创建49735行。</p>
+<p style="padding-left: 30px;">SQL&gt; insert into sorttable (select * from sorttable);</p>
+<p style="padding-left: 30px;">已创建99470行。</p>
+<p style="padding-left: 30px;">SQL&gt; set timing on;<br />
+SQL&gt; set autotrace traceonly;<br />
+SQL&gt; select * from sorttable order by object_id;</p>
+<p style="padding-left: 30px;">已选择198940行。</p>
+<p style="padding-left: 30px;">已用时间:  00: 00: 50.49</p>
+<p style="padding-left: 30px;">Session级修改排序区为30mb所需时间<br />
+SQL&gt; ALTER SESSION SET WORKAREA_SIZE_POLICY = MANUAL;</p>
+<p style="padding-left: 30px;">会话已更改。</p>
+<p style="padding-left: 30px;">已用时间:  00: 00: 00.02<br />
+SQL&gt; ALTER SESSION SET SORT_AREA_SIZE = 30000000;</p>
+<p style="padding-left: 30px;">会话已更改。</p>
+<p style="padding-left: 30px;">已用时间:  00: 00: 00.01<br />
+SQL&gt; select * from sorttable order by object_id;</p>
+<p style="padding-left: 30px;">已选择198940行。</p>
+<p style="padding-left: 30px;">已用时间:  00: 00: 10.76</p>
+<p style="padding-left: 30px;">可以看到所需时间从50.49秒减少到10.31秒，速度提升很明显。</p>
+<p style="padding-left: 30px;">2，散列区：<br />
+pga_aggregate_target为100MB，单个查询能用到5%也就是5MB时表连接所需时间</p>
+<p style="padding-left: 30px;">SQL&gt; select /*+ use_hash(tb1 tb2)*/ * from sorttable tb1,sorttable tb2 where tb1.object_id=tb2.object_id;</p>
+<p style="padding-left: 30px;">已选择49735行。</p>
+<p style="padding-left: 30px;">已用时间:  00: 00: 40.50</p>
+<p style="padding-left: 30px;">Session级修改散列区为30mb所需时间<br />
+SQL&gt; ALTER SESSION SET WORKAREA_SIZE_POLICY = MANUAL;</p>
+<p style="padding-left: 30px;">会话已更改。</p>
+<p style="padding-left: 30px;">已用时间:  00: 00: 00.01<br />
+SQL&gt; ALTER SESSION SET HASH_AREA_SIZE = 30000000;</p>
+<p style="padding-left: 30px;">会话已更改。</p>
+<p style="padding-left: 30px;">已用时间:  00: 00: 00.01<br />
+SQL&gt; select /*+ use_hash(tb1 tb2)*/ * from sorttable tb1,sorttable tb2 where tb1.object_id=tb2.object_id;</p>
+<p style="padding-left: 30px;">已选择49735行。</p>
+<p style="padding-left: 30px;">已用时间:  00: 00: 04.47</p>
+<p style="padding-left: 30px;">所需时间由40.50秒提升到4.47秒，效果同样很明显。</p>
+<p style="padding-left: 30px;">备注：以上实验皆执行全表扫描保证相关表读入缓冲区中，避免因数据没读入缓存造成误差。</p>
+&nbsp;</p>
+
+
+
+
+<p><span style="color: #000000;">结论：在9iR2版以后，PGA不再像以前那样困扰DBA了，Oracle会帮我们做好PGA的分配。但这并不意味着DBA不需要深入了解PGA了，掌握PGA并根据适当应用会让工作如虎添翼。 </span></p>
+
+]]></content>
+  </entry>
+  
+  <entry>
+    <title type="html"><![CDATA[postgresql的分区表实现方式]]></title>
+    <link href="http://github.klwang.info/blog/postgresql-partition-table-explain/"/>
+    <updated>2013-03-21T00:00:00+08:00</updated>
+    <id>http://github.klwang.info/blog/postgresql-partition-table-explain</id>
+    <content type="html"><![CDATA[<p><h3>如下：可以在postgresql中建立分区表</h3>
+<div>
+<ol type="1" compact="compact">
+    <li>建立主表，其他的将会继承该主表。</li>
+    <li>主表中不会包含任何的数据，所以，不要在该表上定义任何check，除非，需要在后续的任何子表上包含该check。</li>
+    <li>建立继承自主表的子表（全部字段来自主表，不需要额外的其他字段）。后面，会将所有的子表作为partition来处理。</li>
+    <li>在每个partition（子表）上添加约束：like this:
+<pre>CHECK ( x = 1 )
+CHECK ( county IN ( 'Oxfordshire', 'Buckinghamshire', 'Warwickshire' ))
+CHECK ( outletID &gt;= 100 AND outletID &lt; 200 )</pre>
+一定要保证在不同分区之间的key值中不要出现交叠,常见的边界错误如下：
+<pre>CHECK ( outletID BETWEEN 100 AND 200 )
+CHECK ( outletID BETWEEN 200 AND 300 )</pre>
+这玩意将会导致系统无法判断200将会处于哪一个分区.</li>
+    <li>为每一个分区建立独立的索引（同时，还可以建立其他索引哦）</li>
+    <li>建立triiger或者rule来将数据进行重定向，使其进入分区子表</li>
+    <li>保证  <a href="http://www.postgresql.org/docs/9.2/static/runtime-config-query.html#GUC-CONSTRAINT-EXCLUSION">constraint_exclusion</a> 参数要开启哦，不然查询解析的结果可能不是希望的</li>
+</ol>
+我们建立一个表（冰欺凌工厂）
+<pre>CREATE TABLE measurement (
+    city_id         int not null,
+    logdate         date not null,
+    peaktemp        int,
+    unitsales       int
+);</pre>
+我们只保存最近三年的数据，每月开始，我们会移出最远month的数据;此时，我们可以使用分区表来实现这个需求:
+<ol type="1" compact="compact">
+    <li>主表，上面已经建立好了</li>
+    <li>接着，每个月建立一个分区表:
+<pre>CREATE TABLE measurement_y2006m02 ( ) INHERITS (measurement);
+CREATE TABLE measurement_y2006m03 ( ) INHERITS (measurement);
+...
+CREATE TABLE measurement_y2007m11 ( ) INHERITS (measurement);
+CREATE TABLE measurement_y2007m12 ( ) INHERITS (measurement);
+CREATE TABLE measurement_y2008m01 ( ) INHERITS (measurement);</pre>
+第一个问题：删除最远月份的数据：我们需要使用drop table语句来删除最远月份的分区表，并且，使用create table建立最新月份的分区表</li>
+    <li>不像一开始建表那样，我们还需要使用check来保证数据的正确性（没有交叠）:
+<pre>CREATE TABLE measurement_y2006m02 (
+    CHECK ( logdate &gt;= DATE '2006-02-01' AND logdate &lt; DATE '2006-03-01' )
+) INHERITS (measurement);
+CREATE TABLE measurement_y2006m03 (
+    CHECK ( logdate &gt;= DATE '2006-03-01' AND logdate &lt; DATE '2006-04-01' )
+) INHERITS (measurement);
+...
+CREATE TABLE measurement_y2007m11 (
+    CHECK ( logdate &gt;= DATE '2007-11-01' AND logdate &lt; DATE '2007-12-01' )
+) INHERITS (measurement);
+CREATE TABLE measurement_y2007m12 (
+    CHECK ( logdate &gt;= DATE '2007-12-01' AND logdate &lt; DATE '2008-01-01' )
+) INHERITS (measurement);
+CREATE TABLE measurement_y2008m01 (
+    CHECK ( logdate &gt;= DATE '2008-01-01' AND logdate &lt; DATE '2008-02-01' )
+) INHERITS (measurement);</pre>
+</li>
+    <li>我们还需要在分区主列上建立index:
+<pre>CREATE INDEX measurement_y2006m02_logdate ON measurement_y2006m02 (logdate);
+CREATE INDEX measurement_y2006m03_logdate ON measurement_y2006m03 (logdate);
+...
+CREATE INDEX measurement_y2007m11_logdate ON measurement_y2007m11 (logdate);
+CREATE INDEX measurement_y2007m12_logdate ON measurement_y2007m12 (logdate);
+CREATE INDEX measurement_y2008m01_logdate ON measurement_y2008m01 (logdate);</pre>
+</li>
+    <li>让我们的程序可以插入数据，我们需要这样...数据重定向到合适的分区表，我们使用trigger实现。比如:将数据单纯的插入最后一个分区的函数可以如下：
+<pre>CREATE OR REPLACE FUNCTION measurement_insert_trigger()
+RETURNS TRIGGER AS $$
+BEGIN
+    INSERT INTO measurement_y2008m01 VALUES (NEW.*);
+    RETURN NULL;
+END;
+$$
+LANGUAGE plpgsql;</pre>
+建立好函数后，可以使用trigger来调用:
+<pre>CREATE TRIGGER insert_measurement_trigger
+    BEFORE INSERT ON measurement
+    FOR EACH ROW EXECUTE PROCEDURE measurement_insert_trigger();</pre>
+每个月，我们都需要重新定义这个函数（改变具体插入数据的分区表），使数据进入正确的分区,当然，触发器是不需要改变的</li></ol></div></p>
+
+
+
+
+<p>使用稍微复杂一些的逻辑，我们可以让服务器自己来判断数据该进入那个分区：
+<pre>CREATE OR REPLACE FUNCTION measurement_insert_trigger()
+RETURNS TRIGGER AS $$
+BEGIN
+    IF ( NEW.logdate &gt;= DATE '2006-02-01' AND
+         NEW.logdate &lt; DATE '2006-03-01' ) THEN
+        INSERT INTO measurement_y2006m02 VALUES (NEW.*);
+    ELSIF ( NEW.logdate &gt;= DATE '2006-03-01' AND
+            NEW.logdate &lt; DATE '2006-04-01' ) THEN
+        INSERT INTO measurement_y2006m03 VALUES (NEW.*);
+    ...
+    ELSIF ( NEW.logdate &gt;= DATE '2008-01-01' AND
+            NEW.logdate &lt; DATE '2008-02-01' ) THEN
+        INSERT INTO measurement_y2008m01 VALUES (NEW.*);
+    ELSE
+        RAISE EXCEPTION 'Date out of range.  Fix the measurement_insert_trigger() function!';
+    END IF;
+    RETURN NULL;
+END;
+$$
+LANGUAGE plpgsql;</pre>
+函数基本定义和之前的差不多，只是对数据进行了判断,从而决定进入的分区</p>
+
+
+
+
+<p>这个函数显然比单月份的复杂一些，所以，我们就不需要经常性地修改函数定义了。只要根据需要添加if分支即可
+<div>
+<blockquote><b>Note:</b> 写函数的时候，先check最新的月份，可以提高数据插入的性能</blockquote>
+</div>
+
+
+<div>
+<h3><a id="DDL-PARTITIONING-MANAGING-PARTITIONS" name="DDL-PARTITIONING-MANAGING-PARTITIONS"></a>管理分区</h3>
+删除旧分区数据的简单方式就是删除具体的分区表:
+<pre>DROP TABLE measurement_y2006m02;</pre>
+这种操作可以在短时间内删除百万级别的数据（根据pg的设计原理，它不会真的去擦除每条记录）</div></p>
+
+
+
+
+<p>还有可能的方式是：不真的删除表，而是将子表从基表中脱离:
+<pre>ALTER TABLE measurement_y2006m02 NO INHERIT measurement;</pre>
+这样，在删除旧数据前，我们还可以进行其他的操作。比如，我们可以使用copy，pg_dump来备份历史数据。这些数据可以用来制作报表</p>
+
+
+
+
+<p>同样，我们可以建立新的分区表来存储新的数据，就像之前建立其他分区表的方式一样:
+<pre>CREATE TABLE measurement_y2008m02 (
+    CHECK ( logdate &gt;= DATE '2008-02-01' AND logdate &lt; DATE '2008-03-01' )
+) INHERITS (measurement);</pre>
+作为选择，我们可以在分区表之外建立一个表，将这个表适当调整后，加入该分区表（比如将之前删除的分区表子分区又还原回来）:
+<pre>CREATE TABLE measurement_y2008m02
+  (LIKE measurement INCLUDING DEFAULTS INCLUDING CONSTRAINTS);
+ALTER TABLE measurement_y2008m02 ADD CONSTRAINT y2008m02
+   CHECK ( logdate &gt;= DATE '2008-02-01' AND logdate &lt; DATE '2008-03-01' );
+\copy measurement_y2008m02 from 'measurement_y2008m02'
+-- possibly some other data preparation work
+ALTER TABLE measurement_y2008m02 INHERIT measurement;</pre>
+
+<div>
+<h3><a id="DDL-PARTITIONING-CONSTRAINT-EXCLUSION" name="DDL-PARTITIONING-CONSTRAINT-EXCLUSION"></a>分区和查询剪支</h3>
+<i>分区剪支Constraint exclusion</i> 可以对上面建立的分区表进行查询优化.如:
+<pre>SET constraint_exclusion = on;
+SELECT count(*) FROM measurement WHERE logdate &gt;= DATE '2008-01-01';</pre>
+不进行剪支，上面的查询会扫描每一个子分区来获取需要的数据。进行剪支后，查询优化器可以根据where语句来判断哪些子分区需要检索。</div></p>
+
+
+
+
+<p>使用explain来查看是用和不使用剪支时的查询计划:
+<pre>SET constraint_exclusion = off;
+EXPLAIN SELECT count(*) FROM measurement WHERE logdate &gt;= DATE '2008-01-01';</pre></p>
+
+
+
+
+<p>                                          QUERY PLAN<br />
+-----------------------------------------------------------------------------------------------<br />
+ Aggregate  (cost=158.66..158.68 rows=1 width=0)<br />
+   -&gt;  Append  (cost=0.00..151.88 rows=2715 width=0)<br />
+         -&gt;  Seq Scan on measurement  (cost=0.00..30.38 rows=543 width=0)<br />
+               Filter: (logdate &gt;= '2008-01-01'::date)<br />
+         -&gt;  Seq Scan on measurement_y2006m02 measurement  (cost=0.00..30.38 rows=543 width=0)<br />
+               Filter: (logdate &gt;= '2008-01-01'::date)<br />
+         -&gt;  Seq Scan on measurement_y2006m03 measurement  (cost=0.00..30.38 rows=543 width=0)<br />
+               Filter: (logdate &gt;= '2008-01-01'::date)<br />
+...<br />
+         -&gt;  Seq Scan on measurement_y2007m12 measurement  (cost=0.00..30.38 rows=543 width=0)<br />
+               Filter: (logdate &gt;= '2008-01-01'::date)<br />
+         -&gt;  Seq Scan on measurement_y2008m01 measurement  (cost=0.00..30.38 rows=543 width=0)<br />
+               Filter: (logdate &gt;= '2008-01-01'::date)
+也许，所有的分区可以使用index scan来排除不需要的记录，加速检索。但是，我们此时关注的是能否排除那些不相关的分区：
+<pre>SET constraint_exclusion = on;
+EXPLAIN SELECT count(*) FROM measurement WHERE logdate &gt;= DATE '2008-01-01';
+                                          QUERY PLAN
+-----------------------------------------------------------------------------------------------
+ Aggregate  (cost=63.47..63.48 rows=1 width=0)
+   -&gt;  Append  (cost=0.00..60.75 rows=1086 width=0)
+         -&gt;  Seq Scan on measurement  (cost=0.00..30.38 rows=543 width=0)
+               Filter: (logdate &gt;= '2008-01-01'::date)
+         -&gt;  Seq Scan on measurement_y2008m01 measurement  (cost=0.00..30.38 rows=543 width=0)
+               Filter: (logdate &gt;= '2008-01-01'::date)</pre>
+如上，剪支使用check约束来排除分区，而不是index。 即，我们不需要定义索引来达到剪支的效果。是否在分区上建立所以的原则是分区数据量的大小。如果是大的数据，索引是有益的，但是小的分区，索引可能不会起到什么效果（比如，分区小到直接可以放在内存中）</p>
+
+
+
+
+<p>
+<div>
+<h3><a id="DDL-PARTITIONING-ALTERNATIVES" name="DDL-PARTITIONING-ALTERNATIVES"></a>其他分区方式</h3>
+肯能的分区方式，还有rule：
+<pre>CREATE RULE measurement_insert_y2006m02 AS
+ON INSERT TO measurement WHERE
+    ( logdate &gt;= DATE '2006-02-01' AND logdate &lt; DATE '2006-03-01' )
+DO INSTEAD
+    INSERT INTO measurement_y2006m02 VALUES (NEW.*);
+...
+CREATE RULE measurement_insert_y2008m01 AS
+ON INSERT TO measurement WHERE
+    ( logdate &gt;= DATE '2008-01-01' AND logdate &lt; DATE '2008-02-01' )
+DO INSTEAD
+    INSERT INTO measurement_y2008m01 VALUES (NEW.*);</pre>
+rule的方式会更底层一些，但是，trigger的方式可能性能更好一些.</div></p>
+
+
+
+
+<p>小心COPY这个玩意, 执行copy的时候会忽略任何约束,所以，不能直接copy进入主表，而是要copy进入正确的分区表</p>
+
+
+
+
+<p>rule的另外一个缺点是：无法使用简单的方式处理没有想到的数据，它们会偷偷的进入主表:</p>
+
+
+
+
+<p>分区表也可以使用union all来合并多个子表实现：
+<pre>CREATE VIEW measurement AS
+          SELECT * FROM measurement_y2006m02
+UNION ALL SELECT * FROM measurement_y2006m03
+...
+UNION ALL SELECT * FROM measurement_y2007m11
+UNION ALL SELECT * FROM measurement_y2007m12
+UNION ALL SELECT * FROM measurement_y2008m01;</pre>
+可惜的是：当我们删除或者添加新的分区时，需要不断的重建view。</p>
+
+
+
+
+<p></p>
+
+]]></content>
+  </entry>
+  
+  <entry>
+    <title type="html"><![CDATA[postgresql的一些隐含列]]></title>
+    <link href="http://github.klwang.info/blog/postgresql-columns-that-your-dont-know/"/>
+    <updated>2013-03-21T00:00:00+08:00</updated>
+    <id>http://github.klwang.info/blog/postgresql-columns-that-your-dont-know</id>
+    <content type="html"><![CDATA[<p>postgresql中的每张表都含有一些系统特定列，如下：
+<div><dl><dt><tt>oid</tt></dt><dd>只有在建表时使用（WITH OIDS）选项时，才会含有该列，为表中的每个原组分配oid</dd><dt><tt>tableoid</tt></dt><dd>表的oid，用来记录某个具体的原组到底来自哪张表</dd><dt><tt>xmin</tt></dt><dd>该原组被insert时的transaction id， 每一次更新会产生该原组的一个新版本(MVCC)</dd></dl></div></p>
+
+
+
+
+<p><dt><tt>cmin</tt></dt><dd>原组插入时的command id（每次从零开始）</dd><dt><tt>xmax</tt></dt><dd>该原组删除时的transaction id, 默认为0.</dd><dt><tt>cmax</tt></dt><dd>原组删除时的command id，默认0</dd><dt><tt>ctid</tt></dt><dd>记录原组物理上在文件中的位置，会在 vacuum full时发生变化</dd></p>
+
+]]></content>
+  </entry>
+  
+  <entry>
+    <title type="html"><![CDATA[PostgreSQL Rules 的简单介绍 - Making entries which can't be altered]]></title>
+    <link href="http://github.klwang.info/blog/introduction-to-postgresql-rules-making-entries-which-cant-be-altered/"/>
+    <updated>2013-03-14T00:00:00+08:00</updated>
+    <id>http://github.klwang.info/blog/introduction-to-postgresql-rules-making-entries-which-cant-be-altered</id>
+    <content type="html"><![CDATA[<p>原文请猛点 <a title="这里" href="https://wiki.postgresql.org/wiki/Introduction_to_PostgreSQL_Rules_-_Making_entries_which_can%27t_be_altered">这里</a>，下面是经过本人翻译整理的版本<br />
+by Justin Clift</p>
+
+
+
+
+<p><a id="Introduction" name="Introduction"></a>
+<h2>简介</h2>
+玩过Postgresql的Rule规则吗？如果没有的话，看看下面的介绍，也许你会喜欢这种操作方式</p>
+
+
+
+
+<p>postgresql的 rule 规则被用来在查询执行前改变查询的本来目的。比如：如果你有一张所有人都可以操作的表，但是：你又想让其中特定的三条记录不会被任何人误操作更改或者删除，你可以这样做：
+<h4>1. 建立示例表：</h4>
+<pre>foo=>CREATE TABLE gift_certificates (idnum serial, person varchar(20), amount float4);
+NOTICE: CREATE TABLE will create implicit sequence 'gift_certificates_idnum_seq' for SERIAL column 'gift_certificates.idnum'
+NOTICE: CREATE TABLE/UNIQUE will create implicit index 'gift_certificates_idnum_key' for table 'gift_certificates'
+CREATE</pre>
+<h5>2. 整点数据先：</h5>
+<pre>foo=>insert into gift_certificates (person, amount) values ('Justin', 200);
+INSERT 51564057 1
+foo=>insert into gift_certificates (person, amount) values ('Tom', 200);
+INSERT 51564059 1
+foo=>insert into gift_certificates (person, amount) values ('Richard', 200);
+INSERT 51564062 1
+foo=>insert into gift_certificates (person, amount) values ('Peter', 200);
+INSERT 51564065 1
+foo=>insert into gift_certificates (person, amount) values ('Bruce', 200);
+INSERT 51564066 1
+foo=>insert into gift_certificates (person, amount) values ('Marc', 200);
+INSERT 51564067 1
+foo=>insert into gift_certificates (person, amount) values ('Vince', 200);</pre></p>
+
+
+
+
+<p>foo=>select * from gift_certificates;<br />
+ idnum |  person | amount<br />
+-------+---------+--------<br />
+     1 | Justin  | 200<br />
+     2 | Tom     | 200<br />
+     3 | Richard | 200<br />
+     4 | Peter   | 200<br />
+     5 | Bruce   | 200<br />
+     6 | Marc    | 200<br />
+     7 | Vince   | 200<br />
+(7 rows)
+<h5>3. 接下来，建立如下两个规则：</h5>
+<pre>foo=>CREATE RULE prot_gc_upd AS ON UPDATE TO gift_certificates WHERE old.idnum &lt; 4 DO INSTEAD nothing;
+CREATE
+foo=>CREATE RULE prot_gc_del AS ON DELETE TO gift_certificates WHERE old.idnum &lt; 4 DO INSTEAD nothing;
+CREATE</pre>
+Noting是一个神奇的pstgresql规则，可以将任何对于您想要保护的三条记录的UPDATE / DELETE操作无害化（DO NOTING INSTEAD）；</p>
+
+
+
+
+<p>放心：除了对于这三条记录的update/delete操作，其他任何对于该表的操作不受影响
+<h5>4. OK， 接下来测试一把</h5>
+<pre>foo=>update gift_certificates set person = 'Justin2' where idnum = 1;
+UPDATE 0
+foo=>update gift_certificates set person = 'Justin2' where idnum = 2;
+UPDATE 0
+foo=>update gift_certificates set person = 'Justin2' where idnum = 3;
+UPDATE 0
+foo=>update gift_certificates set person = 'Justin2' where idnum = 4;
+UPDATE 1</pre>
+瞅瞅，看有木有生效：
+<pre>foo=>select * from gift_certificates;
+ idnum |  person | amount
+-------+---------+--------
+     1 | Justin  | 200
+     2 | Tom     | 200
+     3 | Richard | 200
+     5 | Bruce   | 200
+     6 | Marc    | 200
+     7 | Vince   | 200
+     4 | Justin2 | 200
+(7 rows)</pre></p>
+
+
+
+
+<p>foo=>
+怎么样？再试试delete操作：
+<pre>foo=>delete from gift_certificates;
+DELETE 4
+foo=>select * from gift_certificates;
+ idnum |  person | amount
+-------+---------+--------
+     1 | Justin  | 200
+     2 | Tom     | 200
+     3 | Richard | 200
+(3 rows)</pre></p>
+
+
+
+
+<p>foo=>
+神奇吧？</p>
+
+
+
+
+<p>希望这个功能可以对你有用</p>
+
+
+
+
+<p>更多资料,参考《PostgreSQL Programmer's Guide, <a title="http://www.postgresql.org/docs/current/static/rules.html" href="http://www.postgresql.org/docs/current/static/rules.html" rel="nofollow">"The Postgres Rule System"</a>》</p>
+
+]]></content>
+  </entry>
+  
+</feed>
