@@ -1,0 +1,325 @@
+
+<!DOCTYPE html>
+<!--[if IEMobile 7 ]><html class="no-js iem7"><![endif]-->
+<!--[if lt IE 9]><html class="no-js lte-ie8"><![endif]-->
+<!--[if (gt IE 8)|(gt IEMobile 7)|!(IEMobile)|!(IE)]><!--><html class="no-js" lang="en"><!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  <title>Oracle内存结构-SGA - klwang's TechNotes</title>
+  <meta name="author" content="wklxd">
+
+  
+  <meta name="description" content="转载：源地址 一、概述
+在《Oracle内存结构研究-PGA篇》一文中提到，PGA是一个服务器进程的专用的私有内存区，而SGA则是共享内存区。 SGA由多个部分组成：
+1， 固定SGA（Fixed SGA）
+2， 块缓冲区（Db cache）
+3， 重做日志缓冲区（Redo log buffer &hellip;">
+  
+
+  <!-- http://t.co/dKP3o1e -->
+  <meta name="HandheldFriendly" content="True">
+  <meta name="MobileOptimized" content="320">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  
+  <link rel="canonical" href="http://blog.klwang.info/a-explain-of-oracle-sga-memory">
+  <link href="/favicon.png" rel="icon">
+  <link href="/stylesheets/screen.css" media="screen, projection" rel="stylesheet" type="text/css">
+  <link href="/atom.xml" rel="alternate" title="klwang's TechNotes" type="application/atom+xml">
+  <script src="/javascripts/modernizr-2.0.js"></script>
+  <script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+  <script>!window.jQuery && document.write(unescape('%3Cscript src="./javascripts/lib/jquery.min.js"%3E%3C/script%3E'))</script>
+  <script src="/javascripts/octopress.js" type="text/javascript"></script>
+  <!--Fonts from Google"s Web font directory at http://google.com/webfonts -->
+<link href="http://fonts.googleapis.com/css?family=PT+Serif:regular,italic,bold,bolditalic" rel="stylesheet" type="text/css">
+<link href="http://fonts.googleapis.com/css?family=PT+Sans:regular,italic,bold,bolditalic" rel="stylesheet" type="text/css">
+
+  
+
+</head>
+
+<body   >
+  <header role="banner"><hgroup>
+  <h1><a href="/">klwang's TechNotes</a></h1>
+  
+    <h2>Focusing on Datebase and Linux</h2>
+  
+</hgroup>
+
+</header>
+  <nav role="navigation"><ul class="subscription" data-subscription="rss">
+  <li><a href="/atom.xml" rel="subscribe-rss" title="subscribe via RSS">RSS</a></li>
+  
+</ul>
+  
+<form action="http://google.com/search" method="get">
+  <fieldset role="search">
+    <input type="hidden" name="q" value="site:blog.klwang.info" />
+    <input class="search" type="text" name="q" results="0" placeholder="Search"/>
+  </fieldset>
+</form>
+  
+<ul class="main-navigation">
+  <li><a href="/">Blog</a></li>
+  <li><a href="/blog/archives">Archives</a></li>
+</ul>
+
+</nav>
+  <div id="main">
+    <div id="content">
+      <div>
+<article class="hentry" role="article">
+  
+  <header>
+    
+      <h1 class="entry-title">Oracle内存结构-SGA</h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2013-04-11T00:00:00+08:00" pubdate data-updated="true">Apr 11<span>th</span>, 2013</time>
+        
+      </p>
+    
+  </header>
+
+
+<div class="entry-content"><p>转载：<a href="http://www.duote.com/tech/5/12080.html">源地址</a></p>
+
+<p>一、概述<br />
+在《Oracle内存结构研究-PGA篇》一文中提到，PGA是一个服务器进程的专用的私有内存区，而SGA则是共享内存区。</p>
+
+<p>SGA由多个部分组成：
+<pre>1， 固定SGA（Fixed SGA）
+2， 块缓冲区（Db cache）
+3， 重做日志缓冲区（Redo log buffer）
+4， Java池（Java pool）
+5， 大池（Large pool）
+6， 共享池（Shared pool）
+7， 流池（Stream pool）</pre>
+有如下参数控制共享池相关组件大小：<br />
+1， JAVA_POOL_SIZE：控制Java池大小。<br />
+2， SHARED_POOL_SIZE：9i中控制共享池中占用最大的部分，10g以上控制共享池大小。<br />
+3， LARGE_POOL_SIZE：控制大池大小。<br />
+4， DB_*K_CACHE_SIZE：控制不同块大小的缓冲区大小。<br />
+5， LOG_BUFFER：控制重做日志缓冲区大小。<br />
+6， SGA_TARGET：10g以上控制自动SGA内存管理的总内存大小。<br />
+7， SGA_MAX_SIZE：控制SGA可以达到的最大大小，改变需重启数据库。<br />
+下面将详细介绍各个部分的作用和推荐设置。</p>
+
+<p>二、SGA各组件作用<br />
+1， 固定SGA(Fixed SGA)：
+<p style="padding-left: 30px;">顾名思义，是一段不变的内存区，指向SGA中其他部分，Oracle通过它找到SGA中的其他区，可以简单理解为用于管理的一段内存区。</p>
+2， 块缓冲区(DB cache)：
+<p style="padding-left: 30px;">查询时，Oracle会先把从磁盘读取的数据放入内存，以后再查询相关数据时不用再次读取磁盘。插入和更新时，Oracle会现在该区中缓存数据，之后批量写到硬盘中。通过块缓冲区，Oracle可以通过内存缓存提高磁盘的I/O性能。<br />
+块缓冲区中有三个区域：<br />
+ 默认池（Default pool）：所有数据默认都在这里缓存。<br />
+ 保持池（Keep pool）：用来缓存需要多次重用的数据。<br />
+ 回收池（Recycle pool）：用来缓存很少重用的数据。<br />
+原来只有一个默认池，所有数据都在这里缓存。这样会产生一个问题：大量很少重用的数据会把需重用的数据“挤出”缓冲区，造成磁盘I/O增加，运行速度下降。后来分出了保持池和回收池根据是否经常重用来分别缓存数据。<br />
+这三部分内存区需要手动确定大小，并且之间没有共享。例如：保持池中已经满了，而回收池中还有大量空闲内存，这时回收池的内存不会分配给保持池。<br />
+9i开始，还可以设置db_nk_cache。9i之前数据库只能使用相同的块大小。9i开始同一个数据库可以使用多种块大小（2KB,4KB,8KB,16KB,32KB），这些块需要在各自的db_nk_cache中缓存。如果为不同的表空间指定了不同的块大小，需要为其设置各自的缓冲区。</p>
+3， 重做日志缓冲区（Redo log buffer）：
+<p style="padding-left: 30px;">数据写到重做日志文件之前在这里缓存，在以下情况中触发：<br />
+ 每隔3秒<br />
+ 缓存达到1MB或1/3满时<br />
+ 用户提交时<br />
+ 缓冲区的数据写入磁盘前</p>
+4， Java池（Java pool）：
+<p style="padding-left: 30px;">在数据库中运行Java代码时用到这部分内存。例如：编写Java存储过程在服务器内运行。需要注意的是，该内存与常见的Java编写的B/S系统并没关系。用JAVA语言代替PL/SQL语言在数据库中写存储过程才会用到这部分内存。</p>
+5， 大池（Large pool）：
+<p style="padding-left: 30px;">下面三种情况使用到大池：<br />
+ 并行执行：存放进程间的消息缓冲区<br />
+ RMAN：某些情况下用于磁盘I/O缓冲区<br />
+ 共享服务器模式：共享服务器模式下UGA在大池中分配（如果设置了大池）</p>
+6， 共享池（Shared pool）
+<p style="padding-left: 30px;">共享池是SGA中最重要的内存段之一。共享池太大和太小都会严重影响服务器性能。<br />
+SQL和PL/SQL的解释计划、代码，数据字典数据等等都在这里缓存。<br />
+SQL和PL/SQL代码在执行前会进行“硬解析”来获得执行计划及权限验证等相关辅助操作。“硬解析”很费时间。对于响应时间很短的查询，“硬解析”可以占到全部时间的2/3。对于响应时间较长的统计等操作，“硬解析”所占用的时间比例会下降很多。执行计划及所需的数据字典数据都缓存在共享池中，让后续相同的查询可以减少很多时间。<br />
+不使用“绑定变量”导致：<br />
+ 系统需要花费大量的资源去解析查询。<br />
+ 共享池中的代码从不重用，系统花费很大代价管理这部分内存。<br />
+关于共享变量的优缺点讨论已经超过了这篇文章的范畴，简单来讲，响应时间短的查询要使用共享变量，响应时间长的统计不使用共享变量。<br />
+需要注意的是，SHARED_POOL_SIZE参数在9i中控制共享池中占用最大的部分，10g以上控制共享池总大小。</p>
+7， 流池（Stream pool）
+<p style="padding-left: 30px;">9iR2以上增加了“流”技术，10g以上在SGA中增加了流池。流是用来共享和复制数据的工具。</p>
+三、SGA设置<br />
+没有通用的设置，所有设置都要根据系统的负载、业务需求和硬件环境来进行调整。这里只是总结出大体的设定，避免因SGA设置不当引起的问题。</p>
+
+<p>1，自动SGA内存管理
+<p style="padding-left: 30px;">在Oracle 10g中引入了自动SGA内存管理特性，DBA可以设定SGA_TARGET告诉Oracle可用的SGA内存为多大，由Oracle根据系统负载来动态调整各组件大小，相应的数定会保存在控制文件中，使数据库重启后也记得各组件大小。<br />
+需要注意一下几点：<br />
+ 要使用自动SGA内存管理，STATISTICS_LEVEL参数必须设为TYPICAL或ALL，系统自动收集相应的信息用来动态调整SGA设定。<br />
+ 可以设定某个组件的值，Oracle使用此值为该组件的最小大小</p>
+<p style="padding-left: 30px;">可动态调整的参数：<br />
+DB_CACHE_SIZE，SHARED_POOL_SIZE，LARGE_POOL_SIZE，JAVA_POOL_SIZE。<br />
+需手动设置的参数：<br />
+LOG_BUFFER,STREAMS_POOL,DB_NK_CACHE_SIZE,DB_KEEP_CACHE_SIZE，DB_RECYCLE_CACHE_SIZE。</p>
+2，手动SGA内存管理
+<p style="padding-left: 30px;">1) 32bit和64bit限制<br />
+在32位的操作系统中，Oracle最大可用内存为1.75g，也就是说SGA+PGA&lt;=1.75g，超过这一限制的内存将不会被Oracle用到。 32位的Oracle可以装到64位的操作系统上，64位的Oracle不可以装到32位的操作系统上。</p>
+<p style="padding-left: 30px;">2) 查看Oracle版本： SQL&gt; select * from v$version;<br />
+BANNER<br />
+&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;-<br />
+Oracle Database 10g Enterprise Edition Release 10.2.0.1.0 - Prod<br />
+PL/SQL Release 10.2.0.1.0 - Production<br />
+CORE 10.2.0.1.0 Production<br />
+TNS for 32-bit Windows: Version 10.2.0.1.0 - Production<br />
+NLSRTL Version 10.2.0.1.0 – Production</p>
+<p style="padding-left: 30px;">3) 各组件设置：<br />
+JAVA_POOL_SIZE：如果没用到数据库端java的系统，30MB足够。</p>
+<p style="padding-left: 30px;">LOG_BUFFER：默认为MAX(512KB,128KB*CPU个数)。一般系统1MB足够，运行大型事务的系统可以设为2MB，让1/3满写入日志文件时可以继续写入缓冲，再大也没有意义。</p>
+<p style="padding-left: 30px;">SHARED_POOL_SIZE：过大过小都会严重影响系统性能，1GB内存可以设为100MB，2GB内存可设为150MB，4GB内存可设为300MB。共享池命中过低首先要调整的是应用程序而不是扩大共享池。使用绑定变量可以减少共享池需求、提高命中率，减少共享池管理负担和LATCH竞争。</p>
+<p style="padding-left: 30px;">LARGE_POOL_SIZE：使用专用服务模式可设为30MB，除非必要，不然不建议使用共享服务器模式。</p>
+<p style="padding-left: 30px;">DB_CACHE_SIZE：除去上述内存外其他可用内存都分配给该区域。</p>
+总结
+<p style="padding-left: 30px;">32位Oracle：<br />
+1G内存：SHARED_POOL_SIZE=100MB，DB_CACHE_SIZE=0.5GB；<br />
+2G内存：SHARED_POOL_SIZE=150MB，DB_CACHE_SIZE=1.25GB；</p>
+<p style="padding-left: 30px;">64位Oracle<br />
+4G内存：SHARED_POOL_SIZE=200MB，DB_CACHE_SIZE=2.5GB；<br />
+8G内存：SHARED_POOL_SIZE=400MB，DB_CACHE_SIZE=5GB；<br />
+12G内存：SHARED_POOL_SIZE=500MB，DB_CACHE_SIZE=8GB</p>
+再次强调，以上只是避免因SGA设置不当引起问题的大体设置，需要根据具体的系统负载和业务逻辑结合Stackpack等工具细调。</p>
+
+<p>其他：
+<p style="padding-left: 30px;">1. 可以使用show sga在数据库中来查询关于sga的信息</p>
+<p style="padding-left: 30px;">2. sga的取值单位为 granules，规则为 4M(SGA &lt; 128M)， 16M(sga&gt;128M)；具体值可以使用下列语句查询</p></p>
+
+<p><pre>select compenet_granule_size from v$sga_dynamic_components;</pre></p>
+</div>
+
+
+  <footer>
+    <p class="meta">
+      
+  
+
+<span class="byline author vcard">Posted by <span class="fn">wklxd</span></span>
+
+      
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2013-04-11T00:00:00+08:00" pubdate data-updated="true">Apr 11<span>th</span>, 2013</time>
+      
+
+<span class="categories">
+  
+    <a class='category' href='/blog/categories/oracle/'>oracle</a>
+  
+</span>
+
+
+    </p>
+    
+      <div class="sharing">
+  
+  <a href="http://twitter.com/share" class="twitter-share-button" data-url="http://blog.klwang.info/a-explain-of-oracle-sga-memory/" data-via="" data-counturl="http://blog.klwang.info/a-explain-of-oracle-sga-memory/" >Tweet</a>
+  
+  
+  
+</div>
+
+    
+    <p class="meta">
+      
+        <a class="basic-alignment left" href="/a-explain-of-oracle-pga-memory/" title="Previous Post: Oracle内存结构-PGA">&laquo; Oracle内存结构-PGA</a>
+      
+      
+        <a class="basic-alignment right" href="/oracle-tools-explain/" title="Next Post: Oracle实用小工具">Oracle实用小工具 &raquo;</a>
+      
+    </p>
+  </footer>
+</article>
+
+</div>
+
+<aside class="sidebar">
+  
+    <section>
+  <h1>Recent Posts</h1>
+  <ul id="recent_posts">
+    
+      <li class="post">
+        <a href="/about-strace/">About Strace</a>
+      </li>
+    
+      <li class="post">
+        <a href="/about-ubuntu-no-pubkey-error/">Ubuntu NO_PUBKEY 故障解决方式</a>
+      </li>
+    
+      <li class="post">
+        <a href="/bash-you-don-not-konw-special-character/">你不知道的bash (特殊字符)</a>
+      </li>
+    
+      <li class="post">
+        <a href="/about-lvm-skills/">Lvm 实践笔记</a>
+      </li>
+    
+      <li class="post">
+        <a href="/change-your-resouce-angent-to-multistate/">将 Resouce Angent 改造成 Multi State 类型</a>
+      </li>
+    
+  </ul>
+</section>
+
+
+
+
+
+  
+</aside>
+
+
+    </div>
+  </div>
+  <footer role="contentinfo"><p>
+  Copyright &copy; 2013 - wklxd -
+  <span class="credit">Powered by <a href="http://octopress.org">Octopress</a></span>
+</p>
+
+</footer>
+  
+
+
+
+
+
+
+
+  <script type="text/javascript">
+    (function(){
+      var twitterWidgets = document.createElement('script');
+      twitterWidgets.type = 'text/javascript';
+      twitterWidgets.async = true;
+      twitterWidgets.src = 'http://platform.twitter.com/widgets.js';
+      document.getElementsByTagName('head')[0].appendChild(twitterWidgets);
+    })();
+  </script>
+
+
+
+
+
+</body>
+</html>

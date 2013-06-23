@@ -1,209 +1,209 @@
 <?xml version='1.0' encoding='UTF-8'?>
 <urlset xmlns='http://www.sitemaps.org/schemas/sitemap/0.9'>
     <url>
-        <loc>http://blog.klwang.info/blog/mysql-password-come-back/</loc>
+        <loc>http://blog.klwang.info/mysql-password-come-back/</loc>
         <lastmod>2013-06-22T23:35:58+08:00</lastmod>
     </url>
     <url>
-        <loc>http://blog.klwang.info/blog/before-the-article/</loc>
+        <loc>http://blog.klwang.info/before-the-article/</loc>
         <lastmod>2013-06-22T23:35:58+08:00</lastmod>
     </url>
     <url>
-        <loc>http://blog.klwang.info/blog/upstart/</loc>
+        <loc>http://blog.klwang.info/upstart/</loc>
         <lastmod>2013-06-22T23:35:58+08:00</lastmod>
     </url>
     <url>
-        <loc>http://blog.klwang.info/blog/about-the-cluster-of-pgsql/</loc>
+        <loc>http://blog.klwang.info/about-the-cluster-of-pgsql/</loc>
         <lastmod>2013-06-22T23:35:58+08:00</lastmod>
     </url>
     <url>
-        <loc>http://blog.klwang.info/blog/pgsql-auto-increment-column/</loc>
+        <loc>http://blog.klwang.info/pgsql-auto-increment-column/</loc>
         <lastmod>2013-06-22T23:35:58+08:00</lastmod>
     </url>
     <url>
-        <loc>http://blog.klwang.info/blog/pgsql-log-system/</loc>
+        <loc>http://blog.klwang.info/pgsql-log-system/</loc>
         <lastmod>2013-06-22T23:35:58+08:00</lastmod>
     </url>
     <url>
-        <loc>http://blog.klwang.info/blog/pgsql-password-come-back/</loc>
+        <loc>http://blog.klwang.info/pgsql-password-come-back/</loc>
         <lastmod>2013-06-22T23:35:58+08:00</lastmod>
     </url>
     <url>
-        <loc>http://blog.klwang.info/blog/some-max-result-of-pgsql/</loc>
+        <loc>http://blog.klwang.info/some-max-result-of-pgsql/</loc>
         <lastmod>2013-06-22T23:35:58+08:00</lastmod>
     </url>
     <url>
-        <loc>http://blog.klwang.info/blog/sorry-too-many-clients/</loc>
+        <loc>http://blog.klwang.info/sorry-too-many-clients/</loc>
         <lastmod>2013-06-22T23:35:58+08:00</lastmod>
     </url>
     <url>
-        <loc>http://blog.klwang.info/blog/pgsql-aduit-method-of-trigger/</loc>
+        <loc>http://blog.klwang.info/pgsql-aduit-method-of-trigger/</loc>
         <lastmod>2013-06-22T23:35:58+08:00</lastmod>
     </url>
     <url>
-        <loc>http://blog.klwang.info/blog/bash-psql-combination/</loc>
+        <loc>http://blog.klwang.info/bash-psql-combination/</loc>
         <lastmod>2013-06-22T23:35:58+08:00</lastmod>
     </url>
     <url>
         <loc>
-            http://blog.klwang.info/blog/introduction-to-postgresql-rules-making-entries-which-cant-be-altered/
+            http://blog.klwang.info/introduction-to-postgresql-rules-making-entries-which-cant-be-altered/
         </loc>
         <lastmod>2013-06-22T23:35:58+08:00</lastmod>
     </url>
     <url>
-        <loc>http://blog.klwang.info/blog/postgresql-columns-that-your-dont-know/</loc>
+        <loc>http://blog.klwang.info/postgresql-columns-that-your-dont-know/</loc>
         <lastmod>2013-06-22T23:35:58+08:00</lastmod>
     </url>
     <url>
-        <loc>http://blog.klwang.info/blog/postgresql-partition-table-explain/</loc>
+        <loc>http://blog.klwang.info/postgresql-partition-table-explain/</loc>
         <lastmod>2013-06-22T23:35:58+08:00</lastmod>
     </url>
     <url>
-        <loc>http://blog.klwang.info/blog/a-explain-of-oracle-pga-memory/</loc>
+        <loc>http://blog.klwang.info/a-explain-of-oracle-pga-memory/</loc>
         <lastmod>2013-06-22T23:35:58+08:00</lastmod>
     </url>
     <url>
-        <loc>http://blog.klwang.info/blog/a-explain-of-oracle-sga-memory/</loc>
+        <loc>http://blog.klwang.info/a-explain-of-oracle-sga-memory/</loc>
         <lastmod>2013-06-22T23:35:58+08:00</lastmod>
     </url>
     <url>
-        <loc>http://blog.klwang.info/blog/oracle-tools-explain/</loc>
+        <loc>http://blog.klwang.info/oracle-tools-explain/</loc>
         <lastmod>2013-06-22T23:35:58+08:00</lastmod>
     </url>
     <url>
-        <loc>http://blog.klwang.info/blog/manage-of-oracle-constraints/</loc>
+        <loc>http://blog.klwang.info/manage-of-oracle-constraints/</loc>
         <lastmod>2013-06-22T23:35:58+08:00</lastmod>
     </url>
     <url>
-        <loc>http://blog.klwang.info/blog/manage-of-oracle-inde/</loc>
+        <loc>http://blog.klwang.info/manage-of-oracle-inde/</loc>
         <lastmod>2013-06-22T23:35:58+08:00</lastmod>
     </url>
     <url>
-        <loc>http://blog.klwang.info/blog/manage-of-oracle-tables/</loc>
+        <loc>http://blog.klwang.info/manage-of-oracle-tables/</loc>
         <lastmod>2013-06-22T23:35:58+08:00</lastmod>
     </url>
     <url>
-        <loc>http://blog.klwang.info/blog/manage-of-oracle-tablespace/</loc>
+        <loc>http://blog.klwang.info/manage-of-oracle-tablespace/</loc>
         <lastmod>2013-06-22T23:35:58+08:00</lastmod>
     </url>
     <url>
-        <loc>http://blog.klwang.info/blog/oracle-data-directory-explain/</loc>
+        <loc>http://blog.klwang.info/oracle-data-directory-explain/</loc>
         <lastmod>2013-06-22T23:35:58+08:00</lastmod>
     </url>
     <url>
-        <loc>http://blog.klwang.info/blog/oralce-ofa-expain-of-myself/</loc>
+        <loc>http://blog.klwang.info/oralce-ofa-expain-of-myself/</loc>
         <lastmod>2013-06-22T23:35:58+08:00</lastmod>
     </url>
     <url>
-        <loc>http://blog.klwang.info/blog/sfex-resource-agent/</loc>
+        <loc>http://blog.klwang.info/sfex-resource-agent/</loc>
         <lastmod>2013-06-22T23:35:58+08:00</lastmod>
     </url>
     <url>
-        <loc>http://blog.klwang.info/blog/basic-skill-of-svn/</loc>
+        <loc>http://blog.klwang.info/basic-skill-of-svn/</loc>
         <lastmod>2013-06-22T23:35:58+08:00</lastmod>
     </url>
     <url>
-        <loc>http://blog.klwang.info/blog/install-cloudstack-4-0/</loc>
+        <loc>http://blog.klwang.info/install-cloudstack-4-0/</loc>
         <lastmod>2013-06-22T23:35:58+08:00</lastmod>
     </url>
     <url>
-        <loc>http://blog.klwang.info/blog/vrrp-protocol-explain/</loc>
+        <loc>http://blog.klwang.info/vrrp-protocol-explain/</loc>
         <lastmod>2013-06-22T23:35:58+08:00</lastmod>
     </url>
     <url>
-        <loc>http://blog.klwang.info/blog/ubuntu-tips/</loc>
+        <loc>http://blog.klwang.info/ubuntu-tips/</loc>
         <lastmod>2013-06-22T23:35:58+08:00</lastmod>
     </url>
     <url>
-        <loc>http://blog.klwang.info/blog/cloudstack-basic-concept/</loc>
+        <loc>http://blog.klwang.info/cloudstack-basic-concept/</loc>
         <lastmod>2013-06-22T23:35:58+08:00</lastmod>
     </url>
     <url>
-        <loc>http://blog.klwang.info/blog/cloudstack-virtualmachine-vnc-config/</loc>
+        <loc>http://blog.klwang.info/cloudstack-virtualmachine-vnc-config/</loc>
         <lastmod>2013-06-22T23:35:58+08:00</lastmod>
     </url>
     <url>
-        <loc>http://blog.klwang.info/blog/change-default-wordpress-login-address/</loc>
+        <loc>http://blog.klwang.info/change-default-wordpress-login-address/</loc>
         <lastmod>2013-06-22T23:35:58+08:00</lastmod>
     </url>
     <url>
-        <loc>http://blog.klwang.info/blog/install-a-dhcp-service-on-ubuntu-server/</loc>
+        <loc>http://blog.klwang.info/install-a-dhcp-service-on-ubuntu-server/</loc>
         <lastmod>2013-06-22T23:35:58+08:00</lastmod>
     </url>
     <url>
-        <loc>http://blog.klwang.info/blog/move-my-wordpress-to-a-subdir/</loc>
+        <loc>http://blog.klwang.info/move-my-wordpress-to-a-subdir/</loc>
         <lastmod>2013-06-22T23:35:58+08:00</lastmod>
     </url>
     <url>
-        <loc>http://blog.klwang.info/blog/sbd-fencing/</loc>
+        <loc>http://blog.klwang.info/sbd-fencing/</loc>
         <lastmod>2013-06-22T23:35:58+08:00</lastmod>
     </url>
     <url>
-        <loc>http://blog.klwang.info/blog/split-brain-quorum-and-fencing/</loc>
+        <loc>http://blog.klwang.info/split-brain-quorum-and-fencing/</loc>
         <lastmod>2013-06-22T23:35:58+08:00</lastmod>
     </url>
     <url>
-        <loc>http://blog.klwang.info/blog/centos-and-centos-update-softwares/</loc>
+        <loc>http://blog.klwang.info/centos-and-centos-update-softwares/</loc>
         <lastmod>2013-06-22T23:35:58+08:00</lastmod>
     </url>
     <url>
-        <loc>http://blog.klwang.info/blog/use-of-cloudstack-reset_password-method/</loc>
+        <loc>http://blog.klwang.info/use-of-cloudstack-reset_password-method/</loc>
         <lastmod>2013-06-22T23:35:58+08:00</lastmod>
     </url>
     <url>
-        <loc>http://blog.klwang.info/blog/resource-agent-debug/</loc>
+        <loc>http://blog.klwang.info/resource-agent-debug/</loc>
         <lastmod>2013-06-22T23:35:58+08:00</lastmod>
     </url>
     <url>
-        <loc>http://blog.klwang.info/blog/ovirt-install-guide-of-klwang/</loc>
+        <loc>http://blog.klwang.info/ovirt-install-guide-of-klwang/</loc>
         <lastmod>2013-06-22T23:35:58+08:00</lastmod>
     </url>
     <url>
-        <loc>http://blog.klwang.info/blog/config-your-net-card-name/</loc>
+        <loc>http://blog.klwang.info/config-your-net-card-name/</loc>
         <lastmod>2013-06-22T23:35:58+08:00</lastmod>
     </url>
     <url>
-        <loc>http://blog.klwang.info/blog/linux-file-permission/</loc>
+        <loc>http://blog.klwang.info/linux-file-permission/</loc>
         <lastmod>2013-06-22T23:35:58+08:00</lastmod>
     </url>
     <url>
-        <loc>http://blog.klwang.info/blog/kvm-guest-fence/</loc>
+        <loc>http://blog.klwang.info/kvm-guest-fence/</loc>
         <lastmod>2013-06-22T23:35:58+08:00</lastmod>
     </url>
     <url>
-        <loc>http://blog.klwang.info/blog/cman-and-corosync/</loc>
+        <loc>http://blog.klwang.info/cman-and-corosync/</loc>
         <lastmod>2013-06-22T23:35:58+08:00</lastmod>
     </url>
     <url>
-        <loc>http://blog.klwang.info/blog/gfs2-startup/</loc>
+        <loc>http://blog.klwang.info/gfs2-startup/</loc>
         <lastmod>2013-06-22T23:35:58+08:00</lastmod>
     </url>
     <url>
-        <loc>http://blog.klwang.info/blog/pacemaker-cososync-cman-setup/</loc>
+        <loc>http://blog.klwang.info/pacemaker-cososync-cman-setup/</loc>
         <lastmod>2013-06-22T23:35:58+08:00</lastmod>
     </url>
     <url>
-        <loc>http://blog.klwang.info/blog/wordpress-enable-mobile-access/</loc>
+        <loc>http://blog.klwang.info/wordpress-enable-mobile-access/</loc>
         <lastmod>2013-06-22T23:35:58+08:00</lastmod>
     </url>
     <url>
-        <loc>http://blog.klwang.info/blog/change-your-resouce-angent-to-multistate/</loc>
+        <loc>http://blog.klwang.info/change-your-resouce-angent-to-multistate/</loc>
         <lastmod>2013-06-22T23:35:58+08:00</lastmod>
     </url>
     <url>
-        <loc>http://blog.klwang.info/blog/about-lvm-skills/</loc>
+        <loc>http://blog.klwang.info/about-lvm-skills/</loc>
         <lastmod>2013-06-22T23:35:58+08:00</lastmod>
     </url>
     <url>
-        <loc>http://blog.klwang.info/blog/bash-you-don-not-konw-special-character/</loc>
+        <loc>http://blog.klwang.info/bash-you-don-not-konw-special-character/</loc>
         <lastmod>2013-06-22T23:35:58+08:00</lastmod>
     </url>
     <url>
-        <loc>http://blog.klwang.info/blog/about-ubuntu-no-pubkey-error/</loc>
+        <loc>http://blog.klwang.info/about-ubuntu-no-pubkey-error/</loc>
         <lastmod>2013-06-22T23:35:58+08:00</lastmod>
     </url>
     <url>
-        <loc>http://blog.klwang.info/blog/about-strace/</loc>
+        <loc>http://blog.klwang.info/about-strace/</loc>
         <lastmod>2013-06-22T23:35:58+08:00</lastmod>
     </url>
     <url>

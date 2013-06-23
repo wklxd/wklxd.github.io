@@ -4,7 +4,7 @@
   <title><![CDATA[Category: wordpress | klwang's TechNotes]]></title>
   <link href="http://blog.klwang.info/blog/categories/wordpress/atom.xml" rel="self"/>
   <link href="http://blog.klwang.info/"/>
-  <updated>2013-06-23T00:41:25+08:00</updated>
+  <updated>2013-06-23T09:22:55+08:00</updated>
   <id>http://blog.klwang.info/</id>
   <author>
     <name><![CDATA[wklxd]]></name>
@@ -15,9 +15,9 @@
   
   <entry>
     <title type="html"><![CDATA[让 wordpress 支持手机访问]]></title>
-    <link href="http://blog.klwang.info/blog/wordpress-enable-mobile-access/"/>
+    <link href="http://blog.klwang.info/wordpress-enable-mobile-access/"/>
     <updated>2013-06-08T00:00:00+08:00</updated>
-    <id>http://blog.klwang.info/blog/wordpress-enable-mobile-access</id>
+    <id>http://blog.klwang.info/wordpress-enable-mobile-access</id>
     <content type="html"><![CDATA[<p>一时兴起，用手机打开了 <a href="http://klwang.info" target="_blank">klwang.info</a>。竟然是无法访问，真是太让人遗憾了。</p>
 
 
@@ -154,9 +154,9 @@ EOF
   
   <entry>
     <title type="html"><![CDATA[将wordpress博客站点移动到子目录]]></title>
-    <link href="http://blog.klwang.info/blog/move-my-wordpress-to-a-subdir/"/>
+    <link href="http://blog.klwang.info/move-my-wordpress-to-a-subdir/"/>
     <updated>2013-05-19T00:00:00+08:00</updated>
-    <id>http://blog.klwang.info/blog/move-my-wordpress-to-a-subdir</id>
+    <id>http://blog.klwang.info/move-my-wordpress-to-a-subdir</id>
     <content type="html"><![CDATA[<p>之前为了简单，建立博客时使用了wordpress的默认选项，一路回车；</p>
 
 
@@ -202,9 +202,9 @@ EOF
   
   <entry>
     <title type="html"><![CDATA[修改wordpress的登陆地址]]></title>
-    <link href="http://blog.klwang.info/blog/change-default-wordpress-login-address/"/>
+    <link href="http://blog.klwang.info/change-default-wordpress-login-address/"/>
     <updated>2013-05-19T00:00:00+08:00</updated>
-    <id>http://blog.klwang.info/blog/change-default-wordpress-login-address</id>
+    <id>http://blog.klwang.info/change-default-wordpress-login-address</id>
     <content type="html"><![CDATA[<p>考虑到blog的安全性，决定改一下登陆界面，百度了好久，做了好多无用功，还是没有成功；</p>
 
 

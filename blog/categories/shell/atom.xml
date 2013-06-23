@@ -4,7 +4,7 @@
   <title><![CDATA[Category: shell | klwang's TechNotes]]></title>
   <link href="http://blog.klwang.info/blog/categories/shell/atom.xml" rel="self"/>
   <link href="http://blog.klwang.info/"/>
-  <updated>2013-06-23T00:41:25+08:00</updated>
+  <updated>2013-06-23T09:22:55+08:00</updated>
   <id>http://blog.klwang.info/</id>
   <author>
     <name><![CDATA[wklxd]]></name>
@@ -15,9 +15,9 @@
   
   <entry>
     <title type="html"><![CDATA[About strace]]></title>
-    <link href="http://blog.klwang.info/blog/about-strace/"/>
+    <link href="http://blog.klwang.info/about-strace/"/>
     <updated>2013-06-21T00:00:00+08:00</updated>
-    <id>http://blog.klwang.info/blog/about-strace</id>
+    <id>http://blog.klwang.info/about-strace</id>
     <content type="html"><![CDATA[<p>作为软件的使用者而非开发者，平时会遇到很多奇怪的问题</p>
 
 
@@ -382,9 +382,9 @@
   
   <entry>
     <title type="html"><![CDATA[你不知道的bash (特殊字符)]]></title>
-    <link href="http://blog.klwang.info/blog/bash-you-don-not-konw-special-character/"/>
+    <link href="http://blog.klwang.info/bash-you-don-not-konw-special-character/"/>
     <updated>2013-06-17T00:00:00+08:00</updated>
-    <id>http://blog.klwang.info/blog/bash-you-don-not-konw-special-character</id>
+    <id>http://blog.klwang.info/bash-you-don-not-konw-special-character</id>
     <content type="html"><![CDATA[<p><strong>题记</strong>
 <pre>
   使用Linux有四年多了

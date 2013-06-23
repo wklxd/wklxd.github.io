@@ -4,7 +4,7 @@
   <title><![CDATA[Category: lvm | klwang's TechNotes]]></title>
   <link href="http://blog.klwang.info/blog/categories/lvm/atom.xml" rel="self"/>
   <link href="http://blog.klwang.info/"/>
-  <updated>2013-06-23T00:41:25+08:00</updated>
+  <updated>2013-06-23T09:22:55+08:00</updated>
   <id>http://blog.klwang.info/</id>
   <author>
     <name><![CDATA[wklxd]]></name>
@@ -15,9 +15,9 @@
   
   <entry>
     <title type="html"><![CDATA[lvm 实践笔记]]></title>
-    <link href="http://blog.klwang.info/blog/about-lvm-skills/"/>
+    <link href="http://blog.klwang.info/about-lvm-skills/"/>
     <updated>2013-06-12T00:00:00+08:00</updated>
-    <id>http://blog.klwang.info/blog/about-lvm-skills</id>
+    <id>http://blog.klwang.info/about-lvm-skills</id>
     <content type="html"><![CDATA[<p><strong>物理卷</strong></p>
 
 
@@ -599,9 +599,9 @@ mount
   
   <entry>
     <title type="html"><![CDATA[GFS2 初级]]></title>
-    <link href="http://blog.klwang.info/blog/gfs2-startup/"/>
+    <link href="http://blog.klwang.info/gfs2-startup/"/>
     <updated>2013-06-05T00:00:00+08:00</updated>
-    <id>http://blog.klwang.info/blog/gfs2-startup</id>
+    <id>http://blog.klwang.info/gfs2-startup</id>
     <content type="html"><![CDATA[<p><h4>建立文件系统</h4>
 <pre># mkfs.gfs2 -p lock_dlm -t alpha:mydata1 -j 8 /dev/vg01/lvol0</pre>
 -p 指定要使用的锁定协议名称，集群的锁定协议为 lock_dlm<br />

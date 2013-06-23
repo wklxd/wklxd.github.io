@@ -1,0 +1,521 @@
+
+<!DOCTYPE html>
+<!--[if IEMobile 7 ]><html class="no-js iem7"><![endif]-->
+<!--[if lt IE 9]><html class="no-js lte-ie8"><![endif]-->
+<!--[if (gt IE 8)|(gt IEMobile 7)|!(IEMobile)|!(IE)]><!--><html class="no-js" lang="en"><!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  <title>lvm 实践笔记 - klwang's TechNotes</title>
+  <meta name="author" content="wklxd">
+
+  
+  <meta name="description" content="物理卷 创建物理卷 # pvcreate /dev/sdd /dev/sde /dev/sdf 察看已经存在的物理卷信息 # pvs --每行一条，便于脚本调用
+# pvdisplay --显示pv的详细信息 阻止在物理卷上分配空间 （比如，某个物理磁盘发生了硬件故障，需要移除这个硬盘的时候 &hellip;">
+  
+
+  <!-- http://t.co/dKP3o1e -->
+  <meta name="HandheldFriendly" content="True">
+  <meta name="MobileOptimized" content="320">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  
+  <link rel="canonical" href="http://blog.klwang.info/about-lvm-skills">
+  <link href="/favicon.png" rel="icon">
+  <link href="/stylesheets/screen.css" media="screen, projection" rel="stylesheet" type="text/css">
+  <link href="/atom.xml" rel="alternate" title="klwang's TechNotes" type="application/atom+xml">
+  <script src="/javascripts/modernizr-2.0.js"></script>
+  <script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+  <script>!window.jQuery && document.write(unescape('%3Cscript src="./javascripts/lib/jquery.min.js"%3E%3C/script%3E'))</script>
+  <script src="/javascripts/octopress.js" type="text/javascript"></script>
+  <!--Fonts from Google"s Web font directory at http://google.com/webfonts -->
+<link href="http://fonts.googleapis.com/css?family=PT+Serif:regular,italic,bold,bolditalic" rel="stylesheet" type="text/css">
+<link href="http://fonts.googleapis.com/css?family=PT+Sans:regular,italic,bold,bolditalic" rel="stylesheet" type="text/css">
+
+  
+
+</head>
+
+<body   >
+  <header role="banner"><hgroup>
+  <h1><a href="/">klwang's TechNotes</a></h1>
+  
+    <h2>Focusing on Datebase and Linux</h2>
+  
+</hgroup>
+
+</header>
+  <nav role="navigation"><ul class="subscription" data-subscription="rss">
+  <li><a href="/atom.xml" rel="subscribe-rss" title="subscribe via RSS">RSS</a></li>
+  
+</ul>
+  
+<form action="http://google.com/search" method="get">
+  <fieldset role="search">
+    <input type="hidden" name="q" value="site:blog.klwang.info" />
+    <input class="search" type="text" name="q" results="0" placeholder="Search"/>
+  </fieldset>
+</form>
+  
+<ul class="main-navigation">
+  <li><a href="/">Blog</a></li>
+  <li><a href="/blog/archives">Archives</a></li>
+</ul>
+
+</nav>
+  <div id="main">
+    <div id="content">
+      <div>
+<article class="hentry" role="article">
+  
+  <header>
+    
+      <h1 class="entry-title">Lvm 实践笔记</h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2013-06-12T00:00:00+08:00" pubdate data-updated="true">Jun 12<span>th</span>, 2013</time>
+        
+      </p>
+    
+  </header>
+
+
+<div class="entry-content"><p><strong>物理卷</strong></p>
+
+<p>创建物理卷
+<pre>
+# pvcreate /dev/sdd /dev/sde /dev/sdf
+</pre>
+  <br />
+察看已经存在的物理卷信息</p>
+
+<p><pre>
+# pvs				--每行一条，便于脚本调用
+# pvdisplay			--显示pv的详细信息
+</pre></p>
+
+<p>阻止在物理卷上分配空间 （比如，某个物理磁盘发生了硬件故障，需要移除这个硬盘的时候）</p>
+
+<p><pre>
+# pvchange -x n /dev/sdk1
+</pre></p>
+
+<p>重新允许在物理卷上分配空间</p>
+
+<p><pre>
+# pvchange -x y /dev/sdk1
+</pre></p>
+
+<p>移除物理卷（前提，没有卷组使用该pv）     </p>
+
+<p><pre>
+# pvremove /dev/ram15
+  Labels on physical volume "/dev/ram15" successfully wiped
+</pre></p>
+
+<p>替换/移除物理卷</p>
+
+<p><pre>
+# pvmove /dev/sdc1 SourcePhysicalVolume     --从SourcePhysicalVolume中移除sdc1
+</pre></p>
+
+<p>只移除 sdc1 中 MyLV 逻辑卷上的的数据</p>
+
+<p><pre>
+# pvmove -n MyLV /dev/sdc1
+</pre></p>
+
+<p><strong>卷组</strong></p>
+
+<p>创建卷组</p>
+
+<p><pre>
+# vgcreate vg1 /dev/sdd1 /dev/sde1
+</pre></p>
+
+<p>给卷组中加入新的物理卷</p>
+
+<p><pre>
+# vgextend vg1 /dev/sdf1
+</pre></p>
+
+<p>察看已经存在的卷组信息</p>
+
+<p><pre>
+# vgs		--每行一条，便于脚本调用
+# vgdisplay	--现实vg卷组的详细信息
+# vgscan	--重建 /etc/lvm/cache/.cache file cache文件，维护目前的 LVM 设备列表
+</pre></p>
+
+<p>系统启动时，会自动运行vgscan命令。如果集群中在一个节点进行了 vgextend 等命令，在其他节点手动运行 vgscan 将是很好的选择</p>
+
+<p>移动物理卷上的数据（适用于替换硬盘时）</p>
+
+<p><pre>
+# vgreduce my_volume_group /dev/hda1
+</pre>
+该命令会将 /dev/hda1 上的数据挪到同卷组内的其他物理卷上</p>
+
+<p>限制卷组中最大的逻辑卷数量</p>
+
+<p><pre>
+# vgchange -l 128 /dev/vg00
+</pre></p>
+
+<p>将卷组改成闲置状态（维护时使用）</p>
+
+<p><pre>
+# vgchange -a n my_volume_group
+</pre></p>
+
+<p>重新激活卷组</p>
+
+<p><pre>
+# vgchange -a y my_volume_group
+</pre></p>
+
+<p>移除卷组（要保证移除的卷组上的逻辑卷都已经移除了）</p>
+
+<p><pre>
+# vgremove officevg
+  Volume group "officevg" successfully removed
+</pre></p>
+
+<p>卷组拆分（将/dev/ram15 从 bigvg 中拆出来组成名为 smallvg 的卷组）</p>
+
+<p><pre>
+# vgsplit bigvg smallvg /dev/ram15
+  Volume group "smallvg" successfully split from "bigvg"
+</pre></p>
+
+<p>卷组合并（前提条件：两个卷组的 extent sizes 必须相同）</p>
+
+<p><pre>
+# vgmerge -v databases my_vg
+</pre></p>
+
+<p>将 my_vg 合并到 database卷组, -v表示显示详细信息，其中 my_vg 必须处于 inactive 状态， database可以处于active或者inactive状态</p>
+
+<p>卷组改名</p>
+
+<p><pre>
+# vgrename /dev/vg02 /dev/my_volume_group
+</pre></p>
+
+<p><strong>逻辑卷</strong></p>
+
+<p>创建逻辑卷 </p>
+
+<p><pre>
+# lvcreate -L1500 -n testlv testvg   		--1500M 默认单位M
+# lvcreate -l 60%VG -n mylv testvg   		--使用卷组的60%
+# lvcreate -l 100%FREE -n yourlv testvg 	--使用testvg的全部剩余空间
+</pre></p>
+
+<p>创建条带化的逻辑卷</p>
+
+<p><pre>
+# lvcreate -L 50G -i2 -I64 -n gfslv vg0		-i表示设备的数量， -I表示条带的大小（KB）
+</pre></p>
+
+<p>制定条带化时的详细信息</p>
+
+<p><pre>
+# lvcreate -l 100 -i2 -nstripelv testvg /dev/sda1:0-49 /dev/sdb1:50-99
+  Using default stripesize 64.00 KB
+  Logical volume "stripelv" created
+</pre>
+表示大小为 100个PE， 其中，使用 sda1 的0-49和 sda2 的 50-99</p>
+
+<p>创建镜像化的逻辑卷</p>
+
+<p><pre>
+# lvcreate -L 50G -m1 -n mirrorlv vg0		-- -m表示镜像（复制）的数量
+</pre></p>
+
+<p>镜像逻辑卷按照extend来拷贝，默认是512KB，可以使用 -R num M 的方式进行调整</p>
+
+<p>注意：超过1.5T的就不能使用 512K了</p>
+
+<p><strong>拇指定律： 使用2的指数， 3-4T：4M，   5-8T： 8M</strong></p>
+
+<p>使用快照</p>
+
+<p><pre>
+# lvcreate --size 100M --snapshot --name snap /dev/vg00/lvol1
+</pre></p>
+
+<p>为 /dev/vg00/lvol1 创建名为 snap 的快照，可以用于备份<br />
+ 
+使用merge操作</p>
+
+<p><pre>
+# lvconvert --merge vg00/lvol1_snap
+</pre></p>
+
+<p>将 lvol1_snap merge回源逻辑卷，回复备份时可以考虑此操作<br />
+ 
+收缩逻辑卷</p>
+
+<p><pre>
+# lvreduce -l -3 vg00/lvol1
+</pre>
+将逻辑卷减少3个PE</p>
+
+<p>修改逻辑卷的权限</p>
+
+<p><pre>
+# lvchange -pr vg00/lvol1      --将逻辑卷改为只读模式
+# lvchange -prw vg00/lvol1     --将逻辑卷修改为读写模式
+</pre></p>
+
+<p>逻辑卷改名</p>
+
+<p><pre>
+# lvrename /dev/vg02/lvold /dev/vg02/lvnew
+</pre></p>
+
+<p>删除逻辑卷</p>
+
+<p><pre>
+# lvremove /dev/vg02/lvol1
+</pre></p>
+
+<p>增大逻辑卷</p>
+
+<p>增大到 12G</p>
+
+<p><pre>
+# lvextend -L12G /dev/myvg/homevol
+lvextend -- extending logical volume "/dev/myvg/homevol" to 12 GB
+lvextend -- doing automatic backup of volume group "myvg"
+lvextend -- logical volume "/dev/myvg/homevol" successfully extended
+</pre></p>
+
+<p>增大1G</p>
+
+<p><pre>
+# lvextend -L+1G /dev/myvg/homevol
+lvextend -- extending logical volume "/dev/myvg/homevol" to 13 GB
+lvextend -- doing automatic backup of volume group "myvg"
+lvextend -- logical volume "/dev/myvg/homevol" successfully extended
+</pre></p>
+
+<p>将卷组中所有的空闲附加到已经存在的逻辑卷</p>
+
+<p><pre>
+lvextend -l +100%FREE /dev/myvg/testlv
+  Extending logical volume testlv to 68.59 GB
+  Logical volume testlv successfully resized
+</pre></p>
+
+<p>收缩逻辑卷</p>
+
+<p><pre>
+# lvreduce -l -3 vg00/lvol1
+</pre>
+收缩3个PE，在收缩卷之前要保证先将里边的文件系统进行收缩，不然会丢失数据</p>
+
+<p>如果数据量较大，需要使用-n参数后台进行，下面的命令表示将 sdc1 上的数据移动到 sdf1</p>
+
+<p><pre>
+# pvmove -b /dev/sdc1 /dev/sdf1
+</pre></p>
+
+<p><strong>综合操作实例（跨系统的卷组迁移）</strong></p>
+
+<p>1. 卸载卷组上的所有逻辑卷</p>
+
+<p><pre>
+umount 
+</pre></p>
+
+<p>2. 将卷组改成闲置状态</p>
+
+<p><pre>
+vgchange -a n olumeGroupName
+</pre></p>
+
+<p>3. 导出VolumeGroupName的信息</p>
+
+<p><pre>
+vgexport VolumeGroupName
+</pre></p>
+
+<p>4. 做一次重建cache扫描</p>
+
+<p><pre>
+vgscan
+</pre></p>
+
+<p>5. 察看所有相关物理卷的状态，一定要处于export状态</p>
+
+<p><pre>
+pvscan
+    PV /dev/sda1
+    is in exported VG myvg [17.15 GB / 7.15 GB free]
+    PV /dev/sdc1
+    is in exported VG myvg [17.15 GB / 15.15 GB free]
+    PV /dev/sdd1
+    is in exported VG myvg [17.15 GB / 15.15 GB free]
+    ...
+</pre></p>
+
+<p>6. 拔下硬盘装到新的机器</p>
+
+<p>7. 导入VolumeGroupName的信息</p>
+
+<p><pre>
+vgimport VolumeGroupName
+</pre></p>
+
+<p>8. 激活卷组</p>
+
+<p><pre>
+vgchange -a y VolumeGroupName
+</pre></p>
+
+<p>9. 重新挂在相关逻辑卷</p>
+
+<p><pre>
+mount
+</pre></p>
+
+<p>That&#8217;s all</p>
+</div>
+
+
+  <footer>
+    <p class="meta">
+      
+  
+
+<span class="byline author vcard">Posted by <span class="fn">wklxd</span></span>
+
+      
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2013-06-12T00:00:00+08:00" pubdate data-updated="true">Jun 12<span>th</span>, 2013</time>
+      
+
+<span class="categories">
+  
+    <a class='category' href='/blog/categories/linux/'>Linux</a>, <a class='category' href='/blog/categories/lvm/'>lvm</a>
+  
+</span>
+
+
+    </p>
+    
+      <div class="sharing">
+  
+  <a href="http://twitter.com/share" class="twitter-share-button" data-url="http://blog.klwang.info/about-lvm-skills/" data-via="" data-counturl="http://blog.klwang.info/about-lvm-skills/" >Tweet</a>
+  
+  
+  
+</div>
+
+    
+    <p class="meta">
+      
+        <a class="basic-alignment left" href="/change-your-resouce-angent-to-multistate/" title="Previous Post: 将 resouce angent 改造成 multi state 类型">&laquo; 将 resouce angent 改造成 multi state 类型</a>
+      
+      
+        <a class="basic-alignment right" href="/bash-you-don-not-konw-special-character/" title="Next Post: 你不知道的bash (特殊字符)">你不知道的bash (特殊字符) &raquo;</a>
+      
+    </p>
+  </footer>
+</article>
+
+</div>
+
+<aside class="sidebar">
+  
+    <section>
+  <h1>Recent Posts</h1>
+  <ul id="recent_posts">
+    
+      <li class="post">
+        <a href="/about-strace/">About Strace</a>
+      </li>
+    
+      <li class="post">
+        <a href="/about-ubuntu-no-pubkey-error/">Ubuntu NO_PUBKEY 故障解决方式</a>
+      </li>
+    
+      <li class="post">
+        <a href="/bash-you-don-not-konw-special-character/">你不知道的bash (特殊字符)</a>
+      </li>
+    
+      <li class="post">
+        <a href="/about-lvm-skills/">Lvm 实践笔记</a>
+      </li>
+    
+      <li class="post">
+        <a href="/change-your-resouce-angent-to-multistate/">将 Resouce Angent 改造成 Multi State 类型</a>
+      </li>
+    
+  </ul>
+</section>
+
+
+
+
+
+  
+</aside>
+
+
+    </div>
+  </div>
+  <footer role="contentinfo"><p>
+  Copyright &copy; 2013 - wklxd -
+  <span class="credit">Powered by <a href="http://octopress.org">Octopress</a></span>
+</p>
+
+</footer>
+  
+
+
+
+
+
+
+
+  <script type="text/javascript">
+    (function(){
+      var twitterWidgets = document.createElement('script');
+      twitterWidgets.type = 'text/javascript';
+      twitterWidgets.async = true;
+      twitterWidgets.src = 'http://platform.twitter.com/widgets.js';
+      document.getElementsByTagName('head')[0].appendChild(twitterWidgets);
+    })();
+  </script>
+
+
+
+
+
+</body>
+</html>

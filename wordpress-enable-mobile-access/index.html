@@ -1,0 +1,322 @@
+
+<!DOCTYPE html>
+<!--[if IEMobile 7 ]><html class="no-js iem7"><![endif]-->
+<!--[if lt IE 9]><html class="no-js lte-ie8"><![endif]-->
+<!--[if (gt IE 8)|(gt IEMobile 7)|!(IEMobile)|!(IE)]><!--><html class="no-js" lang="en"><!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  <title>让 wordpress 支持手机访问 - klwang's TechNotes</title>
+  <meta name="author" content="wklxd">
+
+  
+  <meta name="description" content="一时兴起，用手机打开了 klwang.info。竟然是无法访问，真是太让人遗憾了。 网上搜了一下，很多人都说使用要 wp-wap， 完了还要改变访问的地址为 klwang.info/wap， 为了还看，还要另外设置一个域名解析。 我就在想了，既然有了新的访问地址，那可不可以在index. &hellip;">
+  
+
+  <!-- http://t.co/dKP3o1e -->
+  <meta name="HandheldFriendly" content="True">
+  <meta name="MobileOptimized" content="320">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  
+  <link rel="canonical" href="http://blog.klwang.info/wordpress-enable-mobile-access">
+  <link href="/favicon.png" rel="icon">
+  <link href="/stylesheets/screen.css" media="screen, projection" rel="stylesheet" type="text/css">
+  <link href="/atom.xml" rel="alternate" title="klwang's TechNotes" type="application/atom+xml">
+  <script src="/javascripts/modernizr-2.0.js"></script>
+  <script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+  <script>!window.jQuery && document.write(unescape('%3Cscript src="./javascripts/lib/jquery.min.js"%3E%3C/script%3E'))</script>
+  <script src="/javascripts/octopress.js" type="text/javascript"></script>
+  <!--Fonts from Google"s Web font directory at http://google.com/webfonts -->
+<link href="http://fonts.googleapis.com/css?family=PT+Serif:regular,italic,bold,bolditalic" rel="stylesheet" type="text/css">
+<link href="http://fonts.googleapis.com/css?family=PT+Sans:regular,italic,bold,bolditalic" rel="stylesheet" type="text/css">
+
+  
+
+</head>
+
+<body   >
+  <header role="banner"><hgroup>
+  <h1><a href="/">klwang's TechNotes</a></h1>
+  
+    <h2>Focusing on Datebase and Linux</h2>
+  
+</hgroup>
+
+</header>
+  <nav role="navigation"><ul class="subscription" data-subscription="rss">
+  <li><a href="/atom.xml" rel="subscribe-rss" title="subscribe via RSS">RSS</a></li>
+  
+</ul>
+  
+<form action="http://google.com/search" method="get">
+  <fieldset role="search">
+    <input type="hidden" name="q" value="site:blog.klwang.info" />
+    <input class="search" type="text" name="q" results="0" placeholder="Search"/>
+  </fieldset>
+</form>
+  
+<ul class="main-navigation">
+  <li><a href="/">Blog</a></li>
+  <li><a href="/blog/archives">Archives</a></li>
+</ul>
+
+</nav>
+  <div id="main">
+    <div id="content">
+      <div>
+<article class="hentry" role="article">
+  
+  <header>
+    
+      <h1 class="entry-title">让 Wordpress 支持手机访问</h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2013-06-08T00:00:00+08:00" pubdate data-updated="true">Jun 8<span>th</span>, 2013</time>
+        
+      </p>
+    
+  </header>
+
+
+<div class="entry-content"><p>一时兴起，用手机打开了 <a href="http://klwang.info" target="_blank">klwang.info</a>。竟然是无法访问，真是太让人遗憾了。</p>
+
+<p>网上搜了一下，很多人都说使用要 wp-wap， 完了还要改变访问的地址为 <a href="http://klwang.info/?mobile=1" target="_blank">klwang.info/wap</a>， 为了还看，还要另外设置一个域名解析。</p>
+
+<p>我就在想了，既然有了新的访问地址，那可不可以在index.php中加一些代码，判断访问的来源，如果是手机访问，就重定向到 <a href="http://klwang.info/?mobile=1" target="_blank">klwang.info/wap</a> 好了，这样还免得设置解析，最重要的是访问者可以不用输入专门的手机版域名。</p>
+
+<p>接着找了PHP关于$_SERVER的所有变量，挑了一些 可能有用的变量，如</p>
+
+<p><pre>
+HTTP_USER_AGENT
+VIA
+</pre></p>
+
+<p>关于 HTTP_USER_AGENT， 实在是比较强大，可以知道所有的访问来自什么设备，只要grep就行了，具体的设备和 HTTP_USER_AGENT 值的关系，可以参考这篇文档： Mobile Browser ID (User-Agent) Strings， 文章里列出了几乎世界上所有的移动设备HTTP_USER_AGENT信息，为了方便，还提供了下面这么一段代码，来获取这写 AGENT</p>
+
+<p><pre>
+// Marc Gray's PHP script (untested by us)
+// use at your discretion
+<?php
+$page = file_get_contents('1.html');
+preg_match_all('/<(p) class="g-c-[ns]"[^>]*>(.*?)<\/p>/s', $page, $m); </pre></p>
+
+<p>$agents = array();<br />
+foreach($m[2] as $agent) {<br />
+  $split = explode(&#8220;\n&#8221;, trim($agent));<br />
+  foreach($split as $item) {<br />
+    $agents[] = trim($item);<br />
+  }<br />
+}
+// $agents now holds every user agent string, one per array index, trimmed<br />
+foreach($agents as $agent) {<br />
+ echo($agent.&#8221;\n&#8221;);<br />
+}
+?>
+</p>
+
+<p>代码里边说他们没有测试过，我可以告诉大家，我测试了，确实可以用，但是结果确实很多， 一共 477 行， 下面是其中的几行，写在这里让大家看看 HTTP_USER_AGENT 到底长啥样</p>
+
+<p><pre>
+Mobile/9B206 Safari/7534.48.3
+Mozilla/5.0 (iPhone; CPU iPhone OS 5_1 like Mac OS X)
+AppleWebKit/534.46 (KHTML, like Gecko) Version/5.1 Mobile/9B176
+Safari/7534.48.3
+Mozilla/5.0 (iPhone; CPU iPhone OS 5_0_1 like Mac OS X)
+AppleWebKit/534.46 (KHTML, like Gecko) Version/5.1 Mobile/9A405
+Safari/7534.48.3</pre></p>
+
+<p>这里是大量的省略号</p>
+
+<p>Mozilla/5.0 (iPhone; CPU iPhone OS 5_0_1 like Mac OS X)<br />
+AppleWebKit/534.46 (KHTML, like Gecko) Version/5.1 Mobile/9A405<br />
+Safari/7534.48.3<br />
+Mozilla/5.0 (iPod; U; CPU iPhone OS 4_3_3 like Mac OS<br />
+X; en-us) AppleWebKit/533.17.9 (KHTML, like Gecko) Version/5.0.2
+</p>
+
+<p>有了所有的移动设备，就好办了，只要在 HTTP_USER_AGENT 中找这些东东就ok了，只要找到一个，就 Location 到 <a href="http://klwang.info/?mobile=1" target="_blank">klwang.info/wap</a>。<br />
+上边的代码改成这样就行了</p>
+
+<p><pre>
+// $agents now holds every user agent string, one per array index, trimmed
+foreach($agents as $agent) {
+ if($agent == $_SERVER['HTTP_USER_AGENT']){
+    header("Location: http://klwang.info/wap");
+}
+</pre></p>
+
+<p>好了，思路有了，也知道怎么搞了，可以动手了， 打开 wordpress，搜索 wap-wp</p>
+
+<p><a href="http://klwang.info/blog/wp-content/uploads/2013/06/wap-wp-search.png"><img src="http://klwang.info/blog/wp-content/uploads/2013/06/wap-wp-search-300x229.png" alt="wap-wp-search" width="300" height="229" /></a></p>
+
+<p>咦？ 这个 Wireless-Wordpress 是啥？ 看了介绍，突然发现我半天的思考白费了，竟然有人已经把我想的事情全做好了，而且还做的更好。</p>
+
+<p>好吧，就直接用人家的插件吧，照着引导设置，也很简单，就不废话了</p>
+
+<p>这下玩大了， 上面说了一大堆，都暴露除了 <a href="http://klwang.info/?mobile=1" target="_blank">klwang.info/wap </a>这个地址，最后竟然不搞了，这怎么能行呢？</p>
+
+<p>嘿嘿，这是难不倒咱们的</p>
+
+<p>在根目录下创建一个 wap/index.php， 里边就一句话</p>
+
+<p><pre>
+cat >>wap/index.php<<EOF
+<?php
+    header("Location: http://klwang.info/?mobile=1");
+?>
+EOF
+</pre></p>
+
+<p>这样，用户就可以正常访问 <a href="http://klwang.info/?mobile=1" target="_blank">klwang.info/wap</a> 啦<br />
+总算前面说了那么多没有骗人，也不用收回那么多的废话（打字都打了好久呢）</p>
+
+<p>无图无真相，上两张截图，看看<a href="http://klwang.info/?mobile=1" target="_blank">klwang.info</a>在手机中长得啥样</p>
+
+<p><a href="http://klwang.info/blog/wp-content/uploads/2013/06/wap-klwang-index.png"><img src="http://klwang.info/blog/wp-content/uploads/2013/06/wap-klwang-index.png" alt="wap-klwang-index" width="300" /></a>
+主页效果图</p>
+
+<p><a href="http://klwang.info/blog/wp-content/uploads/2013/06/wap-klwang-wordpress-mobile.png"><img src="http://klwang.info/blog/wp-content/uploads/2013/06/wap-klwang-wordpress-mobile.png" alt="wap-klwang-wordpress-mobile" width="300" /></a>
+本文效果图</p>
+
+<p>总结：</p>
+
+<p><strong>正式动手前，一定要多观察，说不定别人已经做了你要做的事情了呢</strong>
+</p>
+</div>
+
+
+  <footer>
+    <p class="meta">
+      
+  
+
+<span class="byline author vcard">Posted by <span class="fn">wklxd</span></span>
+
+      
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2013-06-08T00:00:00+08:00" pubdate data-updated="true">Jun 8<span>th</span>, 2013</time>
+      
+
+<span class="categories">
+  
+    <a class='category' href='/blog/categories/wordpress/'>wordpress</a>
+  
+</span>
+
+
+    </p>
+    
+      <div class="sharing">
+  
+  <a href="http://twitter.com/share" class="twitter-share-button" data-url="http://blog.klwang.info/wordpress-enable-mobile-access/" data-via="" data-counturl="http://blog.klwang.info/wordpress-enable-mobile-access/" >Tweet</a>
+  
+  
+  
+</div>
+
+    
+    <p class="meta">
+      
+        <a class="basic-alignment left" href="/pacemaker-cososync-cman-setup/" title="Previous Post: Clusters from Scratch 实验笔记">&laquo; Clusters from Scratch 实验笔记</a>
+      
+      
+        <a class="basic-alignment right" href="/change-your-resouce-angent-to-multistate/" title="Next Post: 将 resouce angent 改造成 multi state 类型">将 resouce angent 改造成 multi state 类型 &raquo;</a>
+      
+    </p>
+  </footer>
+</article>
+
+</div>
+
+<aside class="sidebar">
+  
+    <section>
+  <h1>Recent Posts</h1>
+  <ul id="recent_posts">
+    
+      <li class="post">
+        <a href="/about-strace/">About Strace</a>
+      </li>
+    
+      <li class="post">
+        <a href="/about-ubuntu-no-pubkey-error/">Ubuntu NO_PUBKEY 故障解决方式</a>
+      </li>
+    
+      <li class="post">
+        <a href="/bash-you-don-not-konw-special-character/">你不知道的bash (特殊字符)</a>
+      </li>
+    
+      <li class="post">
+        <a href="/about-lvm-skills/">Lvm 实践笔记</a>
+      </li>
+    
+      <li class="post">
+        <a href="/change-your-resouce-angent-to-multistate/">将 Resouce Angent 改造成 Multi State 类型</a>
+      </li>
+    
+  </ul>
+</section>
+
+
+
+
+
+  
+</aside>
+
+
+    </div>
+  </div>
+  <footer role="contentinfo"><p>
+  Copyright &copy; 2013 - wklxd -
+  <span class="credit">Powered by <a href="http://octopress.org">Octopress</a></span>
+</p>
+
+</footer>
+  
+
+
+
+
+
+
+
+  <script type="text/javascript">
+    (function(){
+      var twitterWidgets = document.createElement('script');
+      twitterWidgets.type = 'text/javascript';
+      twitterWidgets.async = true;
+      twitterWidgets.src = 'http://platform.twitter.com/widgets.js';
+      document.getElementsByTagName('head')[0].appendChild(twitterWidgets);
+    })();
+  </script>
+
+
+
+
+
+</body>
+</html>

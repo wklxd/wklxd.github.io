@@ -4,7 +4,7 @@
   <title><![CDATA[Category: Database | klwang's TechNotes]]></title>
   <link href="http://blog.klwang.info/blog/categories/database/atom.xml" rel="self"/>
   <link href="http://blog.klwang.info/"/>
-  <updated>2013-06-23T00:41:25+08:00</updated>
+  <updated>2013-06-23T09:22:55+08:00</updated>
   <id>http://blog.klwang.info/</id>
   <author>
     <name><![CDATA[wklxd]]></name>
@@ -15,9 +15,9 @@
   
   <entry>
     <title type="html"><![CDATA[Oracle实用小工具]]></title>
-    <link href="http://blog.klwang.info/blog/oracle-tools-explain/"/>
+    <link href="http://blog.klwang.info/oracle-tools-explain/"/>
     <updated>2013-04-11T00:00:00+08:00</updated>
-    <id>http://blog.klwang.info/blog/oracle-tools-explain</id>
+    <id>http://blog.klwang.info/oracle-tools-explain</id>
     <content type="html"><![CDATA[<p>ipcs:
 <p style="padding-left: 30px;">查看共享内存</p>
 lsnrctl:
@@ -38,9 +38,9 @@ tips:
   
   <entry>
     <title type="html"><![CDATA[忘记mysql密码的处理方式]]></title>
-    <link href="http://blog.klwang.info/blog/mysql-password-come-back/"/>
+    <link href="http://blog.klwang.info/mysql-password-come-back/"/>
     <updated>2013-03-07T00:00:00+08:00</updated>
-    <id>http://blog.klwang.info/blog/mysql-password-come-back</id>
+    <id>http://blog.klwang.info/mysql-password-come-back</id>
     <content type="html"><![CDATA[<p>一次又一次的忘记mysql密码，一次又一次的在网上搜索解决方式。</p>
 
 

@@ -1,0 +1,268 @@
+
+<!DOCTYPE html>
+<!--[if IEMobile 7 ]><html class="no-js iem7"><![endif]-->
+<!--[if lt IE 9]><html class="no-js lte-ie8"><![endif]-->
+<!--[if (gt IE 8)|(gt IEMobile 7)|!(IEMobile)|!(IE)]><!--><html class="no-js" lang="en"><!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  <title>Oracle约束管理 - klwang's TechNotes</title>
+  <meta name="author" content="wklxd">
+
+  
+  <meta name="description" content="1. 主键约束 create table tb1 (col1 type1 primary key) alter table tb1 add primary key (col1) alter table tb1 add constraint cs_name primary key (col1)
+2 &hellip;">
+  
+
+  <!-- http://t.co/dKP3o1e -->
+  <meta name="HandheldFriendly" content="True">
+  <meta name="MobileOptimized" content="320">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  
+  <link rel="canonical" href="http://blog.klwang.info/manage-of-oracle-constraints">
+  <link href="/favicon.png" rel="icon">
+  <link href="/stylesheets/screen.css" media="screen, projection" rel="stylesheet" type="text/css">
+  <link href="/atom.xml" rel="alternate" title="klwang's TechNotes" type="application/atom+xml">
+  <script src="/javascripts/modernizr-2.0.js"></script>
+  <script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+  <script>!window.jQuery && document.write(unescape('%3Cscript src="./javascripts/lib/jquery.min.js"%3E%3C/script%3E'))</script>
+  <script src="/javascripts/octopress.js" type="text/javascript"></script>
+  <!--Fonts from Google"s Web font directory at http://google.com/webfonts -->
+<link href="http://fonts.googleapis.com/css?family=PT+Serif:regular,italic,bold,bolditalic" rel="stylesheet" type="text/css">
+<link href="http://fonts.googleapis.com/css?family=PT+Sans:regular,italic,bold,bolditalic" rel="stylesheet" type="text/css">
+
+  
+
+</head>
+
+<body   >
+  <header role="banner"><hgroup>
+  <h1><a href="/">klwang's TechNotes</a></h1>
+  
+    <h2>Focusing on Datebase and Linux</h2>
+  
+</hgroup>
+
+</header>
+  <nav role="navigation"><ul class="subscription" data-subscription="rss">
+  <li><a href="/atom.xml" rel="subscribe-rss" title="subscribe via RSS">RSS</a></li>
+  
+</ul>
+  
+<form action="http://google.com/search" method="get">
+  <fieldset role="search">
+    <input type="hidden" name="q" value="site:blog.klwang.info" />
+    <input class="search" type="text" name="q" results="0" placeholder="Search"/>
+  </fieldset>
+</form>
+  
+<ul class="main-navigation">
+  <li><a href="/">Blog</a></li>
+  <li><a href="/blog/archives">Archives</a></li>
+</ul>
+
+</nav>
+  <div id="main">
+    <div id="content">
+      <div>
+<article class="hentry" role="article">
+  
+  <header>
+    
+      <h1 class="entry-title">Oracle约束管理</h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2013-04-16T00:00:00+08:00" pubdate data-updated="true">Apr 16<span>th</span>, 2013</time>
+        
+      </p>
+    
+  </header>
+
+
+<div class="entry-content"><p>1. 主键约束
+<pre>	create table tb1
+	(col1 type1 primary key)</pre></p>
+
+<p>	alter table tb1<br />
+	add primary key (col1)</p>
+
+<p>	alter table tb1<br />
+	add constraint cs_name<br />
+	primary key (col1)
+2. 非空约束
+<pre>	create table tb1
+	(col1 type1 not null)</pre></p>
+
+<p>	alter table tb1<br />
+	modify col1 not null
+3. 检查约束
+<pre>
+	create table tb1
+	(col1 type check (col1 &gt; 1))</pre>
+4. 唯一约束
+<pre>	create table tb1
+	(col_list, constraint ukey unique(col_list))</pre></p>
+
+<p>	alter table tb1<br />
+	add constraint ukey<br />
+	unique(col_list)
+5. 外键约束
+<pre>	create table tb1
+	(col1 type constraint fk1 references tb2(col2))</pre></p>
+
+<p>	alter table t2<br />
+	add constraint fk2 <br />
+	foreign key (col1) references t1(col2);
+6. 改变约束的校验方式
+<pre>	alter table t2 modify constraint fk2 initially deferred;	--延迟，事务结束后
+	alter table t2 modify constraint fk2 initially immediate;</pre></p>
+
+<p>	alter table t2 modify constraint fk2<br />
+	[<br />
+		disable validate			&#8211;对已经存在的数据进行检查，不允许后续DML<br />
+		disable novalidate			&#8211;现有和后续DML，都不检查<br />
+		enable	validate			&#8211;现有和后续DML，都检查<br />
+		enable	novalidate			&#8211;现有不检查，后续检查<br />
+	]
+7. 相关视图
+<pre>
+	dba_constraints				--约束
+	dba_cons_columns			--约束列</pre></p>
+</div>
+
+
+  <footer>
+    <p class="meta">
+      
+  
+
+<span class="byline author vcard">Posted by <span class="fn">wklxd</span></span>
+
+      
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2013-04-16T00:00:00+08:00" pubdate data-updated="true">Apr 16<span>th</span>, 2013</time>
+      
+
+<span class="categories">
+  
+    <a class='category' href='/blog/categories/oracle/'>oracle</a>
+  
+</span>
+
+
+    </p>
+    
+      <div class="sharing">
+  
+  <a href="http://twitter.com/share" class="twitter-share-button" data-url="http://blog.klwang.info/manage-of-oracle-constraints/" data-via="" data-counturl="http://blog.klwang.info/manage-of-oracle-constraints/" >Tweet</a>
+  
+  
+  
+</div>
+
+    
+    <p class="meta">
+      
+        <a class="basic-alignment left" href="/oracle-tools-explain/" title="Previous Post: Oracle实用小工具">&laquo; Oracle实用小工具</a>
+      
+      
+        <a class="basic-alignment right" href="/manage-of-oracle-inde/" title="Next Post: Oracle索引管理">Oracle索引管理 &raquo;</a>
+      
+    </p>
+  </footer>
+</article>
+
+</div>
+
+<aside class="sidebar">
+  
+    <section>
+  <h1>Recent Posts</h1>
+  <ul id="recent_posts">
+    
+      <li class="post">
+        <a href="/about-strace/">About Strace</a>
+      </li>
+    
+      <li class="post">
+        <a href="/about-ubuntu-no-pubkey-error/">Ubuntu NO_PUBKEY 故障解决方式</a>
+      </li>
+    
+      <li class="post">
+        <a href="/bash-you-don-not-konw-special-character/">你不知道的bash (特殊字符)</a>
+      </li>
+    
+      <li class="post">
+        <a href="/about-lvm-skills/">Lvm 实践笔记</a>
+      </li>
+    
+      <li class="post">
+        <a href="/change-your-resouce-angent-to-multistate/">将 Resouce Angent 改造成 Multi State 类型</a>
+      </li>
+    
+  </ul>
+</section>
+
+
+
+
+
+  
+</aside>
+
+
+    </div>
+  </div>
+  <footer role="contentinfo"><p>
+  Copyright &copy; 2013 - wklxd -
+  <span class="credit">Powered by <a href="http://octopress.org">Octopress</a></span>
+</p>
+
+</footer>
+  
+
+
+
+
+
+
+
+  <script type="text/javascript">
+    (function(){
+      var twitterWidgets = document.createElement('script');
+      twitterWidgets.type = 'text/javascript';
+      twitterWidgets.async = true;
+      twitterWidgets.src = 'http://platform.twitter.com/widgets.js';
+      document.getElementsByTagName('head')[0].appendChild(twitterWidgets);
+    })();
+  </script>
+
+
+
+
+
+</body>
+</html>

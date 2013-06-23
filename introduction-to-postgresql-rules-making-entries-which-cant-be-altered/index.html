@@ -1,0 +1,307 @@
+
+<!DOCTYPE html>
+<!--[if IEMobile 7 ]><html class="no-js iem7"><![endif]-->
+<!--[if lt IE 9]><html class="no-js lte-ie8"><![endif]-->
+<!--[if (gt IE 8)|(gt IEMobile 7)|!(IEMobile)|!(IE)]><!--><html class="no-js" lang="en"><!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  <title>PostgreSQL Rules 的简单介绍 - Making entries which can't be altered - klwang's TechNotes</title>
+  <meta name="author" content="wklxd">
+
+  
+  <meta name="description" content="原文请猛点 这里，下面是经过本人翻译整理的版本
+by Justin Clift 简介
+玩过Postgresql的Rule规则吗？如果没有的话，看看下面的介绍，也许你会喜欢这种操作方式 postgresql的 rule 规则被用来在查询执行前改变查询的本来目的。比如：如果你有一张所有人都可以操作的表 &hellip;">
+  
+
+  <!-- http://t.co/dKP3o1e -->
+  <meta name="HandheldFriendly" content="True">
+  <meta name="MobileOptimized" content="320">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  
+  <link rel="canonical" href="http://blog.klwang.info/introduction-to-postgresql-rules-making-entries-which-cant-be-altered">
+  <link href="/favicon.png" rel="icon">
+  <link href="/stylesheets/screen.css" media="screen, projection" rel="stylesheet" type="text/css">
+  <link href="/atom.xml" rel="alternate" title="klwang's TechNotes" type="application/atom+xml">
+  <script src="/javascripts/modernizr-2.0.js"></script>
+  <script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+  <script>!window.jQuery && document.write(unescape('%3Cscript src="./javascripts/lib/jquery.min.js"%3E%3C/script%3E'))</script>
+  <script src="/javascripts/octopress.js" type="text/javascript"></script>
+  <!--Fonts from Google"s Web font directory at http://google.com/webfonts -->
+<link href="http://fonts.googleapis.com/css?family=PT+Serif:regular,italic,bold,bolditalic" rel="stylesheet" type="text/css">
+<link href="http://fonts.googleapis.com/css?family=PT+Sans:regular,italic,bold,bolditalic" rel="stylesheet" type="text/css">
+
+  
+
+</head>
+
+<body   >
+  <header role="banner"><hgroup>
+  <h1><a href="/">klwang's TechNotes</a></h1>
+  
+    <h2>Focusing on Datebase and Linux</h2>
+  
+</hgroup>
+
+</header>
+  <nav role="navigation"><ul class="subscription" data-subscription="rss">
+  <li><a href="/atom.xml" rel="subscribe-rss" title="subscribe via RSS">RSS</a></li>
+  
+</ul>
+  
+<form action="http://google.com/search" method="get">
+  <fieldset role="search">
+    <input type="hidden" name="q" value="site:blog.klwang.info" />
+    <input class="search" type="text" name="q" results="0" placeholder="Search"/>
+  </fieldset>
+</form>
+  
+<ul class="main-navigation">
+  <li><a href="/">Blog</a></li>
+  <li><a href="/blog/archives">Archives</a></li>
+</ul>
+
+</nav>
+  <div id="main">
+    <div id="content">
+      <div>
+<article class="hentry" role="article">
+  
+  <header>
+    
+      <h1 class="entry-title">PostgreSQL Rules 的简单介绍 - Making Entries Which Can't Be Altered</h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2013-03-14T00:00:00+08:00" pubdate data-updated="true">Mar 14<span>th</span>, 2013</time>
+        
+      </p>
+    
+  </header>
+
+
+<div class="entry-content"><p>原文请猛点 <a title="这里" href="https://wiki.postgresql.org/wiki/Introduction_to_PostgreSQL_Rules_-_Making_entries_which_can%27t_be_altered">这里</a>，下面是经过本人翻译整理的版本<br />
+by Justin Clift</p>
+
+<p><a id="Introduction" name="Introduction"></a>
+<h2>简介</h2>
+玩过Postgresql的Rule规则吗？如果没有的话，看看下面的介绍，也许你会喜欢这种操作方式</p>
+
+<p>postgresql的 rule 规则被用来在查询执行前改变查询的本来目的。比如：如果你有一张所有人都可以操作的表，但是：你又想让其中特定的三条记录不会被任何人误操作更改或者删除，你可以这样做：
+<h4>1. 建立示例表：</h4>
+<pre>foo=>CREATE TABLE gift_certificates (idnum serial, person varchar(20), amount float4);
+NOTICE: CREATE TABLE will create implicit sequence 'gift_certificates_idnum_seq' for SERIAL column 'gift_certificates.idnum'
+NOTICE: CREATE TABLE/UNIQUE will create implicit index 'gift_certificates_idnum_key' for table 'gift_certificates'
+CREATE</pre>
+<h5>2. 整点数据先：</h5>
+<pre>foo=>insert into gift_certificates (person, amount) values ('Justin', 200);
+INSERT 51564057 1
+foo=>insert into gift_certificates (person, amount) values ('Tom', 200);
+INSERT 51564059 1
+foo=>insert into gift_certificates (person, amount) values ('Richard', 200);
+INSERT 51564062 1
+foo=>insert into gift_certificates (person, amount) values ('Peter', 200);
+INSERT 51564065 1
+foo=>insert into gift_certificates (person, amount) values ('Bruce', 200);
+INSERT 51564066 1
+foo=>insert into gift_certificates (person, amount) values ('Marc', 200);
+INSERT 51564067 1
+foo=>insert into gift_certificates (person, amount) values ('Vince', 200);</pre></p>
+
+<p>foo=>select * from gift_certificates;<br />
+ idnum |  person | amount<br />
+&#8212;&#8212;-+&#8212;&#8212;&#8212;+&#8212;&#8212;&#8211;<br />
+     1 | Justin  | 200<br />
+     2 | Tom     | 200<br />
+     3 | Richard | 200<br />
+     4 | Peter   | 200<br />
+     5 | Bruce   | 200<br />
+     6 | Marc    | 200<br />
+     7 | Vince   | 200<br />
+(7 rows)
+<h5>3. 接下来，建立如下两个规则：</h5>
+<pre>foo=>CREATE RULE prot_gc_upd AS ON UPDATE TO gift_certificates WHERE old.idnum &lt; 4 DO INSTEAD nothing;
+CREATE
+foo=>CREATE RULE prot_gc_del AS ON DELETE TO gift_certificates WHERE old.idnum &lt; 4 DO INSTEAD nothing;
+CREATE</pre>
+Noting是一个神奇的pstgresql规则，可以将任何对于您想要保护的三条记录的UPDATE / DELETE操作无害化（DO NOTING INSTEAD）；</p>
+
+<p>放心：除了对于这三条记录的update/delete操作，其他任何对于该表的操作不受影响
+<h5>4. OK， 接下来测试一把</h5>
+<pre>foo=>update gift_certificates set person = 'Justin2' where idnum = 1;
+UPDATE 0
+foo=>update gift_certificates set person = 'Justin2' where idnum = 2;
+UPDATE 0
+foo=>update gift_certificates set person = 'Justin2' where idnum = 3;
+UPDATE 0
+foo=>update gift_certificates set person = 'Justin2' where idnum = 4;
+UPDATE 1</pre>
+瞅瞅，看有木有生效：
+<pre>foo=>select * from gift_certificates;
+ idnum |  person | amount
+-------+---------+--------
+     1 | Justin  | 200
+     2 | Tom     | 200
+     3 | Richard | 200
+     5 | Bruce   | 200
+     6 | Marc    | 200
+     7 | Vince   | 200
+     4 | Justin2 | 200
+(7 rows)</pre></p>
+
+<p>foo=>
+怎么样？再试试delete操作：
+<pre>foo=>delete from gift_certificates;
+DELETE 4
+foo=>select * from gift_certificates;
+ idnum |  person | amount
+-------+---------+--------
+     1 | Justin  | 200
+     2 | Tom     | 200
+     3 | Richard | 200
+(3 rows)</pre></p>
+
+<p>foo=>
+神奇吧？</p>
+
+<p>希望这个功能可以对你有用</p>
+
+<p>更多资料,参考《PostgreSQL Programmer&#8217;s Guide, <a title="http://www.postgresql.org/docs/current/static/rules.html" href="http://www.postgresql.org/docs/current/static/rules.html" rel="nofollow">&#8220;The Postgres Rule System&#8221;</a>》</p>
+</div>
+
+
+  <footer>
+    <p class="meta">
+      
+  
+
+<span class="byline author vcard">Posted by <span class="fn">wklxd</span></span>
+
+      
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2013-03-14T00:00:00+08:00" pubdate data-updated="true">Mar 14<span>th</span>, 2013</time>
+      
+
+<span class="categories">
+  
+    <a class='category' href='/blog/categories/postgresql/'>postgresql</a>
+  
+</span>
+
+
+    </p>
+    
+      <div class="sharing">
+  
+  <a href="http://twitter.com/share" class="twitter-share-button" data-url="http://blog.klwang.info/introduction-to-postgresql-rules-making-entries-which-cant-be-altered/" data-via="" data-counturl="http://blog.klwang.info/introduction-to-postgresql-rules-making-entries-which-cant-be-altered/" >Tweet</a>
+  
+  
+  
+</div>
+
+    
+    <p class="meta">
+      
+        <a class="basic-alignment left" href="/bash-psql-combination/" title="Previous Post: bash和psql结合处理批量任务">&laquo; bash和psql结合处理批量任务</a>
+      
+      
+        <a class="basic-alignment right" href="/postgresql-columns-that-your-dont-know/" title="Next Post: postgresql的一些隐含列">postgresql的一些隐含列 &raquo;</a>
+      
+    </p>
+  </footer>
+</article>
+
+</div>
+
+<aside class="sidebar">
+  
+    <section>
+  <h1>Recent Posts</h1>
+  <ul id="recent_posts">
+    
+      <li class="post">
+        <a href="/about-strace/">About Strace</a>
+      </li>
+    
+      <li class="post">
+        <a href="/about-ubuntu-no-pubkey-error/">Ubuntu NO_PUBKEY 故障解决方式</a>
+      </li>
+    
+      <li class="post">
+        <a href="/bash-you-don-not-konw-special-character/">你不知道的bash (特殊字符)</a>
+      </li>
+    
+      <li class="post">
+        <a href="/about-lvm-skills/">Lvm 实践笔记</a>
+      </li>
+    
+      <li class="post">
+        <a href="/change-your-resouce-angent-to-multistate/">将 Resouce Angent 改造成 Multi State 类型</a>
+      </li>
+    
+  </ul>
+</section>
+
+
+
+
+
+  
+</aside>
+
+
+    </div>
+  </div>
+  <footer role="contentinfo"><p>
+  Copyright &copy; 2013 - wklxd -
+  <span class="credit">Powered by <a href="http://octopress.org">Octopress</a></span>
+</p>
+
+</footer>
+  
+
+
+
+
+
+
+
+  <script type="text/javascript">
+    (function(){
+      var twitterWidgets = document.createElement('script');
+      twitterWidgets.type = 'text/javascript';
+      twitterWidgets.async = true;
+      twitterWidgets.src = 'http://platform.twitter.com/widgets.js';
+      document.getElementsByTagName('head')[0].appendChild(twitterWidgets);
+    })();
+  </script>
+
+
+
+
+
+</body>
+</html>
